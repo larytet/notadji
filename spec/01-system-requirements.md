@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 0.4 (iteration 1 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 0.5 (iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -156,7 +156,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 |----|-------------|-----|-------|-----|
 | ADA-001 | Adaptive frequency selection: the ground unit shall scan the permitted channels (spectrum sensing using the receiver, 50 microsecond dwell per channel per scan) and rank them by interference energy and by decoded video quality. | M | | T |
 | ADA-002 | Channel switch on degraded quality: decision latency of 20 ms or less, and execution as defined in MAC-010. | M | | T |
-| ADA-003 | Two hopping modes: (a) slow hop: change channel when the current one is bad (per ADA-002); (b) fast hop (for control/telemetry and as a robust fallback): frequency hopping with a dwell of 1 to 10 ms across at least 20 channels in a pseudo-random sequence shared at pairing. | M | | T |
+| ADA-003 | Two hopping modes: (a) slow hop: change channel when the current one is bad (per ADA-002); (b) fast hop (for control/telemetry and as a robust fallback; in ETSI regions only in an adaptive form, because non-adaptive hopping is limited to a 5 ms on-time followed by a 5 ms gap [to be checked in EN 300 328]): frequency hopping with a dwell of 1 to 10 ms across at least 20 channels in a pseudo-random sequence shared at pairing. | M | | T |
 | ADA-004 | Band hopping: switching between 2.4 GHz and 5.8 GHz (and 900 MHz when fitted) in a link-loss case, with a re-establishment time of 300 ms or less (using the stored hop sequence and the control channel). | M | P2 | T |
 | ADA-005 | Out-of-band control: the beacon/control channel shall remain on a robust, low-rate, separate channel (e.g. 900 MHz or the 2.4 GHz band when video is on 5.8 GHz) so that the link can be re-established after loss. | S | | T |
 | ADA-006 | Regional compliance: the set of allowed channels, powers and dwell times is data-driven per region and locked at the factory (region code) with signed updates only. | M | | I |
@@ -215,6 +215,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | REG-003 | Export classification and licensing review (encryption, EAR 5D002 / dual-use) before shipping. | M | | I |
 | REG-004 | RoHS, REACH, and battery-related requirements where applicable. | M | P2 | I |
 | REG-005 | IP policy: RTL and software derived from GPL, AGPL, non-commercial or unlicensed references shall be written clean-room (behavioural reference only); a licence register shall be kept for every reference (`reference/MANIFEST.tsv`); a freedom-to-operate patent search shall be completed before P2 funding. | M | | I |
+| REG-006 | Patent design-around register (`11`, section 4): PA bias current and supply voltage shall be set from temperature and PA current only and shall not be adjusted as a function of measured load impedance or VSWR while DPD is active; reflection data may be used for fold-back, DPD coefficient-set selection, the optional tunable match and alarms. Other constraints D-2 to D-5 apply until counsel clears them. | M | | I |
 
 ## 14. Environment (ENV)
 
@@ -273,3 +274,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 0.2 | 5 | Applies `06` and `07`: SYS-003, SYS-005, SYS-009, VID-003, PHY-001, PHY-003, MAC-001, MAC-007, RF-010, RF-020, PWR-004, ENV-001, SEC-005, REG-002, ASC-001, ASC-002, ASC-004 rewritten; added SYS-010, VID-017..019, MAC-011, REG-005, TST-001..002 |
 | 0.3 | 6 | RF-029 adjacent-channel rejection added; link-budget rate model aligned with PHY-001 tone counts and MAC-001 guard |
 | 0.4 | G2-1 | Source review (`10`): VID-006 hard bound, VID-020 added, IF-002 fixed frame period, LAT-001 register-step method, SEC-002 default cipher, PRO-006 added |
+| 0.5 | G2-2 | Patent search (`11`): REG-006 design-around register added, ADA-003 ETSI note |

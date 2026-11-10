@@ -1,6 +1,6 @@
 # notadji - Overview and Document Map
 
-Status: DRAFT, SRS revision 0.4
+Status: DRAFT, SRS revision 0.5
 Owner: system team (arkady)
 Audience: RF, baseband/FPGA, video, firmware, mechanical, regulatory, test
 
@@ -30,6 +30,7 @@ ground unit) built in two phases:
 | `08-verification-plan.md` | Test groups, equipment, staged execution (pass 5) |
 | `09-traceability-matrix.md` | Generated requirement to test-group matrix (`scripts/trace_matrix.py`) |
 | `10-source-review.md` | Facts from the downloaded sources and their effect on the spec (second goal, iteration 1) |
+| `11-patent-search.md` | Preliminary patent landscape, design-around constraints, brief for the patent attorney (iteration 2) |
 
 ## 3. Conventions
 
