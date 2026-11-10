@@ -481,6 +481,8 @@ values and requirements tagged [GU] (PHY-016, PHY-017, RF-032, ADA-011, ANT-012)
 
 ## T-22 Silicon family: one pair of chips or separate air and ground chips (notes entry 5)
 
+![Silicon family: one digital SoC and one RF die for both roles, replicated RF dice for the enhanced ground unit, an optional dedicated ground chip. Source: diagrams/silicon-family.dot](diagrams/silicon-family.png)
+
 The first draft assumed the same silicon in both roles. The estimate in `effort.md` (area and effort estimates [E]) puts a separate air chip at about 25 mm2 (no decoder, no display PHY) and a separate ground chip at about 24 mm2 (no encoder, no ISP, no CSI)
 against about 29 mm2 for the shared design: a saving of about 5 mm2 each (about 15%, roughly USD 0.5 per unit), at the price of a second tape-out (about 3 M for masks and 50 to 60 person-years). Break-even (`scripts/link_budget.py`):
 

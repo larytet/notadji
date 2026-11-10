@@ -1,0 +1,23 @@
+// Silicon family (07 T-21, T-22, T-23; SYS-011, ASC-007..009): one digital SoC and one RF die for both roles, replicated RF dice for the enhanced ground unit.
+digraph silicon_family {
+  rankdir=LR; fontname="Helvetica"; nodesep=0.3;
+  node [shape=box, style="rounded,filled", fillcolor="#eef3fb", fontname="Helvetica", fontsize=10]; edge [fontname="Helvetica", fontsize=9];
+  soc [label="Digital SoC (one design)\nmodem, FEC, encoder + decoder,\nreal-time cores, power-gated app core,\ngated beamforming logic, security", fillcolor="#dfe9f7"];
+  rf [label="RF die (one design)\n2 TX / 2 RX, observation receiver,\ncapture memory, PLLs", fillcolor="#dfe9f7"];
+  nvm [label="Signed NVM / fuse:\nregion profile, options,\nchain count (SEC-005, SEC-006)", shape=note, fillcolor="#f6e3e3"];
+  subgraph cluster_au { label="Air unit"; style="rounded"; color="#4a6fa5";
+    au_soc [label="SoC"]; au_rf [label="1 RF die\n(1 TX video band,\n1 RX uplink band)"]; au_pa [label="External PA / FEM\n(per element for beamforming)", fillcolor="#fdf1dc"];
+    au_soc -> au_rf [label="2.95 Gbit/s\n(40 MHz)"]; au_rf -> au_pa;
+  }
+  subgraph cluster_gub { label="Basic ground unit"; style="rounded"; color="#4a6fa5";
+    gb_soc [label="SoC"]; gb_rf [label="1 RF die\n(2 RX video band,\n1 TX uplink band)"]; gb_soc -> gb_rf [label="4.4 Gbit/s"];
+  }
+  subgraph cluster_gue { label="Enhanced ground unit (board-level, same silicon)"; style="rounded"; color="#4a6fa5";
+    ge_soc [label="SoC"]; ge_rf [label="RF die x N (up to 8 RX branches)\nshared reference clock and LO", fillcolor="#dfe9f7"]; ge_scan [label="One RF die as\nscan receiver", fillcolor="#fdf1dc"]; ge_fe [label="Discrete LNA + preselector\nfilters, external antennas", fillcolor="#fdf1dc"];
+    ge_soc -> ge_rf [label="11.8 Gbit/s\n(8 RX)"]; ge_soc -> ge_scan; ge_fe -> ge_rf;
+  }
+  ded [label="Dedicated ground chip\n(allowed by SYS-011, justified only by\nvolume of 21 to 24 million units\nor a capability replication cannot give)", fillcolor="#f2f2f2", style="rounded,filled,dashed"];
+  soc -> au_soc [style=dotted, dir=none]; soc -> gb_soc [style=dotted, dir=none]; soc -> ge_soc [style=dotted, dir=none];
+  rf -> au_rf [style=dotted, dir=none]; rf -> gb_rf [style=dotted, dir=none]; rf -> ge_rf [style=dotted, dir=none];
+  nvm -> soc [style=dashed]; ge_soc -> ded [style=dashed, dir=none];
+}

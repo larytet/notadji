@@ -1,17 +1,23 @@
-// System scope (SRS section 1): video downlink chain, uplink chain, split-band channel plan.
+// System scope (SRS section 1), rev 2.3, laid out as stacked rows so that it fits a page.
 digraph system_scope {
-  rankdir=LR; fontname="Helvetica"; node [shape=box, style="rounded,filled", fillcolor="#eef3fb", fontname="Helvetica", fontsize=11]; edge [fontname="Helvetica", fontsize=10];
+  rankdir=TB; fontname="Helvetica"; compound=true; nodesep=0.22; ranksep=0.55; newrank=true;
+  node [shape=box, style="rounded,filled", fillcolor="#eef3fb", fontname="Helvetica", fontsize=10]; edge [fontname="Helvetica", fontsize=9];
   subgraph cluster_au { label="Air unit (AU)"; style="rounded"; color="#4a6fa5";
-    sensor [label="Camera sensor"]; isp [label="ISP"]; enc [label="Encoder\n(slices)"]; frm_tx [label="Framer / FEC"]; mtx [label="Modem TX"]; rftx [label="RF front end TX\n(PA, coupler)"];
-    ul_rx [label="Uplink RX\n(feedback, telemetry,\ncontrol)", fillcolor="#fdf1dc"];
-    sensor -> isp -> enc -> frm_tx -> mtx -> rftx;
+    { rank=same; sensor [label="Camera sensor"]; isp [label="ISP"]; enc [label="Encoder\n(slices, foveation\nmap optional)"]; frm_tx [label="Framer / FEC"]; }
+    { rank=same; mtx [label="Modem TX"]; rftx [label="RF front end TX\n(PA, coupler, VSWR)"];
+      aant [label="Antennas: 2 omni diversity\nor beamforming option\n(signed NVM)", shape=oval, fillcolor="#e8f4e8"]; }
+    ul_rx [label="Uplink RX\n(feedback, telemetry, control)", fillcolor="#fdf1dc"];
+    sensor -> isp -> enc -> frm_tx; frm_tx -> mtx; mtx -> rftx -> aant;
   }
-  subgraph cluster_gu { label="Ground unit (GU)"; style="rounded"; color="#4a6fa5";
-    rfrx [label="RF front end RX\n(2 to 8 branches)"]; mrx [label="Modem RX"]; frm_rx [label="Deframer / FEC"]; dec [label="Decoder"]; disp [label="Display"];
-    ul_tx [label="Uplink TX", fillcolor="#fdf1dc"]; fb [label="Link feedback\n(CSI, ACK bitmap, MCS)", fillcolor="#fdf1dc"];
-    rfrx -> mrx -> frm_rx -> dec -> disp;
-    mrx -> fb [style=dashed]; fb -> ul_tx [style=dashed];
+  subgraph cluster_gu { label="Ground unit (GU), basic or enhanced"; style="rounded"; color="#4a6fa5";
+    { rank=same; gant [label="Antennas: 2 basic, up to 8 branches;\nexternal on coax with LNA;\nsix-sector array option", shape=oval, fillcolor="#e8f4e8"]; rfrx [label="RF front end RX\n(NF 4 dB basic, 2 dB enhanced)"]; mrx [label="Modem RX\n(combining, LDPC)"]; }
+    { rank=same; frm_rx [label="Deframer / FEC"]; dec [label="Decoder"]; disp [label="Display\n(locked to frame timing)"]; }
+    { rank=same; scan [label="Scan receiver\n(enhanced)", fillcolor="#fdf1dc"]; aoa [label="Angle of arrival and range\n(tracker, beam select, pilot display)", fillcolor="#f6e3e3"]; fb [label="Link feedback (CSI, ACK bitmap, MCS,\nchannel plan, foveation mode)", fillcolor="#fdf1dc"]; ul_tx [label="Uplink TX", fillcolor="#fdf1dc"]; }
+    gant -> rfrx -> mrx; mrx -> frm_rx; frm_rx -> dec -> disp;
+    mrx -> aoa [style=dotted]; mrx -> fb [style=dashed]; scan -> fb [style=dashed, label="channel ranking"]; fb -> ul_tx [style=dashed]; gant -> scan [style=dotted];
   }
-  rftx -> rfrx [label="video downlink\n(5.8 or 2.4 GHz)", penwidth=2, color="#2a5d9f"];
-  ul_tx -> ul_rx [label="uplink, other band\n(2.4 GHz or 915 MHz; in-band TDD fallback)", style=dashed, color="#b36b00", constraint=false];
+  aant -> gant [label="video downlink, 20 MHz (5.8 or 2.4 GHz)", penwidth=2, color="#2a5d9f"];
+  ul_tx -> ul_rx [label="uplink, other band, 5 MHz (2.4 GHz or 915 MHz; in-band TDD fallback)", style=dashed, color="#b36b00", constraint=false];
+  lim [label="Region profile + option entitlement\n(signed tables, hardware limiter)", shape=note, fillcolor="#f6e3e3"];
+  lim -> rftx [style=dotted, constraint=false]; lim -> rfrx [style=dotted, constraint=false];
 }
