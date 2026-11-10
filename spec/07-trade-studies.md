@@ -222,6 +222,16 @@ SEC-005. Check the current FCC software-security guidance with counsel (A-06).
 Recommendation: **A for the product** (a certified RID/BLE module is cheapest and fastest to approve) and **B** as a
 later integration step if a measured sleep-power and cost benefit exists.
 
+Review (iteration 10, T-09 and T-10): evidence found by search: 47 CFR 2.944 requires the manufacturer of a software defined radio to ensure that only software approved with the radio can be loaded (acceptable means include authenticated
+download, electronic signatures or hardware coding, to be described in the authorization application), and radios whose software a third party is expected to change in ways that affect frequency range, modulation or power must meet that and be
+certified as software defined radios ([eCFR/Cornell text](https://www.law.cornell.edu/cfr/text/47/2.944)); the FCC's U-NII security guidance (KDB 594280 D02) asks the applicant to describe the security measures and list the RF parameters software can change; the 2014 rule change
+required software security for U-NII devices. The KDB revision found is from 2015/2016 and the current one was not read.
+Consequences for the options: A (fully open firmware including the RF limits) makes every RF parameter third-party modifiable, so the product would have to be certified as an SDR with approved-software-only loading, which contradicts the openness it was meant to give: rejected for the sold product.
+B (open stack, signed RF limiter) fits: third-party software cannot move the RF parameters outside the approved set, which is exactly the statement the application must make. New alternative (D): put the limiter in the **modem hardware** (register lock set from a signed, region-bound
+table) so even a compromised processor cannot exceed it; this is B implemented in silicon and is the ASIC target (SEC-005); in the FPGA phases the same is done by a signed bitstream. The FPGA prototypes are not sold and run in
+conducted or shielded set-ups or under the applicable test authorisation. Option C (an open SKU) would need an amateur-radio style authorisation and is left to the community, not a product. Decision: **B, with D as its ASIC form**; REG-007 requires the software security statement.
+For Remote ID (T-10): the FAA accepts ASTM F3586-22 for broadcast modules and each manufacturer files a declaration of compliance; using a module that already has one avoids that process for the main device, so **A (separate certified module) is confirmed** and B/C wait for a later revision.
+
 ## T-11 Baseband base for the FPGA prototype (P1)
 
 | Option | Description | Pros | Cons |

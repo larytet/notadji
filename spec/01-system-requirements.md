@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 1.2 (T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 1.3 (T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -216,13 +216,14 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | SEC-002 | Link encryption ChaCha20-Poly1305 by default (as in wfb-ng, no AES hardware needed) with AES-256-GCM as the hardware option, per-slice authentication tag, anti-replay counter. Latency impact below 0.2 ms. | M | | T |
 | SEC-003 | Secure boot, signed firmware and bitstreams (FPGA) and signed region/power tables. | M | | T |
 | SEC-004 | Jam resistance: detection of wideband jamming and automatic fallback to fast hopping and to lower rate (ADA-003). | S | | T |
-| SEC-005 | RF limits (region, power, band, dwell, DFS) shall be enforced by a hardware-locked limiter whose tables are signed; the rest of the stack stays open. The limiter design and the signing process shall be published for audit. Revised by T-09. | M | | I |
+| SEC-005 | RF limits (region, power, band, dwell, DFS) shall be enforced by a hardware-locked limiter (modem register lock set from a signed, region-bound table) in the ASIC and by a signed bitstream in FPGA builds; the rest of the stack stays open. The limiter design and the signing process shall be published for audit. FPGA prototypes are not sold and run in conducted or shielded set-ups or under the applicable test authorisation. Revised by T-09. | M | | I |
 | REG-001 | FCC Part 15 (15.247, 15.407), ETSI EN 300 328 and EN 301 893, ISED RSS-247, and the Radio Equipment Directive (RED) cyber-security delegated act (EN 18031). | M | P2 | T |
 | REG-002 | Remote ID: broadcast RID from a certified separate BLE/WiFi module (T-10) that works with the main device off, meeting the FAA-accepted means of compliance ASTM F3586-22 (an overlay on ASTM F3411-22a) for Part 89 and the EU Direct RID rules; a Bluetooth implementation shall include both Bluetooth 4 legacy advertising and Bluetooth 5 Long Range with extended advertising, a WiFi implementation NAN or beacon frames (at least one transport); the RID data (position, altitude, ID) comes from the flight controller or GNSS over IF-001. A later revision may integrate it. | M | | T |
 | REG-003 | Export classification and licensing review (encryption, EAR 5D002 / dual-use) before shipping. | M | | I |
 | REG-004 | RoHS, REACH, and battery-related requirements where applicable. | M | P2 | I |
 | REG-005 | IP policy: RTL and software derived from GPL, AGPL, non-commercial or unlicensed references shall be written clean-room (behavioural reference only); a licence register shall be kept for every reference (`reference/MANIFEST.tsv`); a freedom-to-operate patent search shall be completed before P2 funding. | M | | I |
 | REG-006 | Patent design-around register (`11`, section 4): PA bias current and supply voltage shall be set from temperature and PA current only and shall not be adjusted as a function of measured load impedance or VSWR while DPD is active; reflection data may be used for fold-back, DPD coefficient-set selection, the optional tunable match and alarms. Other constraints D-2 to D-5 apply until counsel clears them. | M | | I |
+| REG-007 | A software security statement shall be prepared before certification, covering 47 CFR 2.944 (only approved software loadable, method described) and the FCC U-NII device security guidance (KDB 594280 D02, current revision to be checked): the RF parameters software can change, the authentication of updates and the limiter of SEC-005. | M | P2 | I |
 
 ## 14. Environment (ENV)
 
@@ -310,3 +311,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 1.0 | G2-7 | T-05 iteration: near-far analysis; SYS-009 split into race and long-range counts, RF-029 restated, ADA-010 added |
 | 1.1 | G2-8 | T-06/T-07 iteration: slice PER to codeword error rate, intra-refresh cost, VID-005/010 revised, VID-021 reactive slice refresh added, PHY-011 clarified |
 | 1.2 | G2-9 | T-11/T-12/T-19 iteration: phase A configurations A1/A2/A3, ADRV9002 for phase B, PRO-007 added |
+| 1.3 | G2-10 | T-09/T-10 iteration: SEC-005 restated (hardware limiter, signed bitstream), REG-007 software security statement added; T-10 confirmed |

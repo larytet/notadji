@@ -114,10 +114,10 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 |---|---|
 | C | 16 |
 | E | 121 |
-| P | 31 |
-| R | 7 |
+| P | 30 |
+| R | 9 |
 | S | 16 |
-| total | 191 |
+| total | 192 |
 
 | ID | Class | Basis |
 |---|---|---|
@@ -260,13 +260,14 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | SEC-002 | S | wfb-ng uses ChaCha20-Poly1305 AEAD per packet (protocol draft) |
 | SEC-003 | P | security design rule; review by third party |
 | SEC-004 | P | security design rule; review by third party |
-| SEC-005 | P | security design rule; review by third party |
+| SEC-005 | R | 47 CFR 2.944 and U-NII security guidance (search); counsel to confirm the limiter approach |
 | REG-001 | R | regulatory; counsel to confirm |
 | REG-002 | S | FAA-accepted ASTM F3586-22 overlay on F3411-22a; transports from the FAA notice summary |
 | REG-003 | R | regulatory; counsel to confirm |
 | REG-004 | R | regulatory; counsel to confirm |
 | REG-005 | P | licence register from MANIFEST.tsv; clean-room policy |
 | REG-006 | S | US 12,456,952 B2 claims read (Skyworks); constraint D-1 in 11 |
+| REG-007 | R | 47 CFR 2.944 text read via search; KDB revision to be checked by counsel |
 | ENV-001 | E | ranges chosen to match consumer drone practice; thermal and cold-start behaviour unproven |
 | ENV-002 | E | engineering target; proved by verification method T (see 08) |
 | ENV-003 | E | engineering target; proved by verification method T (see 08) |
