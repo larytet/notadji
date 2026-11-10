@@ -6,7 +6,7 @@ Status: DRAFT, pass 2.
 
 | Stage | Platform | What it proves | Exit criterion |
 |---|---|---|---|
-| P0a | Commodity WiFi in injection mode (wfb-ng/OpenIPC with Realtek adapters) plus an IP camera SoC | Video pipeline, latency measurement method, field range data | G2G measured and logged; baseline numbers |
+| P0a | Commodity WiFi in injection mode (wfb-ng/OpenIPC with Realtek adapters) plus an IP camera SoC | Video pipeline, latency measurement method, field range data | G2G and camera half measured and logged (PRO-006); baseline numbers |
 | P0b | WiFi 802.11n/ac with low-latency tweaks (see section 2) | How low commodity WiFi can go | Latency floor documented |
 | P1a | openwifi-style SDR (Zynq + AD9361) running 802.11 mode | Full-control baseband and MAC; SIFS-level timing; calibration hooks | 802.11 link at 20 MHz with timestamps at every stage |
 | P1b | Same hardware with the custom PHY/MAC (OFDM, short LDPC, slice framing, TDD) | The custom waveform | SYS-002 (30 ms G2G) and RF requirements met on the bench |

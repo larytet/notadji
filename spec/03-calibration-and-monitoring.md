@@ -118,3 +118,20 @@ rolling shutter (assumption A-03).
 | Calibration under vibration | Shaker | no calibration loss, ENV-002 |
 | Thermal soak without airflow | Chamber | THM-003, THM-004 |
 | Power-up cold start (outside the full-spec range, ENV-001) | Chamber at -20 C | Link established, DPD converges in 200 ms, EVM within 3 dB of RF-014 |
+
+## 9. Cross-check with the open Realtek driver (source review S-12)
+
+The Realtek WiFi driver in `reference/svpcom/rtl8812eu/hal/phydm/halrf/` (GPLv2, behavioural reference only) is
+organised around the same calibration categories as this document. File-name evidence only, behaviour not run:
+
+| Category in this document | Realtek driver module | Note |
+|---|---|---|
+| TX/RX IQ imbalance | `halrf_iqk*` (IQK) | Run at start-up and on channel change |
+| PLL/VCO band | LCK (`phydm` LC-tank calibration) | Re-run after large temperature change |
+| DPD | `halrf_dpk_8822e.c` (DPK) | Per-chip; only for newer chips |
+| Power detector, power control | TSSI and `halrf_powertracking*` | Thermal-meter-based correction of TX power |
+| Factory data | `halrf_kfree` | Per-unit offsets stored in efuse |
+| Spectrum/noise estimate | `halrf_psd` | PSD capture used for calibration |
+
+Gap relative to this document: the driver has no antenna-reflection (VSWR) loop and no observation-receiver based
+DPD; ANT-001 to ANT-003 and CAL-008 are therefore new work, not available in any open code we hold.

@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 0.3 (pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 0.4 (iteration 1 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -39,7 +39,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | VID-003 | Codecs: AVC (H.264) high profile as the baseline in P1 and P2; HEVC (H.265) main profile as the quality mode in P2. The encoder architecture shall be codec-agnostic at slice level. Revised by T-06. | M | | T |
 | VID-004 | The encoder shall be slice-based with at least 8 slices per frame, each slice independently decodable and independently protected. | M | | T |
 | VID-005 | No I-frames in steady state. The encoder shall use rolling intra-refresh (column or row wave) with a refresh period of 30 frames or less. | M | | T |
-| VID-006 | Rate control: per-slice constant bit budget with a rate buffer of at most 1 slice, retargeted every slice from the MCS in force. | M | | T |
+| VID-006 | Rate control: per-slice constant bit budget with a rate buffer of at most 1 slice, retargeted every slice from the MCS in force; hard bound: no slice shall exceed 105% of its budget, verified on the encoded bitstream and not from encoder readback (source review S-4). | M | | T |
 | VID-007 | Encoder pipeline latency (first pixel in to first slice bits out) of 2.0 ms or less at 1080p60. | M | P2 | T |
 | VID-008 | Decoder pipeline latency (first slice bits in to first line out) of 2.0 ms or less at 1080p60. | M | P2 | T |
 | VID-009 | Video bit rate range: 1 to 80 Mbit/s, adjustable per frame. | M | | T |
@@ -53,12 +53,13 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | VID-017 | Codec licensing: a royalty and patent-pool review for AVC and HEVC shall be completed before P2 funding; the product shall ship with the pool licences or the codec shall be disabled in that region. | M | P2 | I |
 | VID-018 | Display synchronisation: the ground unit shall lock the display scan-out to the received frame timing (display pixel clock steered, residual drift 1 ppm equivalent or better) so that latency varies by no more than 1 ms over a 10 minute flight and no visible glitch is produced. Revised by T-17. | M | | T |
 | VID-019 | Optional audio: 48 kHz, 32 to 128 kbit/s, end-to-end latency 20 ms or less, lip-sync within 40 ms of the video. | O | P2 | T |
+| VID-020 | No hidden encoder limits: every rate, intra-refresh and reference-structure parameter takes effect within one slice time without restarting the pipeline; unsupported values are rejected with an error and never silently replaced; input frame-rate ceilings of at least 120 fps at 1080p and 240 fps at 720p (source review S-4 to S-7). | M | | T |
 
 ## 4. Latency and jitter (LAT)
 
 | ID | Requirement | Pri | Phase | Ver |
 |----|-------------|-----|-------|-----|
-| LAT-001 | G2G latency shall be measured with a high-speed camera or photodiode method at 1000 fps or better. | M | | T |
+| LAT-001 | G2G latency shall be measured with a high-speed camera or photodiode method at 1000 fps or better; a secondary method that steps a sensor register and timestamps the first changed frame on one clock (as in `reference/openipc/latency-probe`) shall be used to split the camera half from the rest. | M | | T |
 | LAT-002 | Latency jitter: p99 shall be within +3 ms and p99.9 within +8 ms of the mean at the nominal MCS. | M | | T |
 | LAT-003 | Air-interface latency (first bit of a slice at the modem TX input to the same slice at the modem RX output), excluding retransmissions, shall be 2.5 ms or less. | M | P2 | T |
 | LAT-004 | The system shall keep a latency budget table (see `02`) and each block shall report its measured latency via a timestamp tap. | M | | T |
@@ -205,7 +206,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | ID | Requirement | Pri | Phase | Ver |
 |----|-------------|-----|-------|-----|
 | SEC-001 | Pairing by ECDH (P-256 or X25519) with authentication through a short code or NFC/QR; no shared default key. | M | | T |
-| SEC-002 | Link encryption AES-256-GCM (or ChaCha20-Poly1305), per-slice authentication tag, anti-replay counter. Latency impact below 0.2 ms. | M | | T |
+| SEC-002 | Link encryption ChaCha20-Poly1305 by default (as in wfb-ng, no AES hardware needed) with AES-256-GCM as the hardware option, per-slice authentication tag, anti-replay counter. Latency impact below 0.2 ms. | M | | T |
 | SEC-003 | Secure boot, signed firmware and bitstreams (FPGA) and signed region/power tables. | M | | T |
 | SEC-004 | Jam resistance: detection of wideband jamming and automatic fallback to fast hopping and to lower rate (ADA-003). | S | | T |
 | SEC-005 | RF limits (region, power, band, dwell, DFS) shall be enforced by a hardware-locked limiter whose tables are signed; the rest of the stack stays open. The limiter design and the signing process shall be published for audit. Revised by T-09. | M | | I |
@@ -232,7 +233,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | ID | Requirement | Pri | Phase | Ver |
 |----|-------------|-----|-------|-----|
 | IF-001 | Host interface (flight controller): UART (up to 3 Mbaud) and USB 2.0 / CAN-FD (P2). MSP, MAVLink 2. | M | | T |
-| IF-002 | Camera: MIPI CSI-2 (VID-002), I2C/SPI control, sensor sync (FSIN) output for rolling-shutter alignment. | M | | I |
+| IF-002 | Camera: MIPI CSI-2 (VID-002), I2C/SPI control, sensor sync (FSIN) output for rolling-shutter alignment; fixed frame period policy: exposure is limited below the frame time so that the sensor never stretches the frame (source review S-5). | M | | I |
 | IF-003 | Ground unit host interface: HDMI/DP/DSI out, USB-C (video and data), Ethernet 1 Gbit (O), 5 GHz WiFi/BLE for the phone app (low-priority sideband). | M | | I |
 | IF-004 | Debug: JTAG/SWD, UART console, a trace port for the latency timestamps, and a test header for RF conducted measurements (U.FL). | M | P1 | I |
 | SW-001 | Control plane in Linux (or Zephyr/RTOS) on the application CPU; data plane in hardware. The data plane shall continue to work if the application CPU stalls for 100 ms. | M | | T |
@@ -250,6 +251,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | PRO-003 | The prototype RF shall use an off-the-shelf transceiver with an observation path (AD9361/AD9364/ADRV9002 class) and an external FEM for 2.4/5.8 GHz and 33 dBm. | M | P1 | I |
 | PRO-004 | A Bluetooth Low Energy sideband (BLE 5 with ISO channels and Long Range) shall serve for pairing, RID and out-of-band control in the prototype. It shall not be used for video. | S | P1 | D |
 | PRO-005 | The RTL shall be written to be ASIC-portable (no vendor primitives outside a wrapper layer, clock-domain-crossing rules, lint and CDC clean). | M | P1 | I |
+| PRO-006 | P0 baseline: the camera half and G2G of a stock IP-camera pipeline shall be measured with the register-step method and with the rig and recorded as the reference for the budget in `02`. | M | P0 | T |
 | ASC-001 | First product: two dice, an RF die in a mature RF CMOS or FD-SOI node and a digital SoC in 12 to 22 nm, with a high-speed digital interface (JESD204 or LVDS); single-die 22 nm FD-SOI is a later cost-down. Decision recorded in T-08. | M | P2 | A |
 | ASC-002 | The two-die set shall integrate: transceiver (2 TX, 2 RX, observation receiver), ADC/DAC, PLL/VCO and temperature sensors (RF die); OFDM modem, FEC, video encoder and decoder, ISP-lite, CPU subsystem, memory interface and security block (digital SoC). | M | P2 | I |
 | ASC-003 | Design for test: scan, BIST for memories, RF loop-back (TX to RX internal path) for production test, 60 s or less of production test time per unit. | M | P2 | T |
@@ -270,4 +272,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 0.1 | 1 | Baseline: 156 requirements |
 | 0.2 | 5 | Applies `06` and `07`: SYS-003, SYS-005, SYS-009, VID-003, PHY-001, PHY-003, MAC-001, MAC-007, RF-010, RF-020, PWR-004, ENV-001, SEC-005, REG-002, ASC-001, ASC-002, ASC-004 rewritten; added SYS-010, VID-017..019, MAC-011, REG-005, TST-001..002 |
 | 0.3 | 6 | RF-029 adjacent-channel rejection added; link-budget rate model aligned with PHY-001 tone counts and MAC-001 guard |
-
+| 0.4 | G2-1 | Source review (`10`): VID-006 hard bound, VID-020 added, IF-002 fixed frame period, LAT-001 register-step method, SEC-002 default cipher, PRO-006 added |

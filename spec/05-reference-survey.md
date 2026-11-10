@@ -46,6 +46,7 @@ HDZero is the closest to a dedicated digital design, but its FPGA/ASIC design is
 3. **Latency claims differ widely between sources** (25 to 80 ms for OpenIPC-class systems; about 14 to 18 ms
    claimed for HDZero). They come from vendor and retailer material and must be re-measured with our own rig
    (LAT-001) in P0 before the budget in `02` is trusted.
+5. **A stock IP-camera pipeline spends about 80 to 95 ms between the sensor register write and the first packet** (OpenIPC latency-probe, p50), of which 25 to 27 ms are ISP tail, encoder and packetising, and its encoder cannot enforce per-frame size caps (waybeam specs). See `10`.
 4. **The licence landscape rules out direct reuse of the best FPGA reference (openwifi, AGPLv3).** See `04`.
 
 ## 4. Local copy

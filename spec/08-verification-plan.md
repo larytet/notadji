@@ -8,7 +8,7 @@ D demonstration, S simulation.
 
 | Group | Covers | Method and equipment | Where |
 |---|---|---|---|
-| TG-LAT latency rig | LAT-*, SYS-001, SYS-002, VID-007/008 | LED on the camera view driven by the rig, photodiode on the display; or a 1000 fps camera seeing both; per-stage timestamp taps (LAT-004) logged over the debug port; 10 000 frames per run; report mean, p99, p99.9 | Lab, then outdoors |
+| TG-LAT latency rig | LAT-*, SYS-001, SYS-002, VID-007/008 | Secondary method: sensor-register step timestamped on one clock (OpenIPC `latency-probe`) to split the camera half; primary: LED on the camera view driven by the rig, photodiode on the display; or a 1000 fps camera seeing both; per-stage timestamp taps (LAT-004) logged over the debug port; 10 000 frames per run; report mean, p99, p99.9 | Lab, then outdoors |
 | TG-PHY baseband conformance | PHY-* | Bit-exact C/Python model versus RTL (S); loop-back and channel emulator with Doppler, delay spread and fading (Rician, Rayleigh, two-ray); BER/PER curves per MCS | Lab |
 | TG-MAC protocol | MAC-*, ADA-002/003/004 | Two-unit testbed with a programmable attenuator and delay line (propagation delay up to 100 us); timing advance and guard checks; hop and band-switch timing with a logic analyser on the PA enable | Lab |
 | TG-RF conducted RF | RF-* | Vector signal analyser (EVM, ACLR, mask, LO leakage, IQ image), real-time spectrum analyser (hop settling, ramp), signal generator with fading (sensitivity), noise-figure meter, harmonic measurement, time-gated measurements for ramp (RF-012) | RF lab |
