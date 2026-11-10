@@ -1,0 +1,21 @@
+repo	history_size_mb	reason
+OpenHD/allwinner-linux	220	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/camera_engine_rkaiq	252	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/kernel-a733	4312	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/kernel_a733	4312	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/linux-nvidia	302	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/linux-pi	3119	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/linux-rock	2832	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/linux-rockchip	2299	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/linux-rpi	3771	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/luckfox-pico-sdk	1027	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/OpenHD-RV1126-External	1298	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/OpenHD-RV1126-OS	3511	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/OpenHD-RV1126-Prebuilds	289	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/openhd_x21b_base	1395	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/openhd_x21b_external	1612	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/openhd_x21b_kernel	241	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/openhd_x21b_rtos	397	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/RK_Kernel	2689	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/rockchip-sdk	2687	vendor kernel/SDK/OS mirror, shallow clone over 400 MB; fetch with MAX_MB override
+OpenHD/rv1126_ohd_sushi	2843	over MAX_MB=2000

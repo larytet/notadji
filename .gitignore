@@ -1,4 +1,5 @@
 # Reference source dump is local-only (about 2.4 GB). Recreate with scripts/fetch_refs.sh
 reference/*
 !reference/MANIFEST.tsv
+!reference/SKIPPED_LARGE.tsv
 build/

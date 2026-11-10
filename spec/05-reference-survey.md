@@ -50,4 +50,18 @@ HDZero is the closest to a dedicated digital design, but its FPGA/ASIC design is
 
 ## 4. Local copy
 
-`scripts/fetch_refs.sh` recreates the local copy (about 2.5 GB). It is excluded from git (`.gitignore`).
+`reference/` holds shallow (depth 1, `.git` stripped) copies of **every repository, including forks and archived
+ones, of the GitHub orgs OpenIPC, OpenHD, hd-zero, svpcom, RubyFPV and open-sdr**, plus the individually chosen
+projects (wfb-ng, befinitiv/wifibroadcast, RomanLut/hx-esp32-cam-fpv, jhshi/openofdm, ADI HDL, GNU Radio,
+gr-ieee802-11, BTLE, LimeSDR-Mini). It lists 372 repositories and is about 14G on disk. It is excluded from git
+(`.gitignore`); `reference/MANIFEST.tsv` pins the commit and licence file of each.
+
+Not downloaded: 20 repositories whose full history exceeds 2000 MB, almost all vendor kernel, SDK and OS mirrors
+in the OpenHD org (listed with sizes in `reference/SKIPPED_LARGE.tsv`). They hold board-support code, not link
+design. Fetch them with `MAX_MB=100000 scripts/fetch_orgs.sh OpenHD` if wanted (about 30 GB).
+Other open projects outside these orgs (for example ArduPilot, PX4, Betaflight, INAV, Walksnail tooling, other
+FPGA video codec cores) are not downloaded; `scripts/fetch_refs.sh` and `scripts/fetch_orgs.sh` can be extended.
+
+Of the 372 manifest entries, 86 have no licence file; treat those as all rights reserved (REG-005, G-09).
+
+Commands: `scripts/fetch_refs.sh` (the chosen projects) and `scripts/fetch_orgs.sh OpenIPC OpenHD hd-zero svpcom RubyFPV open-sdr`.
