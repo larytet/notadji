@@ -1,0 +1,20 @@
+// RF signal chain and sensing points (document 03 section 2).
+digraph signal_chain {
+  rankdir=LR; fontname="Helvetica"; node [shape=box, style="rounded,filled", fillcolor="#eef3fb", fontname="Helvetica", fontsize=11]; edge [fontname="Helvetica", fontsize=10];
+  subgraph cluster_tx { label="Transmit chain"; style="rounded"; color="#4a6fa5";
+    dac [label="DAC / IQ"]; txmix [label="TX mixer"]; drv [label="Driver"]; pa [label="PA"]; cpl [label="Coupler\n(forward / reverse)"]; fsw [label="Filter / switch"];
+    dac -> txmix -> drv -> pa -> cpl -> fsw;
+  }
+  ant [label="Antenna", shape=oval, fillcolor="#e8f4e8"];
+  fsw -> ant; ant -> rfsw [constraint=false];
+  subgraph cluster_rx { label="Receive chain"; style="rounded"; color="#4a6fa5";
+    rfsw [label="Switch / filter"]; lna [label="LNA"]; rxmix [label="RX mixer"]; adc [label="ADC"]; rxcal [label="DC, IQ, gain calibration\nRSSI"];
+    rfsw -> lna -> rxmix -> adc -> rxcal;
+  }
+  lo [label="LO (PLL / VCO)", fillcolor="#fdf1dc"]; lo -> txmix [style=dashed]; lo -> rxmix [style=dashed];
+  tone [label="Calibration tone\ngenerator", fillcolor="#fdf1dc"]; tone -> dac [style=dashed];
+  obs [label="Observation receiver\n(ADC)", fillcolor="#fdf1dc"]; cpl -> obs [label="fwd / rev", style=dashed];
+  loop [label="Loop-back switch", fillcolor="#fdf1dc"]; fsw -> loop [style=dotted]; loop -> rfsw [style=dotted, constraint=false];
+  est [label="DPD, power control, VSWR,\nantenna feedback", fillcolor="#f6e3e3"]; obs -> est; est -> dac [label="predistortion, power", style=dashed, constraint=false];
+  sens [label="Sensors: PA, die and board\ntemperature; supply, PA current", fillcolor="#fdf1dc"]; sens -> est [style=dashed]; pa -> sens [style=dotted, dir=none];
+}

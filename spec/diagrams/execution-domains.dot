@@ -1,0 +1,15 @@
+// Execution domains (document 13 section 1).
+digraph domains {
+  rankdir=TB; fontname="Helvetica"; node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11]; edge [fontname="Helvetica", fontsize=10];
+  subgraph cluster_hw { label="Hardware data plane (FPGA fabric, later ASIC logic)"; style="rounded"; color="#4a6fa5"; node [fillcolor="#eef3fb"];
+    codec [label="Video encode / decode"]; modem [label="OFDM modem, LDPC,\nframing, encryption"]; seq [label="Frame-timeline sequencer\n(hops, turn-around, PA enable)"]; ts [label="64-bit timestamp unit"];
+  }
+  subgraph cluster_rt { label="Hard real-time control core(s)"; style="rounded"; color="#4a6fa5"; node [fillcolor="#fdf1dc"];
+    mac [label="MAC, link adaptation,\nrate control"]; cal [label="Calibration, thermal,\nVSWR loops"]; hostio [label="UART protocols, logging"];
+  }
+  subgraph cluster_app { label="Application core (Linux, optional, power-gated on the air unit)"; style="rounded"; color="#4a6fa5"; node [fillcolor="#e8f4e8"];
+    hal [label="HAL services, web/API,\nOTA, recording, OSD"];
+  }
+  mac -> seq [label="table committed one\nframe ahead"]; cal -> seq; seq -> modem [label="events"]; seq -> codec [style=dashed];
+  hal -> mac [label="mailbox, non-blocking", style=dashed]; ts -> mac [style=dotted]; codec -> mac [label="slice interrupts", style=dotted];
+}

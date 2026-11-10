@@ -4,6 +4,8 @@
 set -eu
 cd "$(dirname "$0")/.."
 mkdir -p build
+scripts/render_diagrams.sh >/dev/null
+rm -rf build/diagrams && cp -r spec/diagrams build/diagrams
 python3 -I scripts/trace_matrix.py >/dev/null
 python3 -I scripts/claim_register.py >/dev/null
 python3 -I scripts/audit_numbers.py >/dev/null
@@ -18,7 +20,7 @@ if command -v pandoc >/dev/null; then
   engine=""
   for e in xelatex pdflatex lualatex; do command -v "$e" >/dev/null && engine="$e" && break; done
   if [ -n "$engine" ]; then
-    pandoc "$out" -o build/notadji-spec.pdf --pdf-engine="$engine" -V geometry:margin=2cm -V fontsize=9pt \
+    pandoc "$out" --resource-path=build -o build/notadji-spec.pdf --pdf-engine="$engine" -V geometry:margin=2cm -V fontsize=9pt \
       --toc --toc-depth=2 -V colorlinks=true && echo "wrote build/notadji-spec.pdf"
   else
     echo "pandoc found but no LaTeX engine; try: pandoc $out -o build/notadji-spec.html && print to PDF from a browser"

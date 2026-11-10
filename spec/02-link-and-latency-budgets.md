@@ -60,6 +60,8 @@ accordingly. The 10 dBi ground antenna of Class X adds 5 dB on the uplink under 
 
 ### 1.1b Split-band uplink (trade study T-03, iteration 4)
 
+![Split-band architecture: video downlink-only in one band, feedback and telemetry uplink in another band, with the air-unit isolation requirement. Source: diagrams/split-band.dot](diagrams/split-band.png)
+
 Instead of an uplink slot inside the video band, feedback, telemetry and control use a narrowband (5 MHz) channel in another band, so the
 video band is downlink-only (5% idle kept for frame-based-equipment rules and pilots). The air unit receives on one chain (no MRC gain assumed).
 

@@ -1,0 +1,17 @@
+// System scope (SRS section 1): video downlink chain, uplink chain, split-band channel plan.
+digraph system_scope {
+  rankdir=LR; fontname="Helvetica"; node [shape=box, style="rounded,filled", fillcolor="#eef3fb", fontname="Helvetica", fontsize=11]; edge [fontname="Helvetica", fontsize=10];
+  subgraph cluster_au { label="Air unit (AU)"; style="rounded"; color="#4a6fa5";
+    sensor [label="Camera sensor"]; isp [label="ISP"]; enc [label="Encoder\n(slices)"]; frm_tx [label="Framer / FEC"]; mtx [label="Modem TX"]; rftx [label="RF front end TX\n(PA, coupler)"];
+    ul_rx [label="Uplink RX\n(feedback, telemetry,\ncontrol)", fillcolor="#fdf1dc"];
+    sensor -> isp -> enc -> frm_tx -> mtx -> rftx;
+  }
+  subgraph cluster_gu { label="Ground unit (GU)"; style="rounded"; color="#4a6fa5";
+    rfrx [label="RF front end RX\n(2 to 8 branches)"]; mrx [label="Modem RX"]; frm_rx [label="Deframer / FEC"]; dec [label="Decoder"]; disp [label="Display"];
+    ul_tx [label="Uplink TX", fillcolor="#fdf1dc"]; fb [label="Link feedback\n(CSI, ACK bitmap, MCS)", fillcolor="#fdf1dc"];
+    rfrx -> mrx -> frm_rx -> dec -> disp;
+    mrx -> fb [style=dashed]; fb -> ul_tx [style=dashed];
+  }
+  rftx -> rfrx [label="video downlink\n(5.8 or 2.4 GHz)", penwidth=2, color="#2a5d9f"];
+  ul_tx -> ul_rx [label="uplink, other band\n(2.4 GHz or 915 MHz; in-band TDD fallback)", style=dashed, color="#b36b00", constraint=false];
+}

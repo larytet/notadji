@@ -1,16 +1,10 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 2.2 (foveated video appendix; revision 2.1 was direction finding and beamforming options; revision 2.0 was the ground unit and silicon family; revision 1.9 was the region profiles; revision 1.8 was the consolidation; revision 1.7 was the T-01 iteration; revision 1.6 was the T-08/T-18 iteration; revision 1.5 was the T-15/T-17 iteration; revision 1.4 was the T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 2.3 (diagrams; revision 2.2 was the foveated video appendix; revision 2.1 was direction finding and beamforming options; revision 2.0 was the ground unit and silicon family; revision 1.9 was the region profiles; revision 1.8 was the consolidation; revision 1.7 was the T-01 iteration; revision 1.6 was the T-08/T-18 iteration; revision 1.5 was the T-15/T-17 iteration; revision 1.4 was the T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
-```
- Camera sensor -> ISP -> Encoder -> Framer/FEC -> Modem (TX) -> RF front end -> Antenna
-                                                                                   |
- Display <- Decoder <- Deframer/FEC <- Modem (RX) <- RF front end <- Antenna  <----+
-                                  ^                                  
-                                  +-- uplink: control, CSI feedback, telemetry
-```
+![System scope: video downlink chain from camera to display, link feedback and uplink between the ground unit and the air unit. Source: diagrams/system-scope.dot](diagrams/system-scope.png)
 
 The system is a bidirectional TDD link. The downlink carries video, the uplink carries link feedback,
 telemetry and optional control frames. The air unit and the ground unit may use the same silicon configured by role (the baseline) or different silicon (SYS-011). Requirements are tagged [AU] (air unit only), [GU] (ground unit only) or untagged (both).
@@ -341,3 +335,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 2.0 | G3-2 | Notes entries 5, 6, 7: role tags and SYS-011 (separate air and ground silicon allowed), enhanced ground configuration (PHY-016/017, RF-032, ADA-011), external antennas ANT-012, ASC-007; T-21 and T-22 added |
 | 2.1 | G3-3 | Notes entries 10, 11, 12: angle-of-arrival output (ANT-013), air-unit beamforming option set (ANT-014), single-silicon option set and day-one provisions (ASC-008, ASC-009), option entitlement (SEC-006); T-23 and `02` section 1.5 added |
 | 2.2 | G3-4 | Notes entries 1, 2, 3, 8: foveated-video appendix (`14`, T-20, VID-023..025, MAC-013, TST-003), out-of-band options F and G in T-03, wording fixes in `00` |
+| 2.3 | G3-5 | Notes entry 4: ASCII diagrams replaced by generated diagrams (Graphviz); split-band and execution-domain diagrams added |

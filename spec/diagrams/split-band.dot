@@ -1,0 +1,13 @@
+// Split-band architecture (07 T-03 option D, MAC-012).
+digraph split_band {
+  rankdir=LR; fontname="Helvetica"; node [shape=box, style="rounded,filled", fillcolor="#eef3fb", fontname="Helvetica", fontsize=11]; edge [fontname="Helvetica", fontsize=10];
+  subgraph cluster_au { label="Air unit (1 TX + 1 RX chain)"; style="rounded"; color="#4a6fa5";
+    au_tx [label="TX chain\nvideo band, 30 dBm"]; au_rx [label="RX chain\nuplink band, 1 branch", fillcolor="#fdf1dc"]; iso [label="TX-to-RX isolation\n70 dB (RF-030)", shape=note, fillcolor="#f6e3e3"];
+    au_tx -> iso [style=dotted, dir=none]; iso -> au_rx [style=dotted, dir=none];
+  }
+  subgraph cluster_gu { label="Ground unit (2 to 8 RX + 1 TX chain)"; style="rounded"; color="#4a6fa5";
+    gu_rx [label="RX chains\nvideo band, MRC"]; gu_tx [label="TX chain\nuplink band, 27 dBm", fillcolor="#fdf1dc"];
+  }
+  au_tx -> gu_rx [label="video, 20 MHz\n5.8 GHz (class S, X) or 2.4 GHz (class L)\ndownlink only, no guard or timing advance", penwidth=2, color="#2a5d9f"];
+  gu_tx -> au_rx [label="feedback every 0.25 ms or faster,\ntelemetry, control: 5 MHz\n2.4 GHz (class S, X) or 915 MHz (class L)", style=dashed, color="#b36b00", constraint=false];
+}

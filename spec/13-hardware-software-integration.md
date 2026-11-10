@@ -5,6 +5,8 @@ Status: DRAFT (verification pass). Evidence labels: **[S]** from a cited source,
 
 ## 1. Principle: three execution domains
 
+![Execution domains: hardware data plane, hard real-time control cores and the optional application core, with the frame-timeline sequencer between them. Source: diagrams/execution-domains.dot](diagrams/execution-domains.png)
+
 | Domain | What runs there | Why |
 |---|---|---|
 | Hardware data plane (FPGA fabric, later ASIC logic) | OFDM modem, LDPC, framing, encryption, video encode/decode, slice packetiser, frame-timeline sequencer, timestamp unit | Deadlines of microseconds to one slice (about 1 to 2 ms); the rates (tens of Mbit/s, 10 MB/s of video) are too high for software at low power |

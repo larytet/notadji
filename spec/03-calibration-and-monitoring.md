@@ -12,15 +12,7 @@ and protection.
 
 ## 2. Signal chain and sensing points
 
-```
- DAC/IQ -> TX mixer -> driver -> PA -> coupler -> filter/switch -> antenna
-   ^           ^                    ^      |  fwd/rev
-   |           | LO (PLL/VCO)       |      +--> observation receiver (ADC)   -> DPD, power, VSWR
- cal tone                      bias, temp                                       
- generator                      sensors                              antenna feedback
-                                                                      (S11, tuner state)
- antenna -> switch/filter -> LNA -> RX mixer -> ADC  -> DC/IQ/gain cal, RSSI
-```
+![RF signal chain and sensing points: transmit chain with coupler, observation receiver, calibration loops, receive chain. Source: diagrams/signal-chain.dot](diagrams/signal-chain.png)
 
 Sensing points:
 
