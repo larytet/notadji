@@ -323,6 +323,20 @@ corrected (no DPD choice reaches 4 dB back-off for 64QAM OFDM).
 Recommendation: **C**, with the video on a static adaptive channel and the control/beacon on a separate, hopped
 band (900 MHz when fitted, otherwise 2.4 GHz). The fast hop of the video (B) is a fallback in anti-jam mode (SEC-004).
 
+Review (iteration 12, T-15; the T-03 iteration changed its context): in split-band mode the video band is a static adaptive channel and the control/telemetry uplink is the out-of-band channel, so the "hopped control channel" of option C
+exists only if hopping is useful there. The cost of hopping was computed (`scripts/link_budget.py`):
+
+| Dwell ms | Overhead at 50 us settle | at 150 us (cross-band) |
+|---|---|---|
+| 1 | 5.0% | 15.0% |
+| 2 | 2.5% | 7.5% |
+| 5 | 1.0% | 3.0% |
+| 10 | 0.5% | 1.5% |
+
+A 1 ms dwell costs 5% of airtime within a band and 15% across bands, 10 ms costs 0.5% and 1.5%, so fast hopping of the **video** channel (option B) is justified only as an anti-jam fallback. Regulation adds a limit: non-adaptive hopping in the 2.4 GHz band
+is limited to a 5 ms on-time followed by a 5 ms gap [from a search summary of EN 300 328, to be checked], which a continuous uplink cannot satisfy; the uplink therefore stays on a static adaptive channel with a fallback channel list, and
+hops (adaptively, with listen-before-talk where required) only on loss. Decision: **C refined**: static adaptive video channel, static adaptive uplink channel with fallback list, fast adaptive hopping only in anti-jam mode (SEC-004).
+
 ## T-16 FEC code
 
 | Option | Description | Pros | Cons |
@@ -380,6 +394,18 @@ Recommendation: A for the first ASIC with C as the air-unit default configuratio
 | C | ZCU104-class kit plus FMCOMMS/ADRV9002 evaluation board | Best-supported ADI reference flows | Highest cost, not "low-cost evaluation" |
 
 Recommendation: A for modem/MAC/calibration bring-up in parallel with B for the video pipeline and the VCU latency measurement; C only if A and B cannot be joined.
+
+Review (iteration 12, T-17): drift between the sensor frame clock and the display clock was computed (`scripts/link_budget.py`):
+
+| Case | Combined error ppm | Drift per minute ms | Drift per 10 min ms | Time to slip one 60 fps frame min |
+|---|---|---|---|---|
+| Both ends on 20 ppm crystals | 40 | 2.40 | 24.0 | 7 |
+| Both ends on 2 ppm TCXOs (RF-007) | 4 | 0.24 | 2.4 | 69 |
+| Display steered to the received frame timing (residual 1 ppm) | 1 | 0.06 | 0.6 | 278 |
+
+Without steering, 20 ppm crystals wander the latency by 24 ms in 10 minutes and slip a frame every 7 minutes; even TCXOs at both ends (RF-007) give 0.24 ms per minute, so the latency would creep up to a whole frame between slips, which
+violates LAT-002 (p99 within 3 ms of the mean). Alternative added: (D) free-running displays disciplined only by the TCXOs plus an occasional deliberate frame drop (a glitch about once per hour): rejected for the latency creep.
+Decision: **B (display scan-out locked to the received frame timing) confirmed**, needing a display controller whose pixel clock can be steered by at least +/-50 ppm with 0.1 ppm resolution [E] (VID-018); option C (air unit slaved to the display) stays a later option.
 
 ---
 

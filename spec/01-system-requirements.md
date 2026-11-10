@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 1.4 (T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 1.5 (T-15/T-17 iteration; revision 1.4 was the T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -51,7 +51,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | VID-015 | The ground unit shall output HDMI 2.0, DisplayPort and/or MIPI DSI with a fixed line-synchronised scan-out (display starts scanning a frame before it is completely decoded). | M | | T |
 | VID-016 | On-screen display overlay (OSD) in the ground unit, MSP DisplayPort and MAVLink sources. | M | | D |
 | VID-017 | Codec licensing: a royalty and patent-pool review for AVC and HEVC shall be completed before P2 funding; the product shall ship with the pool licences or the codec shall be disabled in that region. | M | P2 | I |
-| VID-018 | Display synchronisation: the ground unit shall lock the display scan-out to the received frame timing (display pixel clock steered, residual drift 1 ppm equivalent or better) so that latency varies by no more than 1 ms over a 10 minute flight and no visible glitch is produced. Revised by T-17. | M | | T |
+| VID-018 | Display synchronisation: the ground unit shall lock the display scan-out to the received frame timing, steering the display pixel clock by at least +/-50 ppm with 0.1 ppm resolution (the free-running drift is 2.4 ms per minute for two 20 ppm crystals and 0.24 ms per minute for two TCXOs, `07` T-17), so that latency varies by no more than 1 ms over a 10 minute flight (residual 1 ppm gives 0.6 ms) and no visible glitch is produced. Revised by T-17. | M | | T |
 | VID-019 | Optional audio: 48 kHz, 32 to 128 kbit/s, end-to-end latency 20 ms or less, lip-sync within 40 ms of the video. | O | P2 | T |
 | VID-020 | No hidden encoder limits: every rate, intra-refresh and reference-structure parameter takes effect within one slice time without restarting the pipeline; unsupported values are rejected with an error and never silently replaced; input frame-rate ceilings of at least 120 fps at 1080p and 240 fps at 720p (source review S-4 to S-7). | M | | T |
 | VID-021 | Reactive slice refresh: a slice reported lost in the acknowledgement bitmap (MAC-004) shall be re-coded in intra mode in the next frame, provided the acknowledgement reaches the encoder within one frame time; average overhead at the target loss rate about 0.3% [E]. | M | | T |
@@ -313,3 +313,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 1.2 | G2-9 | T-11/T-12/T-19 iteration: phase A configurations A1/A2/A3, ADRV9002 for phase B, PRO-007 added |
 | 1.3 | G2-10 | T-09/T-10 iteration: SEC-005 restated (hardware limiter, signed bitstream), REG-007 software security statement added; T-10 confirmed |
 | 1.4 | G2-11 | T-13 iteration: sector-array gain corrected (4 sectors give 6.6-9.6 dBi, not 8-10 dB over omni), ANT-008 now 6 sectors, Class X antenna example |
+| 1.5 | G2-12 | T-15/T-17 iteration: hop overhead and genlock drift quantified, VID-018 gets steering range and resolution |

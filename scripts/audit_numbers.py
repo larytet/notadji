@@ -93,7 +93,7 @@ for m, e in zip(lb.MCS_TABLE, (-93, -88, -80, -74)):
 import subprocess  # noqa: E402
 
 out = subprocess.check_output([sys.executable, "-I", str(ROOT / "scripts" / "link_budget.py")], text=True)
-down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl = out.strip().split("\n\n")
+down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl = out.strip().split("\n\n")
 check("02 contains the downlink table from the script", down.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the uplink table from the script", up.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the PA mode table from the script", pa_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
@@ -116,6 +116,8 @@ check("VID-005 wave overhead 5% at 60 frames", abs((lb.INTRA_TO_INTER_BITS - 1) 
 check("PRO-007 A1 frequencies are inside the Pluto guaranteed range", 325 <= 915 <= 3800 and 325 <= 2400 <= 3800 and not (325 <= 5800 <= 3800) and "915 MHz" in SRS)
 check("07 contains the sector gain table", sector_tbl.strip() in TEXT["07-trade-studies.md"])
 check("ANT-008: 6 sectors at 40 degrees reach 10 dBi, 4 sectors at 60 degrees do not", lb.sector_gain_dbi(6, 40) >= 10.0 and lb.sector_gain_dbi(4, 60) < 8.0 and "at least 6 sectors" in SRS)
+check("07 contains the genlock and hop tables", gl_tbl.strip() in TEXT["07-trade-studies.md"] and hop_tbl.strip() in TEXT["07-trade-studies.md"])
+check("VID-018 drift figures (2.4 and 0.24 ms/min, 0.6 ms per 10 min)", abs(40e-6 * 60 * 1e3 - 2.4) < 1e-9 and abs(4e-6 * 60 * 1e3 - 0.24) < 1e-9 and abs(1e-6 * 600 * 1e3 - 0.6) < 1e-9 and "2.4 ms per minute" in SRS and "0.24 ms per minute" in SRS)
 check("02 contains the split-band table from the script", split.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("split-band uplink margin >= 6 dB for all classes (MAC-007)", all(float(r.split("|")[7]) >= 6 for r in split.strip().split("\n")[2:]))
 check("MAC-007 states the split-band margins 17.0, 11.0 and 12.4", "17.0, 11.0 and 12.4 dB" in SRS)

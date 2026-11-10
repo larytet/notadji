@@ -265,6 +265,24 @@ def sector_table() -> str:
     return "\n".join(rows)
 
 
+def genlock_table() -> str:
+    """Latency drift between sensor frame clock and display clock for a given combined frequency error (T-17)."""
+    rows = ["| Case | Combined error ppm | Drift per minute ms | Drift per 10 min ms | Time to slip one 60 fps frame min |", "|---|---|---|---|---|"]
+    for name, ppm in (("Both ends on 20 ppm crystals", 40.0), ("Both ends on 2 ppm TCXOs (RF-007)", 4.0), ("Display steered to the received frame timing (residual 1 ppm)", 1.0)):
+        per_min = ppm * 1e-6 * 60 * 1000
+        slip_min = (1000 / 60) / (ppm * 1e-6 * 1000) / 60
+        rows.append(f"| {name} | {ppm:g} | {per_min:.2f} | {per_min * 10:.1f} | {slip_min:.0f} |")
+    return "\n".join(rows)
+
+
+def hop_overhead_table() -> str:
+    """Airtime lost to retuning for a hopped channel (T-15): settle time divided by dwell."""
+    rows = ["| Dwell ms | Overhead at 50 us settle | at 150 us (cross-band) |", "|---|---|---|"]
+    for dwell in (1.0, 2.0, 5.0, 10.0):
+        rows.append(f"| {dwell:g} | {50e-3 / dwell:.1%} | {150e-3 / dwell:.1%} |")
+    return "\n".join(rows)
+
+
 def tdd_table() -> str:
     """TDD frame budget per range class with the range-adaptive frame length (T-03 option C)."""
     rows = ["| Range km | Frame ms | UL symbols (QPSK 1/2, 1 Mbit/s + 2 preamble) | UL us | Guard us | DL share of frame |", "|---|---|---|---|---|---|"]
@@ -310,3 +328,7 @@ if __name__ == "__main__":
     print(intra_refresh_table())
     print()
     print(sector_table())
+    print()
+    print(genlock_table())
+    print()
+    print(hop_overhead_table())
