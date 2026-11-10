@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 2.1 (direction finding and beamforming options; revision 2.0 was the ground unit and silicon family; revision 1.9 was the region profiles; revision 1.8 was the consolidation; revision 1.7 was the T-01 iteration; revision 1.6 was the T-08/T-18 iteration; revision 1.5 was the T-15/T-17 iteration; revision 1.4 was the T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 2.2 (foveated video appendix; revision 2.1 was direction finding and beamforming options; revision 2.0 was the ground unit and silicon family; revision 1.9 was the region profiles; revision 1.8 was the consolidation; revision 1.7 was the T-01 iteration; revision 1.6 was the T-08/T-18 iteration; revision 1.5 was the T-15/T-17 iteration; revision 1.4 was the T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -57,6 +57,9 @@ telemetry and optional control frames. The air unit and the ground unit may use 
 | VID-020 | [AU] No hidden encoder limits: every rate, intra-refresh and reference-structure parameter takes effect within one slice time without restarting the pipeline; unsupported values are rejected with an error and never silently replaced; input frame-rate ceilings of at least 120 fps at 1080p and 240 fps at 720p (source review S-4 to S-7). | M | | T |
 | VID-021 | [AU] Reactive slice refresh: a slice reported lost in the acknowledgement bitmap (MAC-004) shall be re-coded in intra mode in the next frame, provided the acknowledgement reaches the encoder within one frame time; average overhead at the target loss rate about 0.3% [E]. | M | | T |
 | VID-022 | [AU] Reduced-quality range profile: at 6 Mbit/s or less (BPSK 1/2, 6.9 Mbit/s net in the video band) the encoder shall deliver usable video of at least 720p30, giving 10.3 km at 5.8 GHz and 25 km at 2.4 GHz with 5/5 dBi antennas, 6 dB margin, free space (`07` T-01); usability is judged on the reference video set (objective score target to be set, [E]). | M | | T |
+| VID-023 | Foveation map: the encoder shall accept a region-weighted QP-offset map (centre, size, falloff width, strength) applied per block (macroblock QP delta in AVC, coding-unit QP delta in HEVC); the parameters take effect within one slice time (VID-020), a mode change blends over a few frames, and the decoder needs no change. Saving 20% to 48% by region and offset (`14` section 2 [C/E]). | O | P2 | T |
+| VID-024 | Foveation modes: 0 uniform (default), 1 wide and soft, 2 narrow and strong, 3 custom (pilot-defined shape, later a gaze-tracked centre); presets in non-volatile memory, selected by the pilot from the goggles menu or the ground app and sent on the uplink; optional automatic strengthening as the MCS falls (SYS-004) with a pilot override; a fallback to uniform quality on a pilot button or an abrupt head or camera movement. The high-quality region shall never be wrong where the pilot looks (wide region, soft edges). | O | P2 | T |
+| VID-025 | Foveal slice protection: the slices carrying the high-quality region may use a lower code rate (at most 1/2 against 3/4) when airtime allows, in addition to the header protection of VID-011. | O | P2 | T |
 
 ## 4. Latency and jitter (LAT)
 
@@ -107,6 +110,7 @@ telemetry and optional control frames. The air unit and the ground unit may use 
 | MAC-010 | Multi-link: a link shall be able to survive a change of channel (frequency hop) with a gap in video of 1 frame or less. | M | | T |
 | MAC-011 | [GU] Timing advance: the ground unit shall estimate the round-trip delay from the preamble (resolution 0.1 us) and advance its uplink slot so that the uplink arrives aligned with the air unit's frame; the estimate is also reported to the pilot as range (O). | M | | T |
 | MAC-012 | Split-band mode (baseline for Classes X and L where regulation allows): the video band carries downlink only (5% idle for frame-based-equipment rules); feedback, telemetry and control use a 5 MHz uplink channel at 2.4 GHz (for 5.8 GHz video) or 900 MHz (for 2.4 GHz video, where the band allows continuous operation), with feedback every 0.25 ms or faster; the mode falls back to in-band TDD (MAC-001) when the uplink band is unavailable or fails. | M | | T |
+| MAC-013 | Optional gaze or head-direction field in the uplink feedback (at most 8 bytes per message at up to 120 Hz, 7.7 kbit/s) for a gaze-tracked foveation centre (VID-024 mode 3). | O | P2 | T |
 
 ## 7. RF front end (RF)
 
@@ -254,7 +258,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 |----|-------------|-----|-------|-----|
 | IF-001 | [AU] Host interface (flight controller): UART (up to 3 Mbaud) and USB 2.0 / CAN-FD (P2). MSP, MAVLink 2. | M | | T |
 | IF-002 | [AU] Camera: MIPI CSI-2 (VID-002), I2C/SPI control, sensor sync (FSIN) output for rolling-shutter alignment; fixed frame period policy: exposure is limited below the frame time so that the sensor never stretches the frame (source review S-5); sensor readout time of 8 ms or less at 1080p60 and 4 ms or less at 1080p120 (the assumption of the latency budget in `02`, G-15). | M | | I |
-| IF-003 | [GU] Ground unit host interface: HDMI/DP/DSI out, USB-C (video and data), Ethernet 1 Gbit (O), 5 GHz WiFi/BLE for the phone app (low-priority sideband). | M | | I |
+| IF-003 | [GU] Ground unit host interface: HDMI/DP/DSI out, USB-C (video and data), Ethernet 1 Gbit (O), 5 GHz WiFi/BLE for the phone app (low-priority sideband). Optional gaze or head-direction input from the goggles (MAC-013). | M | | I |
 | IF-004 | Debug: JTAG/SWD, UART console, a trace port for the latency timestamps, and a test header for RF conducted measurements (U.FL). | M | P1 | I |
 | SW-001 | Control plane in Linux (or Zephyr/RTOS) on the application CPU; data plane in hardware. The data plane shall continue to work if the application CPU stalls for 100 ms. | M | | T |
 | SW-002 | A hardware abstraction (HAL) shall isolate the modem from the transceiver, so that the same software runs on the AD936x/ADRV9002-based prototype and the ASIC. | M | | I |
@@ -309,6 +313,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 |----|-------------|-----|-------|-----|
 | TST-001 | A verification plan (`08`) shall map every requirement to a test case with equipment and pass criteria, and a traceability matrix (`09`) shall be generated from this file by `scripts/trace_matrix.py`. | M | | I |
 | TST-002 | The G2G latency rig shall measure with 0.5 ms accuracy or better (photodiode and LED, or a camera at 1000 fps or more) and log per-stage timestamps (LAT-004). | M | P1 | T |
+| TST-003 | Foveation measurement campaign: record gaze with an eye tracker in goggles during real races and freestyle flights, size the region and the falloff from the measured spread, and test each mode with pilots; quality is judged by a region-weighted metric in TG-VID besides the whole-frame metrics. | S | P1 | D |
 
 ## 18. Revision history
 
@@ -335,3 +340,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 1.9 | G3-1 | Notes entry 9: regional limits become region profiles; capability budgets, REG-008, MAC-007 in-band ranges (9 km Class X), RF-010 and SYS-003 reworded |
 | 2.0 | G3-2 | Notes entries 5, 6, 7: role tags and SYS-011 (separate air and ground silicon allowed), enhanced ground configuration (PHY-016/017, RF-032, ADA-011), external antennas ANT-012, ASC-007; T-21 and T-22 added |
 | 2.1 | G3-3 | Notes entries 10, 11, 12: angle-of-arrival output (ANT-013), air-unit beamforming option set (ANT-014), single-silicon option set and day-one provisions (ASC-008, ASC-009), option entitlement (SEC-006); T-23 and `02` section 1.5 added |
+| 2.2 | G3-4 | Notes entries 1, 2, 3, 8: foveated-video appendix (`14`, T-20, VID-023..025, MAC-013, TST-003), out-of-band options F and G in T-03, wording fixes in `00` |

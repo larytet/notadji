@@ -113,12 +113,12 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 
 | Class | Requirements |
 |---|---|
-| C | 23 |
-| E | 124 |
-| P | 36 |
+| C | 24 |
+| E | 126 |
+| P | 38 |
 | R | 8 |
 | S | 16 |
-| total | 207 |
+| total | 212 |
 
 | ID | Class | Basis |
 |---|---|---|
@@ -155,6 +155,9 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | VID-020 | S | waybeam: 120 fps VENC ceiling with silent reset to 30 fps; SDK calls that succeed but do not apply |
 | VID-021 | C | link_budget.py intra_refresh_table: 0.3% average at the target loss rate (cost ratio 4 is E) |
 | VID-022 | C | link_budget.py range_vs_mcs_table: BPSK 1/2 6.9 Mbit/s, 10.3 km at 5.8 GHz, 25 km at 2.4 GHz (free space); video quality target is E |
+| VID-023 | E | saving by rule of thumb (+6 QP halves the bits); link_budget.py foveation_table is arithmetic |
+| VID-024 | P | mode set; region size needs the measurement campaign TST-003 |
+| VID-025 | E | protection level trade not yet quantified |
 | LAT-001 | S | OpenIPC latency-probe method (register step, one clock) |
 | LAT-002 | E | engineering target; proved by verification method T (see 08) |
 | LAT-003 | E | engineering target; proved by verification method T (see 08) |
@@ -190,6 +193,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | MAC-010 | E | engineering target; proved by verification method T (see 08) |
 | MAC-011 | E | engineering target; proved by verification method T (see 08) |
 | MAC-012 | C | link_budget.py split_band_uplink_table: uplink margin 11.0-17.0 dB, video rate +8% |
+| MAC-013 | C | link_budget.py race_channel_table: 7.7 kbit/s |
 | RF-001 | R | band edges per FCC 15.247 / ETSI; verify by counsel |
 | RF-002 | E | engineering target; proved by verification method T (see 08) |
 | RF-003 | E | engineering target; proved by verification method T (see 08) |
@@ -329,5 +333,6 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | ASC-009 | P | provisions list; respin avoidance |
 | TST-001 | P | test infrastructure |
 | TST-002 | S | OpenIPC latency-probe method; rig accuracy is an engineering target |
+| TST-003 | P | measurement campaign |
 
 <!-- END REGISTER -->

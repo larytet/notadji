@@ -8,7 +8,7 @@ recommendation. Recommendations are proposals for the system team to confirm, no
 Index: T-01 range closure, T-02 power classes, T-03 TDD frame and guard, T-04 numerology, T-05 co-located links,
 T-06 codec, T-07 loss protection, T-08 ASIC partitioning, T-09 open vs locked RF, T-10 BLE/Remote ID,
 T-11 P1 baseband base, T-12 P1 transceiver, T-13 antenna/diversity, T-14 DPD architecture, T-15 hopping,
-T-16 FEC code, T-17 clock and genlock.
+T-16 FEC code, T-17 clock and genlock, T-18 control-plane processors, T-19 phase A platform, T-20 foveated video (appendix `14`), T-21 ground-unit configuration, T-22 silicon family, T-23 air-unit beamforming and the single-silicon option set.
 
 ---
 
@@ -91,12 +91,18 @@ sized for MAC-007 (1 Mbit/s at QPSK 1/2, 100 feedback bits per frame, 2 preamble
 
 | D | Split-band uplink: video band downlink-only, feedback/telemetry/RC on a 5 MHz channel in a far band (2.4 GHz for 5.8 GHz video, 900 MHz for 2.4 GHz video) | Uplink margin 11.0-17.0 dB instead of 5.0-6.3 dB (`02` section 1.1b); no guard, no timing advance, no uplink slot in the video band; video rate about 8% higher; the uplink can run continuously (feedback every 0.25 ms or faster, RC at 1 kHz); also provides the out-of-band beacon of ADA-005 | Second receive chain at the air unit and a 2.4 GHz/900 MHz transmit chain at the ground unit; TX-to-RX isolation requirement (RF-030); 900 MHz not usable for a 1 Mbit/s uplink in the EU; uplink channels are limited (16 at 5 MHz in 2.4 GHz) |
 | E | Same-band FDD (uplink 30 MHz away in the video band) | One band, no second radio | Rejected: about 67 dB of isolation needed at a 30 MHz offset [E, estimate in `02`] cannot be reached |
+| F | Beacon and failsafe only out-of-band: re-acquisition, pairing and failsafe on the other band, feedback and telemetry stay in-band | Covers ADA-004/005 and the 300 ms band hop | Needs a second receiver anyway; the in-band uplink margin problem remains (5.0 to 6.3 dB), so it does not replace D |
+| G | Telemetry and RC out-of-band, feedback in-band | Moves the largest uplink payload out of the video band | Two radios anyway but the in-band feedback slot and its guard remain; superseded by D, which moves the feedback as well |
 
 Review (iteration 4): the two missing options were the split-band uplink (D) and same-band FDD (E). D beats in-band TDD on uplink margin and airtime,
 and removes the timing-advance and frame-length machinery from the video band; its cost is hardware (a second band) and regional dependence. E is
 physically infeasible. In-band TDD (C) stays as the fallback for single-band products and for regions where the second band is unusable.
 
 Decision: **D as the baseline architecture for Classes X and L where regulation allows (MAC-012); C as the fallback mode (MAC-001)**.
+
+Review (iteration 19, notes entry 8, options F and G added above): an earlier remark that the 1 ms feedback should stay in-band was based on a stale draft (rev 0.5) and is wrong for the current source: MAC-012 puts the feedback on the separate channel at 0.25 ms or faster. Facts checked [C]: the path
+loss at 915 MHz is 16.0 dB lower than at 5.8 GHz (`20 log(5800/915)`); a quarter-wave antenna is 8.2 cm at 915 MHz and 1.3 cm at 5.8 GHz (6.3 times longer, the antenna cost of the lower band); the 915 MHz row of `02` (30 km, 3/8 dBi, 5 MHz) has 121.2 dB of free-space loss. Not verified (from memory, check before relying on them): ETSI sub-GHz duty-cycle limits (1% to 10%) and power limits; whether
+sub-GHz ground-gain limits differ under other regions (region profiles, REG-008).
 
 ## T-04 Numerology (G-12, G-25)
 
@@ -447,6 +453,16 @@ Without steering, 20 ppm crystals wander the latency by 24 ms in 10 minutes and 
 violates LAT-002 (p99 within 3 ms of the mean). Alternative added: (D) free-running displays disciplined only by the TCXOs plus an occasional deliberate frame drop (a glitch about once per hour): rejected for the latency creep.
 Decision: **B (display scan-out locked to the received frame timing) confirmed**, needing a display controller whose pixel clock can be steered by at least +/-50 ppm with 0.1 ppm resolution [E] (VID-018); option C (air unit slaved to the display) stays a later option.
 
+## T-20 Foveated video (notes entry 3; details in `14`)
+
+| Option | Description | Pros | Cons |
+|---|---|---|---|
+| A | None: uniform quality | Simplest; no risk of a wrong region | At 5 MHz race channels (4.3 Mbit/s at QPSK 3/4) the picture is blurry everywhere |
+| B | Static centre-weighted foveation (wide and soft, or narrow and strong), selected by the pilot, software-defined parameters of a per-block QP map | Saves 20% to 48% depending on region and QP offset (`14` section 2) with no gaze-tracking latency; decoder unchanged; silicon cost well under 0.1 mm2 [E]; presets in NVM | The region can be wrong when the pilot looks aside; the size must be found by measurement; needs a region-weighted quality metric |
+| C | Gaze-tracked region | Best use of the bits, follows the eyes | Needs an eye tracker in the goggles (out of scope), gaze in the uplink (0.8% of 1 Mbit/s) and a loop short enough for saccades [not verified]; a wrong region is worst here |
+
+Decision: **A as the default (mode 0), B as an optional P2 feature with modes 1 and 2 for race channels, C only as mode 3 after the measurement campaign** (TST-003). Requirements VID-023 to VID-025 and MAC-013.
+
 ## T-21 Ground-unit configuration (notes entries 5, 6, 7)
 
 The ground unit can be larger, heavier and more power-hungry than the air unit, and its bill of materials matters less. Levers (numbers in `02` sections 1.3 and 1.4): more receive branches
@@ -525,6 +541,7 @@ Decision: **S-b with S-d** (ASC-008, ASC-009, SEC-006); the day-one list that av
 | T-17 | Display locked to received timing |
 | T-18 | Real-time cores plus power-gated application core; air unit without Linux by default |
 | T-19 | Phase A1 Pluto pair (2.4 GHz + 915 MHz), A2 AD9361/ADRV9002 pair (5.8 + 2.4 GHz), A3 K26-class video board, in parallel |
+| T-20 | Uniform by default; static centre-weighted foveation modes optional; gaze-tracked later |
 | T-21 | Symmetric base pair; enhanced ground unit from the same silicon (replicated RF dice, discrete front end); FPGA ground station for professional use |
 | T-22 | One pair of chips for both roles with board-level ground enhancement; separate air and ground chips allowed but justified only by volume or capability |
 | T-23 | One die with all beamforming options gated and enabled by a signed NVM value; scaling by replicating the RF die with shared clock and LO |

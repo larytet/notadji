@@ -6,7 +6,7 @@ Audience: RF, baseband/FPGA, video, firmware, mechanical, regulatory, test
 
 ## 1. Purpose
 
-Define an open, low-latency digital video link for small UAVs (FPV and cinematic) that matches or beats the
+Define an open, low-latency digital video link for small UAVs (FPV and cinematic) that closely matches or beats the
 DJI O3/O4 class of systems on latency, range, robustness and power. The product is a chipset (air unit and
 ground unit) built in two phases:
 
@@ -39,6 +39,7 @@ ground unit) built in two phases:
 | `09-traceability-matrix.md` | Generated requirement to test-group matrix (`scripts/trace_matrix.py`) |
 | `10-source-review.md` | Facts from the downloaded sources and their effect on the spec (second goal, iteration 1) |
 | `12-claim-audit-and-feasibility.md` | Claim audit, errors corrected, external facts, feasibility register, per-requirement evidence class (verification pass) |
+| `14-appendix-foveated-video.md` | Optional foveated-video feature for race mode (notes entry 3, T-20) |
 | `13-hardware-software-integration.md` | Execution domains, CPU workload, two-phase platform plan (evaluation boards, then custom board), processor options and power |
 | `11-patent-search.md` | Preliminary patent landscape, design-around constraints, brief for the patent attorney (iteration 2) |
 
@@ -51,7 +52,6 @@ ground unit) built in two phases:
 - Numbers marked `[TBV]` are targets or assumptions to be verified. Numbers about DJI products are our
   estimates from public information and must not be quoted as DJI specifications.
 - Design stance: regional compliance (FCC, ETSI and others) is configuration, not a design driver; budgets are for the hardware capability and region profiles are derived (REG-008, `02` section 1.2). Operating rule: a prototype that radiates is operated only conducted into a load, in a shielded enclosure, or under a test or experimental authorisation.
-- Plain dash `-` is used throughout instead of the long dash.
 
 ## 4. Glossary
 

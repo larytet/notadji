@@ -395,6 +395,28 @@ def beamforming_table() -> str:
     return "\n".join(rows)
 
 
+def foveation_table() -> str:
+    """Bit-rate ratio of a foveated picture against a uniform one: region fraction f at the base QP, the rest at +dQP; +6 QP halves the bits of an area (rule of thumb, E)."""
+    rows = ["| High-quality region (share of the picture) | Periphery +3 QP | +6 QP | +9 QP |", "|---|---|---|---|"]
+    for f in (0.25, 0.40, 0.60):
+        cells = []
+        for dqp in (3, 6, 9):
+            ratio = f + (1 - f) * 2 ** (-dqp / 6)
+            cells.append(f"{ratio:.0%} (saves {1 - ratio:.0%})")
+        rows.append(f"| {f:.0%} | " + " | ".join(cells) + " |")
+    return "\n".join(rows)
+
+
+def race_channel_table() -> str:
+    """Net video rate of a 5 MHz race-mode channel in split-band mode (T-05 option D, 48 data tones) and the uplink cost of gaze data (notes entry 3)."""
+    rows = ["| MCS | Net video rate at 5 MHz, Mbit/s |", "|---|---|"]
+    for m in MCS_TABLE[:3]:
+        rows.append(f"| {m.name} | {DATA_TONES[5.0] * m.bits_per_sym / SYMBOL_US * DL_DUTY_SPLIT * 0.85:.1f} |")
+    gaze_kbps = 8 * 8 * 120 / 1000  # 8 bytes per message at 120 Hz
+    rows.append(f"| Gaze message in the uplink: 8 bytes at 120 Hz | {gaze_kbps:.1f} kbit/s of a 1000 kbit/s uplink ({gaze_kbps / 1000:.1%}) |")
+    return "\n".join(rows)
+
+
 def tdd_table() -> str:
     """TDD frame budget per range class with the range-adaptive frame length (T-03 option C)."""
     rows = ["| Range km | Frame ms | UL symbols (QPSK 1/2, 1 Mbit/s + 2 preamble) | UL us | Guard us | DL share of frame |", "|---|---|---|---|---|---|"]
@@ -460,3 +482,7 @@ if __name__ == "__main__":
     print(aoa_table())
     print()
     print(beamforming_table())
+    print()
+    print(foveation_table())
+    print()
+    print(race_channel_table())

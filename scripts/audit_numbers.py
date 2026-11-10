@@ -93,7 +93,7 @@ for m, e in zip(lb.MCS_TABLE, (-93, -88, -80, -74)):
 import subprocess  # noqa: E402
 
 out = subprocess.check_output([sys.executable, "-I", str(ROOT / "scripts" / "link_budget.py")], text=True)
-down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl, iface_tbl, rng_tbl, reg_tbl, lev_tbl, coax_tbl, brk_tbl, aoa_tbl, bf_tbl = out.strip().split("\n\n")
+down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl, iface_tbl, rng_tbl, reg_tbl, lev_tbl, coax_tbl, brk_tbl, aoa_tbl, bf_tbl, fov_tbl, race_tbl = out.strip().split("\n\n")
 check("02 contains the downlink table from the script", down.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the uplink table from the script", up.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the PA mode table from the script", pa_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
@@ -155,6 +155,12 @@ check("AoA unambiguous field of view of a 5-wavelength baseline is 5.7 degrees",
 _b = lb.max_range_km(lb.Scenario("x", 5800, 1, 30, 5, 5, diversity_gain_db=3), lb.MCS_TABLE[1])
 check("beamforming: +6 dB doubles the range (5.8 -> 11.6 km), +3 dB gives 8.2 km", abs(_b * 10 ** (6 / 20) - 11.6) < 0.1 and abs(_b * 10 ** (3 / 20) - 8.2) < 0.1)
 check("ASC-008 area overhead 1.5-4 mm2 is 5% to 14% of 29 mm2", abs(1.5 / 29 - 0.052) < 0.001 and abs(4 / 29 - 0.138) < 0.001 and "about 5% to 14% of the die" in TEXT["07-trade-studies.md"])
+check("14 contains the foveation and race-channel tables", fov_tbl.strip() in TEXT["14-appendix-foveated-video.md"] and race_tbl.strip() in TEXT["14-appendix-foveated-video.md"])
+check("foveation savings: 60% region +6 QP saves 20%; 25% region +9 QP saves 48%", abs((1 - (0.6 + 0.4 * 2 ** -1)) - 0.20) < 1e-9 and abs((1 - (0.25 + 0.75 * 2 ** -1.5)) - 0.48) < 0.005 and "about 20%" in TEXT["14-appendix-foveated-video.md"] and "about 48%" in TEXT["14-appendix-foveated-video.md"])
+check("race channel at 5 MHz: 4.3 Mbit/s at QPSK 3/4; gaze 7.7 kbit/s is 0.8% of 1 Mbit/s", abs(lb.DATA_TONES[5.0] * 1.5 / lb.SYMBOL_US * lb.DL_DUTY_SPLIT * 0.85 - 4.3) < 0.05 and abs(8 * 8 * 120 / 1000 - 7.68) < 0.01 and "7.7 kbit/s" in SRS)
+check("notes entry 8 facts: 915 MHz is 16.0 dB below 5.8 GHz in path loss; quarter wave 8.2 cm and 1.3 cm, ratio 6.3", abs(20 * math.log10(5800 / 915) - 16.0) < 0.05 and abs(3e8 / 915e6 / 4 * 100 - 8.2) < 0.05 and abs(3e8 / 5.8e9 / 4 * 100 - 1.3) < 0.05 and abs(5800 / 915 - 6.3) < 0.05)
+check("00 says closely matches and drops the plain dash bullet", "closely matches or beats" in TEXT["00-overview.md"] and "Plain dash" not in TEXT["00-overview.md"])
+check("07 index lists every trade study T-01..T-23", all(f"T-{n:02d}" in TEXT["07-trade-studies.md"].split("Index:")[1].split("---")[0] for n in range(1, 24)))
 check("02 contains the split-band table from the script", split.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("split-band uplink margin >= 6 dB for all classes (MAC-007)", all(float(r.split("|")[7]) >= 6 for r in split.strip().split("\n")[2:]))
 check("MAC-007 states the split-band margins 17.0, 11.0 and 12.4", "17.0, 11.0 and 12.4 dB" in SRS)
