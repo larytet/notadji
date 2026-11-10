@@ -35,6 +35,8 @@ REPOS=(
   "hdzero|hd-zero/hdzero-goggle"
   "sdr-phy|jhshi/openofdm"
   "sdr-phy|open-sdr/openwifi"
+  "sdr-phy|open-sdr/openwifi-hw"
+  "sdr-phy|open-sdr/openwifi-hw-img"
   "sdr-phy|analogdevicesinc/hdl"
   "sdr-phy|analogdevicesinc/plutosdr-fw"
   "sdr-phy|gnuradio/gnuradio"
@@ -63,7 +65,7 @@ clone_one() {
 export -f clone_one
 export DEST MANIFEST
 
-printf 'repo\tpath\tcommit\tlicense_file\n' > "$MANIFEST"
+[ -s "$MANIFEST" ] || printf 'repo\tpath\tcommit\tlicense_file\n' > "$MANIFEST"
 printf '%s\n' "${REPOS[@]}" | xargs -P 6 -I{} bash -c 'clone_one "{}"'
 du -sh "$DEST"/* 2>/dev/null
 echo DONE

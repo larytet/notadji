@@ -32,3 +32,5 @@ RomanLut/hx-esp32-cam-fpv	esp32/hx-esp32-cam-fpv	4a0ee270a07bfa7bdac22124660970c
 RubyFPV/RubyFPV	rubyfpv/RubyFPV	1c2365f212135d408eca55e3a6084a255afeb8e8	LICENSE
 OpenHD/OpenHD	openhd/OpenHD	c75c37e6bcd014a990b81ae9b2556eb6afefd924	LICENSE
 myriadrf/LimeSDR-Mini	sdr-phy/LimeSDR-Mini	ade9b0663994bb039c69a5e3c7ce05b7ce727cbe	NO_LICENSE_FILE
+open-sdr/openwifi-hw	sdr-phy/openwifi-hw	fa6c89687e4637f07adbfb41299056b6d18fd80e	LICENSE
+open-sdr/openwifi-hw-img	sdr-phy/openwifi-hw-img	64f27c5f897a807cf58fc383dd4b08c728abc07c	LICENSE
