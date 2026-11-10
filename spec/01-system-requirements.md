@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 0.5 (iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 0.6 (verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -23,7 +23,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | SYS-002 | The FPGA prototype shall reach G2G of 30 ms or less at 1080p60 (mean) as the first milestone. | M | P1 | T |
 | SYS-003 | The link shall sustain 1080p60 video (at least 10 Mbit/s net) with at least 6 dB free-space margin in these range classes (30 dBm conducted, 2-branch MRC on the ground unit, lowest MCS that meets the rate): **Class S** 5 km, 5.8 GHz, 20 MHz, 5/5 dBi antennas; **Class X** 10 km, 5.8 GHz, 20 MHz, 10 dBi ground antenna; **Class L** 14 km, 2.4 GHz, 20 MHz, 5/5 dBi. Ranges under ETSI EIRP limits are specified separately (Class L is about 2.5 km at 20 dBm EIRP). Real-world margins per scenario are in `02` (G-02). Revised by T-01. | M | P2 | A,T |
 | SYS-004 | The video shall degrade gracefully (lower resolution/quality, never a frozen frame longer than 100 ms) as SNR drops, down to the lowest MCS. | M | | T |
-| SYS-005 | Air unit total DC input power, excluding the camera sensor module: at most 3.5 W at 25 dBm, 4.0 W at 27 dBm and 6.0 W at 30 dBm conducted average output (the 30 dBm case needs PA PAE of about 28% or better). A separate 33 dBm SKU is allowed up to 10 W. [TBV] Revised by T-02. | M | P2 | T |
+| SYS-005 | Air unit total DC input power, excluding the camera sensor module: at most 3.5 W at 25 dBm, 4.0 W at 27 dBm and 6.0 W at 30 dBm conducted average output (the 30 dBm case needs PA PAE of about 27% or better). A separate 33 dBm SKU is allowed up to 10 W. [TBV] Revised by T-02. | M | P2 | T |
 | SYS-006 | Air unit mass, including the antennas' feed cables and the heatsink, shall not exceed 25 g. | S | P2 | I |
 | SYS-007 | Ground unit shall operate from a 1S-6S battery for at least 3 h at the nominal consumption. | S | | T |
 | SYS-008 | One ground unit shall pair with up to 4 air units and receive one (or two, picture-in-picture, O) at a time. | S | | D |
@@ -88,13 +88,13 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 
 | ID | Requirement | Pri | Phase | Ver |
 |----|-------------|-----|-------|-----|
-| MAC-001 | Time-division duplex with a super-frame of 1.0 ms by default and range-adaptive lengths of 2 and 4 ms selected from the measured round-trip delay; downlink to uplink ratio about 9:1; the DL to UL guard is at least 2 x the one-way propagation delay plus 2 x the turn-around time (100 us + 20 us at 15 km); the guard shall also provide the idle period required by frame-based-equipment rules where applicable (G-21). Revised by T-03. | M | | T |
+| MAC-001 | Time-division duplex with a super-frame of 1 ms up to 7 km, 2 ms up to 15 km and 4 ms beyond, selected from the measured round-trip delay; the uplink slot is sized for MAC-007 (7 symbols at 1 ms: 1 Mbit/s at QPSK 1/2 plus 100 feedback bits plus a 2-symbol preamble); the DL to UL guard is at least 2 x the one-way propagation delay plus 2 x 10 us turn-around (100 us + 20 us at 15 km); the guard shall also provide the idle period required by frame-based-equipment rules where applicable (G-21). Revised by T-03. | M | | T |
 | MAC-002 | All airtime is scheduled by the ground unit or by the air unit master. No contention-based access (no CSMA) inside a link. Coexistence with other systems is done by channel selection (ADA-001). | M | | T |
 | MAC-003 | Time synchronisation between air and ground within 1 microsecond (derived from the preamble). | M | | T |
 | MAC-004 | Uplink slots carry channel feedback (CSI summary, MCS recommendation, RSSI, per-slice ACK/NAK bitmap) with 1 ms or less period. | M | | T |
 | MAC-005 | The air unit shall change MCS, power and slice budget within 2 ms of receiving the feedback. | M | | T |
 | MAC-006 | Selective retransmission of slices only if the slice deadline (display deadline) can still be met; otherwise drop. | M | | T |
-| MAC-007 | Telemetry/control channel carrying MAVLink, MSP and generic serial with latency of 5 ms or less: uplink at least 1 Mbit/s at QPSK 1/2 or higher and at least 300 kbit/s at the lowest MCS; downlink at least 2 Mbit/s. | M | | T |
+| MAC-007 | Telemetry/control channel carrying MAVLink, MSP and generic serial with latency of 5 ms or less: downlink at least 2 Mbit/s; uplink at least 1 Mbit/s (QPSK 1/2) within 5 km (Class S), 8 km (Class X) and 12 km (Class L), and at least 300 kbit/s (BPSK 1/2) out to the full class range; the link adapts the uplink MCS automatically (uplink budget in `02`). | M | | T |
 | MAC-008 | Optional hard real-time RC channel: 1 kHz update, 3 ms one-way latency, link-lost failsafe in 100 ms. | O | | T |
 | MAC-009 | Pairing and key exchange without a network connection (see SEC-001). Re-pairing in the field within 10 s. | M | | D |
 | MAC-010 | Multi-link: a link shall be able to survive a change of channel (frequency hop) with a gap in video of 1 frame or less. | M | | T |
@@ -196,10 +196,10 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 |----|-------------|-----|-------|-----|
 | PWR-001 | Input supply 6.0 V to 30 V (2S to 6S) with reverse polarity, surge (60 V 1 ms) and ripple (up to 2 Vpp at 100 Hz to 100 kHz from the ESCs) tolerance. | M | | T |
 | PWR-002 | The system shall start up (boot to video) in 3 s or less, and recover from a brown-out in 1 s. | M | | T |
-| PWR-003 | SoC/baseband plus transceiver power (excluding PA and sensor): at most 1.5 W typical at 1080p60 for the ASIC; at most 8 W for the FPGA prototype. | M | | T |
+| PWR-003 | SoC/baseband plus transceiver power (excluding PA and sensor): at most 1.5 W typical for the ASIC; at most 9.5 W for the FPGA prototype (a K26-class module is 7.5 W typical [S] plus a 1.5 W transceiver; was 8 W in rev 0.4, corrected after the vendor figure was found). | M | | T |
 | PWR-004 | PA power-added efficiency 30% or better at 27 dBm and at 30 dBm average OFDM output with DPD (Doherty or equivalent), confirmed by the PA study. [TBV] Revised by T-02, T-14. | S | | T |
 | PWR-005 | Standby (link established, no video) of 1.0 W or less. | S | | T |
-| PWR-006 | Sleep (low-power beaconing for RID and pairing) of 50 mW or less. | S | P2 | T |
+| PWR-006 | Sleep: main device 5 mW or less (RAM retention); Remote ID is served by the separate certified module (REG-002), whose own power is at most 50 mW. | S | P2 | T |
 
 ## 13. Security and compliance (SEC, REG)
 
@@ -211,7 +211,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | SEC-004 | Jam resistance: detection of wideband jamming and automatic fallback to fast hopping and to lower rate (ADA-003). | S | | T |
 | SEC-005 | RF limits (region, power, band, dwell, DFS) shall be enforced by a hardware-locked limiter whose tables are signed; the rest of the stack stays open. The limiter design and the signing process shall be published for audit. Revised by T-09. | M | | I |
 | REG-001 | FCC Part 15 (15.247, 15.407), ETSI EN 300 328 and EN 301 893, ISED RSS-247, and the Radio Equipment Directive (RED) cyber-security delegated act (EN 18031). | M | P2 | T |
-| REG-002 | Remote ID: broadcast RID using Bluetooth 5 Long Range and/or WiFi NAN/beacon per FAA Part 89 and ASTM F3411-22a and the EU Direct RID rules, from a certified separate BLE/WiFi module (T-10) that works with the main device off; the RID data (position, altitude, ID) comes from the flight controller or GNSS over IF-001. A later revision may integrate it. | M | | T |
+| REG-002 | Remote ID: broadcast RID from a certified separate BLE/WiFi module (T-10) that works with the main device off, meeting the FAA-accepted means of compliance ASTM F3586-22 (an overlay on ASTM F3411-22a) for Part 89 and the EU Direct RID rules; a Bluetooth implementation shall include both Bluetooth 4 legacy advertising and Bluetooth 5 Long Range with extended advertising, a WiFi implementation NAN or beacon frames (at least one transport); the RID data (position, altitude, ID) comes from the flight controller or GNSS over IF-001. A later revision may integrate it. | M | | T |
 | REG-003 | Export classification and licensing review (encryption, EAR 5D002 / dual-use) before shipping. | M | | I |
 | REG-004 | RoHS, REACH, and battery-related requirements where applicable. | M | P2 | I |
 | REG-005 | IP policy: RTL and software derived from GPL, AGPL, non-commercial or unlicensed references shall be written clean-room (behavioural reference only); a licence register shall be kept for every reference (`reference/MANIFEST.tsv`); a freedom-to-operate patent search shall be completed before P2 funding. | M | | I |
@@ -242,6 +242,26 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | SW-003 | Open documentation of the host APIs, the register map, and the on-air frame formats. | M | | I |
 | SW-004 | Over-the-air (over the link) firmware update of the air unit with fail-safe rollback. | S | | T |
 | SW-005 | Logging: link statistics, per-slice RSSI/SNR/PER, calibration events, thermal events, at 1 kHz into a ring buffer that survives a crash (for flight forensics). | M | | T |
+
+## 15a. Hardware-software integration (HSI) - details in document 13
+
+| ID | Requirement | Pri | Phase | Ver |
+|----|-------------|-----|-------|-----|
+| HSI-001 | Three execution domains: hardware data plane, hard real-time control core(s), optional application core. The data plane shall keep forwarding video, feedback and the safe schedule for at least 100 ms if every processor stalls. | M | | T |
+| HSI-002 | A frame-timeline sequencer in hardware shall execute hops, turn-arounds, PA enable, gain steps and slice slots from a table committed at least one frame ahead; no software action is in the microsecond path. | M | | T |
+| HSI-003 | One 64-bit timestamp counter at 200 MHz or faster (5 ns resolution) shall be latched at every pipeline stage boundary and exposed on the trace port (LAT-004). | M | | T |
+| HSI-004 | The DPD correlation accumulation and the link encryption shall be hardware blocks; steady-state operation shall not depend on a software implementation of either. | M | P2 | I |
+| HSI-005 | Worst-case load of each real-time core shall be 50% or less at the 1080p120 workload of `13` section 2, measured. | M | | T |
+| HSI-006 | The worst-case execution time of every real-time task shall be measured on the target core and recorded; the estimates in `13` section 2 shall be replaced by measurements. | M | | T |
+| HSI-007 | Boot to first video in 3 s or less (target 1.5 s) with the real-time path only; the application core shall not be in the critical path. | M | | T |
+| HSI-008 | Real-time core interrupt entry within 5 us at 300 MHz (to the first instruction of the handler). [TBV] | M | | T |
+| HSI-009 | Processor subsystem power (all cores, caches and SRAM) of the ASIC: 100 mW or less in the streaming state with the application core gated; 5 mW or less in sleep (RAM retention). [target, TBV] | S | P2 | T |
+| HSI-010 | Platform phasing: phase A on low-cost evaluation boards (waveform, MAC, calibration, partial latency); phase B on a custom board with the target controllers (latency, thermal, mass); phase C ASIC. Latency measured in phase A shall not be used to claim SYS-001 or SYS-002. | M | | I |
+| HSI-011 | A stalled control core (no table update for two frames) shall be detected by the sequencer, which falls back to a safe schedule (lowest MCS, reduced power) and keeps the video running. | M | | T |
+| HSI-012 | All modem and RF control shall go through a documented register map and a versioned HAL (SW-002, SW-003) so that phase A, B and C software share the same interface. | M | | I |
+| HSI-013 | The DPD solve shall be validated numerically (conditioning, precision, coefficient drift) before the real-time core is selected; double precision or a demonstrated stable single-precision method. | M | P1 | S |
+| HSI-014 | The inter-processor channel (mailbox, shared memory) shall never block the real-time side; it shall use non-blocking single-producer queues. | M | | T |
+| HSI-015 | Memory protection (MPU/MMU) between real-time control loops, protocol tasks and the application core; a fault in one shall not corrupt the others. | M | P2 | T |
 
 ## 16. Prototype-specific and ASIC-specific requirements (PRO, ASC)
 
@@ -275,3 +295,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 0.3 | 6 | RF-029 adjacent-channel rejection added; link-budget rate model aligned with PHY-001 tone counts and MAC-001 guard |
 | 0.4 | G2-1 | Source review (`10`): VID-006 hard bound, VID-020 added, IF-002 fixed frame period, LAT-001 register-step method, SEC-002 default cipher, PRO-006 added |
 | 0.5 | G2-2 | Patent search (`11`): REG-006 design-around register added, ADA-003 ETSI note |
+| 0.6 | G2-3 | Verification pass: MAC-001/MAC-007 re-derived (uplink sizing, range-adaptive frame), SYS-005 PAE threshold corrected, REG-002 via F3586-22, PWR-003/PWR-006 corrected, HSI-001..015 added (`13`), T-18/T-19 added |

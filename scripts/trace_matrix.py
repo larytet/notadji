@@ -32,6 +32,7 @@ GROUPS = {
     "ENV": "TG-ENV environmental",
     "IF": "TG-IF interfaces",
     "SW": "TG-SW software",
+    "HSI": "TG-HSI hardware-software integration",
     "PRO": "TG-PRO prototype",
     "ASC": "TG-ASC ASIC",
     "TST": "TG-TST test infrastructure",

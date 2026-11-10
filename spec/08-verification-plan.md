@@ -21,6 +21,7 @@ D demonstration, S simulation.
 | TG-REG regulatory | REG-* | Accredited test house (FCC, ETSI, ISED), Remote ID conformance test, export review, EN 18031 assessment | External |
 | TG-ENV environmental | ENV-* | Random-vibration shaker with a live link, shock table, ESD gun, humidity chamber, EMI scan with receiver desense (ENV-007) | Environmental lab |
 | TG-VID video pipeline | VID-* | Reference video set (high-motion, low-light, fine detail), objective metrics (PSNR, VMAF), loss injection, genlock drift test over 10 minutes | Lab |
+| TG-HSI hardware-software integration | HSI-* | Trace-port timestamps, WCET measurement on the target core, fault injection (stalled core, corrupted table), load test at the 1080p120 workload, boot-time measurement, power measurement per state, DPD numerical validation by simulation | Lab |
 | TG-SW / TG-IF | SW-*, IF-* | Integration tests against flight controller (MSP, MAVLink) and displays; update/rollback tests | Lab |
 | TG-SYS system and range | SYS-003, SYS-008, SYS-009 | Range flights per class (S, X, L) in open field, urban and forest; multi-link tests on a site with a defined channel plan | Field |
 | TG-PRO / TG-ASC | PRO-*, ASC-* | Design reviews, lint/CDC reports, DFT coverage, production test time | Design |

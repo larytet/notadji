@@ -36,7 +36,7 @@ Input power excluding the sensor, ASIC target, PAE 30% unless stated (`02` secti
 
 | Option | Description | Pros | Cons |
 |---|---|---|---|
-| A | One class: 30 dBm, with the 6.0 W limit | One SKU; meets 6.0 W only with PAE of about 28% or better at 30 dBm average OFDM | Thin margin, needs a Doherty or envelope-tracking PA, which complicates DPD (T-14); 6.3 W if PAE is 25% |
+| A | One class: 30 dBm, with the 6.0 W limit | One SKU; meets 6.0 W only with PAE of about 27% or better at 30 dBm average OFDM | Thin margin, needs a Doherty or envelope-tracking PA, which complicates DPD (T-14); 6.3 W if PAE is 25% |
 | B | Three programmable classes (25, 27, 30 dBm) with input power at most 3.5, 4.0 and 6.0 W; 33 dBm only for a separate high-power SKU (about 10 W) | Matches regional limits; the user trades range for thermal and battery; the same silicon | More validation; the PA/FEM must be efficient across the range |
 | C | Fixed 25 dBm, rely on antenna gain | Lowest power and weight (2.9 W) | Class X range (10 km) would need about a 14 dBi ground antenna; weak in clutter |
 
@@ -46,17 +46,24 @@ as PAE of 30% or better at 27 and 30 dBm average OFDM output, with a PA study (T
 
 ## T-03 TDD frame structure, guard and sensing (G-08, G-13, G-21)
 
-Propagation: 3.33 us per km one way. DL to UL guard must cover about 2 x delay: 100 us at 15 km, 200 us at 30 km.
+Propagation: 3.33 us per km one way. The DL to UL guard must cover about 2 x delay plus two turn-arounds (`02` section 4). The uplink slot is
+sized for MAC-007 (1 Mbit/s at QPSK 1/2, 100 feedback bits per frame, 2 preamble symbols). Downlink share of the frame [calc]:
+
+| Range km | A: fixed 1 ms | B: fixed 2 ms | C: adaptive |
+|---|---|---|---|
+| 5 | 0.852 | 0.899 | 0.852 |
+| 10 | 0.818 | 0.882 | 0.882 |
+| 15 | 0.785 | 0.865 | 0.865 |
+| 30 | 0.685 | 0.815 | 0.877 |
 
 | Option | Description | Pros | Cons |
 |---|---|---|---|
-| A | Fixed 1.0 ms super-frame, DL 0.85 ms / UL 0.08 ms / guards 0.07 ms, timing advance at the ground unit | Lowest feedback latency (1 ms); guard doubles as an ETSI FBE idle period (at least 100 us, [not verified]); uplink about 5.5 symbols per ms | The 0.07 ms guard covers only about 10 km (needs 2 x delay + 2 x 10 us turn-around); at 15 km it must grow to 0.12 ms (12% of the frame); at 30 km it does not fit |
-| B | 2.0 ms super-frame, DL 1.76 / UL 0.12 / guards 0.12 ms, timing advance | Guard overhead at 15 km is 6% instead of 12%; covers 15 km | Feedback period 2 ms (MAC-005 gets looser); uplink about 4.4 symbols per ms (less than A) and more buffering for the per-frame MCS change; 30 km still does not fit |
-| C | Range-adaptive frame: 1 ms at less than 5 km, 2 ms up to 15 km, 4 ms up to 30 km, set by the measured delay | Optimal overhead for each range; one design | More states to verify; the frame length change must be glitch-free |
+| A | Fixed 1.0 ms super-frame at all ranges, timing advance at the ground unit | Lowest feedback latency (1 ms); the guard doubles as an ETSI frame-based-equipment idle period (at least 100 us, [not verified]) | Downlink share falls from 0.852 at 5 km to 0.785 at 15 km and 0.685 at 30 km |
+| B | Fixed 2.0 ms super-frame | Better efficiency at range (0.865 at 15 km, 0.815 at 30 km) | Feedback period 2 ms (MAC-005 looser); 0.899 at 5 km does not use the short-range advantage of fast feedback |
+| C | Range-adaptive frame: 1 ms to 7 km, 2 ms to 15 km, 4 ms beyond, from the measured round-trip delay | Best share at every range (0.852, 0.882, 0.865, 0.877) | More states to verify; the frame length change must be glitch-free; feedback period grows with range |
 
-Recommendation: **C**, with the 1 ms frame as the default and the guard computed from the measured round-trip
-delay (timing advance estimated from the preamble). MAC-007 is restated as "1 Mbit/s uplink at an MCS of QPSK 1/2
-or higher, 300 kbit/s at the lowest MCS". The RC option (MAC-008) rides in the same uplink slot with priority.
+Recommendation (to be revisited in the trade-off iteration for T-03, where a split-band uplink is evaluated): **C**, with the 1 ms frame as the
+default.
 
 ## T-04 Numerology (G-12, G-25)
 
@@ -90,7 +97,7 @@ Option B is a P2+ feature for event organisers.
 |---|---|---|---|
 | A | HEVC (H.265) with a custom low-latency slice encoder | Best compression at 1080p to 4K (roughly 30 to 50% below AVC at equal quality); the vendor hard cores support it (waybeam, Xilinx VCU) | Several patent pools and royalty exposure; encoder complexity is high |
 | B | AVC (H.264) | Lower complexity and area; simplest low-latency encoder; mature hardware decoders everywhere | Higher bit rate (about 1.5x), so more link margin or lower quality at range; also in patent pools (though the older and better understood) |
-| C | AV1 (or a royalty-free intra-heavy codec such as JPEG-XS for the lowest latency) | AV1: royalty-free by declaration; JPEG-XS: sub-millisecond latency and slice-based by design | AV1 low-latency hardware encoders are heavy; JPEG-XS needs 3 to 10x the bit rate of AVC at similar quality and does not fit the link at long range |
+| C | AV1 (or an intra-heavy codec such as JPEG-XS for the lowest latency) | AV1: offered royalty-free by AOMedia members, but a third-party patent pool also claims essential patents [to be checked]; JPEG-XS: sub-millisecond latency and slice-based by design | AV1 low-latency hardware encoders are heavy; JPEG-XS needs roughly 10x or more of the bit rate of AVC at similar quality [typical compression ratios, from memory] and does not fit the link at long range |
 
 Recommendation: **B and A in parallel**: AVC as the P1 baseline and the ASIC fallback (easier, lower risk, decoders
 everywhere), HEVC as the quality mode. Keep the encoder architecture codec-agnostic at slice level; start the
@@ -156,8 +163,8 @@ buying the commercial licence only if time-to-flight matters more than the legal
 
 | Option | Description | Pros | Cons |
 |---|---|---|---|
-| A | AD9361/AD9364 (70 MHz to 6 GHz, up to 56 MHz) | Cheapest, well supported (openwifi, ADI HDL); known | Limited DPD/observation support; no built-in tracking calibrations beyond basics |
-| B | ADRV9002 (up to 40 MHz, DPD and tracking calibration support) | Closest to the target calibration architecture (`03`); lower power | Newer, more complex boot and API; cost; check licences of the reference firmware |
+| A | AD9361 (2x2) / AD9364 (1x1), 70 MHz to 6 GHz receive, 56 MHz | Cheapest, well supported (openwifi, ADI HDL); retune about 15 to 25 us with fast-lock profiles | No integrated DPD; TDD RX to TX goes through the ALERT state, so the 5 us turn-around (RF-009) is not demonstrated on this part |
+| B | ADRV9002 (30 MHz to 6 GHz, up to 40 MHz, integrated DPD) | Closest to the target calibration architecture (`03`); hop frames of 13 us with about 3 us transitions demonstrated by ADI, which supports RF-006 and RF-009 | Newer, more complex boot and API; cost; power and tracking calibration not verified; check licences of the reference firmware |
 | C | LMS7002M (LimeSDR) | Open hardware docs; flexible | Fewer vendor calibration features; supply |
 
 Recommendation: **A for the first bench link (fast) and B for the calibration work** (CAL-005 DPD with an observation
@@ -218,6 +225,26 @@ packet-level FEC as an optional outer code across slices in cruise mode (LAT-006
 Recommendation: **B**, plus the FSIN alignment of the sensor to the TDD frame on the air unit (`03` section 7).
 C is a later option for fixed-rate displays.
 
+## T-18 Control-plane processors (ASIC) (see `13`)
+
+| Option | Description | Pros | Cons |
+|---|---|---|---|
+| A | Real-time Cortex-R5F/M7-class cores (300 to 400 MHz) plus one power-gated A53/A55-class application core | Same architecture as the phase B device; mature RTOS, tools and WCET analysis; real-time cores cost 5 to 20 mW [E] | Licence and royalty; the application core dominates power if left on |
+| B | RISC-V real-time cores plus a Linux-capable RISC-V core | No licence fee; custom instructions possible | Less mature RTOS/WCET/certification ecosystem; software must be ported from the ARM-based FPGA phases |
+| C | Real-time cores only on the air unit; Linux only on the ground unit or a companion board | Lowest power, fastest boot, smallest area | No on-board application services; update and configuration paths go through the real-time firmware |
+
+Recommendation: A for the first ASIC with C as the air-unit default configuration; B as a cost/IP study.
+
+## T-19 Phase A evaluation platform (see `13`)
+
+| Option | Description | Pros | Cons |
+|---|---|---|---|
+| A | ADALM-PLUTO class (AD9363 + Zynq Z-7010) for PHY/MAC plus a separate low-cost video platform | Lowest cost; ADI software support; good for modem and MAC bring-up | 28k logic cells, 20 MHz, 5.8 GHz outside the guaranteed range; encoder/decoder live on another board, so latency across the boards is not representative |
+| B | Kria K26/KV260 class (Zynq UltraScale+ with codec) plus an RF board | One device for modem, codec and processors, closest to phase B | 7.5 W typical; RF connection to be solved (no FMC on KV260 [E, check]); VCU latency unknown |
+| C | ZCU104-class kit plus FMCOMMS/ADRV9002 evaluation board | Best-supported ADI reference flows | Highest cost, not "low-cost evaluation" |
+
+Recommendation: A for modem/MAC/calibration bring-up in parallel with B for the video pipeline and the VCU latency measurement; C only if A and B cannot be joined.
+
 ---
 
 ## Summary of recommendations
@@ -241,3 +268,5 @@ C is a later option for fixed-rate displays.
 | T-15 | Static adaptive video channel, hopped control, separate beacon |
 | T-16 | LDPC data, short code or polar for control |
 | T-17 | Display locked to received timing |
+| T-18 | Real-time cores plus power-gated application core; air unit without Linux by default |
+| T-19 | Phase A on PlutoSDR-class board and a K26-class board in parallel |

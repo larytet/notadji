@@ -5,9 +5,11 @@ set -eu
 cd "$(dirname "$0")/.."
 mkdir -p build
 python3 -I scripts/trace_matrix.py >/dev/null
+python3 -I scripts/claim_register.py >/dev/null
+python3 -I scripts/audit_numbers.py >/dev/null
 out=build/notadji-spec.md
 : > "$out"
-for f in spec/0*.md; do
+for f in spec/[0-9]*.md; do
   cat "$f" >> "$out"
   printf '\n\n\\newpage\n\n' >> "$out"
 done

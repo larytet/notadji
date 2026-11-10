@@ -24,7 +24,7 @@ list requested):
 | 802.11n/ac injection (wfb-ng) | Raw packet injection, 1:1 RTP packet to frame mapping, FEC above the MAC | Frame mapping per slice, FEC design, TX diversity by RSSI | Rate/MCS control depends on the adapter and driver; no sub-slice control |
 | 802.11ax (Wi-Fi 6) | OFDMA, target wake time (TWT), 4x longer symbol (12.8 us), 242-tone RU | Numerology (the 78.125 kHz spacing used in `02`), scheduled access | Complexity; scheduling designed for many stations |
 | 802.11be (Wi-Fi 7) | Restricted TWT, multi-link operation, low-latency access categories, 320 MHz | Multi-link redundancy (two bands simultaneously), R-TWT style scheduling | 6 GHz and 320 MHz not relevant; hardware cost |
-| 802.11ah (HaLow) | Sub-GHz (863-928 MHz), 1 to 16 MHz channels, long range | Basis of the 900 MHz variant (RF-002) | Rates below 40 Mbit/s, latency higher |
+| 802.11ah (HaLow) | Sub-GHz (863-928 MHz), 1 to 16 MHz channels, long range | Basis of the 900 MHz variant (RF-002) | Single-stream rates of roughly 40 Mbit/s at 8 MHz and 87 Mbit/s at 16 MHz (standard values from memory, not re-checked); regional channel widths limit the usable rate; latency higher |
 | openwifi (FPGA) | 10 microsecond SIFS in an FPGA MAC, injection, CSI | Reference FPGA 802.11 design, open source (AGPLv3, see licence note) | 20 MHz, 802.11a/g/n only in the open tree |
 | DECT-2020 NR (ETSI TS 103 636) | Slot-based low-latency design in unlicensed bands | Frame structure ideas | Not in 2.4/5.8 GHz globally |
 
@@ -55,8 +55,8 @@ timeout, a bounded latency for each payload), adaptive frequency hopping with a 
 | FPGA/SoC | Zynq UltraScale+ MPSoC EV (ZU4EV/ZU5EV) | Hard H.264/H.265 VCU with a low-latency mode, ARM cores, enough logic for the modem and FEC |
 | Alternative | Versal AI Edge | Larger, more expensive; later |
 | Alternative (budget) | Zynq-7000 plus a separate encoder SoC (OpenIPC camera) | Fewer resources; used for P0 hybrid |
-| RF transceiver | AD9361 / AD9364 (2x2, 70 MHz to 6 GHz, 56 MHz BW) | Used by openwifi; no built-in DPD or observation receiver on AD9361 beyond the shared RX |
-| RF transceiver (better) | ADRV9002 (2x2, up to 40 MHz, with DPD and tracking calibrations) | Closer to the final calibration architecture (section 3 of `03`); check the licence of its reference firmware |
+| RF transceiver | AD9361 (2x2) / AD9364 (1x1): receive 70 MHz to 6 GHz, transmit 47 MHz to 6 GHz, channel bandwidth below 200 kHz to 56 MHz, best-case noise figure 2 dB ([datasheet page found by search](https://www.analog.com/AD9361/datasheet)) | Cheapest, well supported (openwifi, ADI HDL) | No integrated DPD; whether its TX monitor path can act as an observation receiver is to be checked in UG-570; fast-lock profiles give about 15 to 25 us retune ([ADI wiki](https://wiki.analog.com/resources/eval/user-guides/adrv936x_rfsom/tutorials/frequency_hopping)) but RX to TX in TDD goes through the ALERT state and a 5 us turn-around is not demonstrated |
+| RF transceiver (better) | ADRV9002 (2 Tx / 2 Rx, 30 MHz to 6 GHz, 12 kHz to 40 MHz bandwidth, integrated DPD per the ADI product page); hopping demonstrated with 13 us hop frames and about 3 us transitions in an ADI Link 16 example ([Analog Dialogue](https://www.analog.com/en/resources/analog-dialogue/articles/the-next-gen-software-defined-radio-sdr-transceiver-delivers-big-advances-in-frequency-hopping-fh.html)) | Closest to the final calibration architecture (section 3 of `03`) and to RF-006/RF-009 | Power figures and tracking-calibration scheduling not verified; 40 MHz limit rules out the optional 80 MHz mode in P1; check the licence of its reference firmware |
 | RF transceiver (alt.) | LimeSDR / LMS7002M | Open hardware and a lot of documentation |
 | FEM | Discrete 2.4 and 5.8 GHz FEMs with a power detector and a coupler, 33 dBm | Vendor choice by trade study T-06 |
 | Camera | MIPI CSI-2 sensor board (4 lanes), global-shutter option | |
