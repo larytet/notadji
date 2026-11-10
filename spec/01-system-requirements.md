@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 1.7 (T-01 iteration; revision 1.6 was the T-08/T-18 iteration; revision 1.5 was the T-15/T-17 iteration; revision 1.4 was the T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 1.8 (consolidation; revision 1.7 was the T-01 iteration; revision 1.6 was the T-08/T-18 iteration; revision 1.5 was the T-15/T-17 iteration; revision 1.4 was the T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -40,8 +40,8 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | VID-004 | The encoder shall be slice-based with at least 8 slices per frame, each slice independently decodable and independently protected. | M | | T |
 | VID-005 | No I-frames in steady state. A rolling intra-refresh wave with a period of 60 frames or less acts as the safety net (about 5% bit-rate overhead [E]); recovery from detected losses uses reactive slice refresh (VID-021). Revised by T-07. | M | | T |
 | VID-006 | Rate control: per-slice constant bit budget with a rate buffer of at most 1 slice, retargeted every slice from the MCS in force; hard bound: no slice shall exceed 105% of its budget, verified on the encoded bitstream and not from encoder readback (source review S-4). | M | | T |
-| VID-007 | Encoder pipeline latency (first pixel in to first slice bits out) of 2.0 ms or less at 1080p60. | M | P2 | T |
-| VID-008 | Decoder pipeline latency (first slice bits in to first line out) of 2.0 ms or less at 1080p60. | M | P2 | T |
+| VID-007 | Encoder pipeline latency (first pixel in to first slice bits out) of 2.0 ms or less at 1080p60 and 1.2 ms or less at 1080p120 (the stage values of the latency budget in `02`; no open or vendor figure exists to confirm them, G-05). | M | P2 | T |
+| VID-008 | Decoder pipeline latency (first slice bits in to first line out) of 2.0 ms or less at 1080p60 and 1.2 ms or less at 1080p120 (budget in `02`; G-05). | M | P2 | T |
 | VID-009 | Video bit rate range: 1 to 80 Mbit/s, adjustable per frame. | M | | T |
 | VID-010 | Loss concealment: a lost slice shall be concealed from the previous frame (motion-compensated, O) and recovered by reactive slice refresh in the next frame (VID-021) or at the latest by the rolling wave within 60 frames. | M | | T |
 | VID-011 | Unequal error protection: slice header and parameter data shall have at least 6 dB more protection than residual data. | S | | T |
@@ -163,7 +163,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 |----|-------------|-----|-------|-----|
 | ADA-001 | Adaptive frequency selection: the ground unit shall scan the permitted channels (spectrum sensing using the receiver, 50 microsecond dwell per channel per scan) and rank them by interference energy and by decoded video quality. | M | | T |
 | ADA-002 | Channel switch on degraded quality: decision latency of 20 ms or less, and execution as defined in MAC-010. | M | | T |
-| ADA-003 | Two hopping modes: (a) slow hop: change channel when the current one is bad (per ADA-002); (b) fast hop (for control/telemetry and as a robust fallback; in ETSI regions only in an adaptive form, because non-adaptive hopping is limited to a 5 ms on-time followed by a 5 ms gap [to be checked in EN 300 328]): frequency hopping with a dwell of 1 to 10 ms across at least 20 channels in a pseudo-random sequence shared at pairing. | M | | T |
+| ADA-003 | Two channel modes: (a) static adaptive channel (default for the video band and for the uplink/control channel): change channel when the current one is bad (per ADA-002), with a fallback channel list; (b) fast hopping, used only in anti-jam mode (SEC-004): dwell of 1 to 10 ms across at least 20 channels in a pseudo-random sequence shared at pairing, costing 5% to 0.5% of airtime at a 50 us settle time (`07` T-15); in ETSI regions only in an adaptive form, because non-adaptive hopping is limited to a 5 ms on-time followed by a 5 ms gap [to be checked in EN 300 328]. Revised by T-15. | M | | T |
 | ADA-004 | Band hopping: switching between 2.4 GHz and 5.8 GHz (and 900 MHz when fitted) in a link-loss case, with a re-establishment time of 300 ms or less (using the stored hop sequence and the control channel). | M | P2 | T |
 | ADA-005 | Out-of-band control: the beacon/control channel shall remain on a robust, low-rate, separate channel (e.g. 900 MHz or the 2.4 GHz band when video is on 5.8 GHz) so that the link can be re-established after loss; in split-band mode (MAC-012) the uplink channel is this channel. | S | | T |
 | ADA-006 | Regional compliance: the set of allowed channels, powers and dwell times is data-driven per region and locked at the factory (region code) with signed updates only. | M | | I |
@@ -243,7 +243,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | ID | Requirement | Pri | Phase | Ver |
 |----|-------------|-----|-------|-----|
 | IF-001 | Host interface (flight controller): UART (up to 3 Mbaud) and USB 2.0 / CAN-FD (P2). MSP, MAVLink 2. | M | | T |
-| IF-002 | Camera: MIPI CSI-2 (VID-002), I2C/SPI control, sensor sync (FSIN) output for rolling-shutter alignment; fixed frame period policy: exposure is limited below the frame time so that the sensor never stretches the frame (source review S-5). | M | | I |
+| IF-002 | Camera: MIPI CSI-2 (VID-002), I2C/SPI control, sensor sync (FSIN) output for rolling-shutter alignment; fixed frame period policy: exposure is limited below the frame time so that the sensor never stretches the frame (source review S-5); sensor readout time of 8 ms or less at 1080p60 and 4 ms or less at 1080p120 (the assumption of the latency budget in `02`, G-15). | M | | I |
 | IF-003 | Ground unit host interface: HDMI/DP/DSI out, USB-C (video and data), Ethernet 1 Gbit (O), 5 GHz WiFi/BLE for the phone app (low-priority sideband). | M | | I |
 | IF-004 | Debug: JTAG/SWD, UART console, a trace port for the latency timestamps, and a test header for RF conducted measurements (U.FL). | M | P1 | I |
 | SW-001 | Control plane in Linux (or Zephyr/RTOS) on the application CPU; data plane in hardware. The data plane shall continue to work if the application CPU stalls for 100 ms. | M | | T |
@@ -318,3 +318,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 1.5 | G2-12 | T-15/T-17 iteration: hop overhead and genlock drift quantified, VID-018 gets steering range and resolution |
 | 1.6 | G2-13 | T-08/T-18 iteration: inter-die interface rate and power computed, ASC-006 added, T-18 confirmed on workload and power grounds |
 | 1.7 | G2-14 | T-01 iteration: range versus MCS computed, reduced-quality range profile VID-022 added, SYS-003 states reduced-rate ranges |
+| 1.8 | G2-15 | Consolidation: VID-007/008 per frame rate, IF-002 sensor readout time (G-05, G-15 closed), ADA-003 aligned with the T-15 decision |

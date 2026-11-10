@@ -112,7 +112,7 @@ Requirements: 194
 | ANT-011 | Antenna return loss and pattern data shall be taken into account by the link-budget estima | O | P1,P2 | D | TG-ANT antenna and VSWR |
 | ADA-001 | Adaptive frequency selection: the ground unit shall scan the permitted channels (spectrum  | M | P1,P2 | T | TG-ADA spectrum and hopping |
 | ADA-002 | Channel switch on degraded quality: decision latency of 20 ms or less, and execution as de | M | P1,P2 | T | TG-ADA spectrum and hopping |
-| ADA-003 | Two hopping modes: (a) slow hop: change channel when the current one is bad (per ADA-002); | M | P1,P2 | T | TG-ADA spectrum and hopping |
+| ADA-003 | Two channel modes: (a) static adaptive channel (default for the video band and for the upl | M | P1,P2 | T | TG-ADA spectrum and hopping |
 | ADA-004 | Band hopping: switching between 2.4 GHz and 5.8 GHz (and 900 MHz when fitted) in a link-lo | M | P2 | T | TG-ADA spectrum and hopping |
 | ADA-005 | Out-of-band control: the beacon/control channel shall remain on a robust, low-rate, separa | S | P1,P2 | T | TG-ADA spectrum and hopping |
 | ADA-006 | Regional compliance: the set of allowed channels, powers and dwell times is data-driven pe | M | P1,P2 | I | TG-ADA spectrum and hopping |

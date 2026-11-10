@@ -126,6 +126,7 @@ _b = lb.MCS_TABLE[0]
 _r58 = lb.max_range_km(lb.Scenario("x", 5800, 1, 30, 5, 5, diversity_gain_db=3), _b)
 _r24 = lb.max_range_km(lb.Scenario("x", 2400, 1, 30, 5, 5, diversity_gain_db=3), _b)
 check("SYS-003/VID-022 reduced-profile ranges 10.3 km and 25 km", abs(_r58 - 10.3) < 0.06 and abs(_r24 - 25.0) < 0.3 and "10.3 km at 5.8 GHz and 25 km at 2.4 GHz" in SRS)
+check("ADA-003 overhead range matches the hop table (5% to 0.5%)", abs(50e-3 / 1.0 - 0.05) < 1e-9 and abs(50e-3 / 10.0 - 0.005) < 1e-9 and "5% to 0.5% of airtime" in SRS)
 check("02 contains the split-band table from the script", split.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("split-band uplink margin >= 6 dB for all classes (MAC-007)", all(float(r.split("|")[7]) >= 6 for r in split.strip().split("\n")[2:]))
 check("MAC-007 states the split-band margins 17.0, 11.0 and 12.4", "17.0, 11.0 and 12.4 dB" in SRS)

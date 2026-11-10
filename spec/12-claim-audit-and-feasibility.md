@@ -84,7 +84,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | 50 us hop inside a band | Feasible | 15-25 us fast lock (AD9361), 15 us PLL retune (ADRV9002) | Bench |
 | 150 us hop between 2.4 and 5.8 GHz | **Unproven** | No source for cross-band retune with front-end switching | Bench |
 | TDD guard and uplink slot | Feasible after rebuild | Computed; sizes 1/2/4 ms frames | Lab with delay line |
-| 6.0 W at 30 dBm | At risk | Needs PA efficiency of about 27% at 30 dBm average OFDM (class AB does not reach it, Doherty may) | PA study, power measurement |
+| 6.0 W at 30 dBm | At risk | Holds in the PA model for OFDM QPSK/16QAM (5.8 W at PAE 27.6%) and for the low-PAPR mode (5.2 W); fails for 64QAM (6.3 W), which is capped at 27 dBm (RF-031); the model (ideal class-B scaling, PAE_sat 55%) is an estimate | PA study, power measurement |
 | 33 dBm product | Not within 6 W | 9.3 W input at 30% efficiency; separate SKU | n/a |
 | EVM -35 dB at 256QAM at high output | **Unproven**, probably aggressive | No source; 1 W PAs at 5.8 GHz usually need back-off | VSA on the FEM |
 | Air unit mass 25 g | **Unproven** | Not analysed; FPGA prototype cannot meet it (the SOM draws 7.5 W typical) | Phase B and ASIC |

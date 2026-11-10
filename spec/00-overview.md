@@ -13,8 +13,16 @@ ground unit) built in two phases:
 | Phase | Platform | Goal |
 |-------|----------|------|
 | P0 | Commodity WiFi (injection mode, wfb-ng/OpenIPC style) | Prove video pipeline, measure real latency, field data. Not a product. |
-| P1 | FPGA + off-the-shelf RF transceiver (software-defined radio) | Full custom PHY/MAC, calibration loops, encoder. Flyable prototype. |
+| P1 | FPGA + off-the-shelf RF transceiver (software-defined radio) | Full custom PHY/MAC, calibration loops, encoder. Bench and large-airframe test flights (about 14 W input, `02`); not a 250 g class flyer. |
 | P2 | ASIC (SDR-style baseband + integrated RF transceiver, external PA/FEM at first) | Product silicon. |
+
+### Platform phases (document 13) against the labels above
+
+| Platform phase (`13`, HSI-010) | Hardware | Labels in the SRS |
+|---|---|---|
+| A | Low-cost evaluation boards: PlutoSDR-class pair (2.4 GHz + 915 MHz), AD9361/ADRV9002 pair (5.8 + 2.4 GHz), K26-class video board, Rockchip/Pi-class ground decoder | P0 and P1 (bring-up) |
+| B | Custom board with the target controllers (ADRV9002-class transceiver, Zynq UltraScale+ EV-class device) | P1 (latency, thermal, mass) |
+| C | ASIC (two dice) | P2 |
 
 ## 2. Reading order
 

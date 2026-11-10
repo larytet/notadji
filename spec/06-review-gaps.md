@@ -103,3 +103,20 @@ needed before the design can proceed), **Medium** (clarify), **Low** (editorial)
 | G-26 | Resolved | Cross-reference fixed |
 | G-27 | Partly resolved | RF-029 added; near-field analysis open |
 | G-28 | Resolved | Rate model corrected (rev 0.3) |
+
+## 6. Updates since pass 5 (SRS rev 1.8)
+
+Statuses in section 5 are as of rev 0.3. Changes made by the second goal (iterations in `07`, audit in `12`):
+
+| ID | Status now | How |
+|---|---|---|
+| G-05 | Resolved | VID-007/008 per frame rate (rev 1.8) |
+| G-08 | Resolved differently | Split-band uplink (MAC-012) gives 11.0-17.0 dB margin; in-band TDD fallback sized from MAC-007 (T-03) |
+| G-13 | Resolved | MAC-001 re-derived (guard from range, frame 1/2/4 ms); only the fallback mode needs it |
+| G-15 | Resolved | IF-002 sensor readout time 8 ms (60 fps) and 4 ms (120 fps); sensor selection still open |
+| G-19 | Resolved | REG-002 via F3586-22 module |
+| G-20 | Resolved | SYS-009 split into race and long-range counts (T-05) |
+| G-24 | Partly resolved | The out-of-band uplink channel (ADA-005, MAC-012) is the rendezvous channel; the protocol is still to be specified |
+| G-27 | Resolved (analysis) | Near-far table in `07` T-05, RF-029 restated; receiver tolerance still to be measured |
+| G-02, G-17, G-22, G-23 | Open | Propagation study, PA datasheet, reliability requirements, ASIC cost model |
+| New (second goal) | See `12` section 3 (F-1 to F-17) and the feasibility register | Errors found by recomputation |
