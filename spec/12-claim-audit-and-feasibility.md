@@ -116,8 +116,8 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | E | 121 |
 | P | 31 |
 | R | 7 |
-| S | 15 |
-| total | 190 |
+| S | 16 |
+| total | 191 |
 
 | ID | Class | Basis |
 |---|---|---|
@@ -304,6 +304,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | PRO-004 | P | prototype plan item |
 | PRO-005 | P | prototype plan item |
 | PRO-006 | P | prototype plan item |
+| PRO-007 | S | Pluto guaranteed range 325-3800 MHz (ADI); AD936x independent RX/TX synthesizers (ADI driver docs); AD9364 independent mode unconfirmed |
 | ASC-001 | E | ASIC target; area and cost unproven (G-23) |
 | ASC-002 | E | ASIC target; area and cost unproven (G-23) |
 | ASC-003 | E | ASIC target; area and cost unproven (G-23) |

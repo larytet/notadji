@@ -113,6 +113,7 @@ _sb = 20e6 / 60 / 8
 check("PHY-011 states 86 codewords and 1.2e-5", math.ceil(_sb / 486) == 86 and abs((1 - (1 - 1e-3) ** (1 / 86)) - 1.2e-5) < 0.05e-5 and "86 codewords" in SRS and "1.2e-5" in SRS)
 check("VID-021 average overhead about 0.3%", abs(0.48 * 0.375 / 60 * 100 - 0.3) < 0.01 and "about 0.3%" in SRS)
 check("VID-005 wave overhead 5% at 60 frames", abs((lb.INTRA_TO_INTER_BITS - 1) / 60 - 0.05) < 1e-9 and "period of 60 frames or less" in SRS)
+check("PRO-007 A1 frequencies are inside the Pluto guaranteed range", 325 <= 915 <= 3800 and 325 <= 2400 <= 3800 and not (325 <= 5800 <= 3800) and "915 MHz" in SRS)
 check("02 contains the split-band table from the script", split.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("split-band uplink margin >= 6 dB for all classes (MAC-007)", all(float(r.split("|")[7]) >= 6 for r in split.strip().split("\n")[2:]))
 check("MAC-007 states the split-band margins 17.0, 11.0 and 12.4", "17.0, 11.0 and 12.4 dB" in SRS)

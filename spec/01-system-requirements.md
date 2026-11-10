@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 1.1 (T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 1.2 (T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -280,6 +280,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | PRO-004 | A Bluetooth Low Energy sideband (BLE 5 with ISO channels and Long Range) shall serve for pairing, RID and out-of-band control in the prototype. It shall not be used for video. | S | P1 | D |
 | PRO-005 | The RTL shall be written to be ASIC-portable (no vendor primitives outside a wrapper layer, clock-domain-crossing rules, lint and CDC clean). | M | P1 | I |
 | PRO-006 | P0 baseline: the camera half and G2G of a stock IP-camera pipeline shall be measured with the register-step method and with the rig and recorded as the reference for the budget in `02`. | M | P0 | T |
+| PRO-007 | Phase A radio bring-up in two configurations: A1 a pair of PlutoSDR-class radios with video at 2.4 GHz and the uplink at 915 MHz (inside the guaranteed 325 MHz to 3.8 GHz range); A2 an AD9361/ADRV9002-class evaluation pair with video at 5.8 GHz and the uplink at 2.4 GHz. A2 shall measure turn-around, hop time, TX-to-RX isolation (RF-030) and, on the AD9364-class air unit, whether independent RX and TX LOs work. | M | P1 | T |
 | ASC-001 | First product: two dice, an RF die in a mature RF CMOS or FD-SOI node and a digital SoC in 12 to 22 nm, with a high-speed digital interface (JESD204 or LVDS); single-die 22 nm FD-SOI is a later cost-down. Decision recorded in T-08. | M | P2 | A |
 | ASC-002 | The two-die set shall integrate: transceiver (2 TX, 2 RX, observation receiver; air unit uses 1 TX at the video band and 1 RX at the uplink band, ground unit 2 RX at the video band and 1 TX at the uplink band), ADC/DAC, PLL/VCO and temperature sensors (RF die); OFDM modem, FEC, video encoder and decoder, ISP-lite, CPU subsystem, memory interface and security block (digital SoC). | M | P2 | I |
 | ASC-003 | Design for test: scan, BIST for memories, RF loop-back (TX to RX internal path) for production test, 60 s or less of production test time per unit. | M | P2 | T |
@@ -308,3 +309,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 0.9 | G2-6 | T-04/T-16 iteration: numerology and decoder sizing quantified; PHY-005 per-mode codeword length, PHY-015 added, PHY-003 prefix note |
 | 1.0 | G2-7 | T-05 iteration: near-far analysis; SYS-009 split into race and long-range counts, RF-029 restated, ADA-010 added |
 | 1.1 | G2-8 | T-06/T-07 iteration: slice PER to codeword error rate, intra-refresh cost, VID-005/010 revised, VID-021 reactive slice refresh added, PHY-011 clarified |
+| 1.2 | G2-9 | T-11/T-12/T-19 iteration: phase A configurations A1/A2/A3, ADRV9002 for phase B, PRO-007 added |

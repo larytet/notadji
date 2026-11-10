@@ -78,6 +78,8 @@ in phase B (HSI-010).
 | Ground decode/display (P0) | Rockchip RK3566 (Radxa Zero 3W class) or Raspberry Pi 5 class boards; RK3588 boards | RK3588 encoder claimed up to 4K120 and RK3566 1080p60 HEVC [S: search summaries, vendor/community claims]; mainline Linux RK3588 has decode but encoder support was reported missing | Power figures not found; decode latency to be measured; display scan-out control is the real issue (VID-018) |
 | Real-time control | The real-time cores of the Zynq parts (Cortex-R5F on UltraScale+; on Z-7010 only the A9) | R5F cores are present on the UltraScale+ parts [E: from AMD family documents, not re-read here] | On Pluto the control loops run on the A9 under Linux (PREEMPT_RT) or in the fabric: acceptable for phase A, not for the product |
 
+Phase A radio configurations (PRO-007): A1 two PlutoSDR-class radios, video 2.4 GHz plus uplink 915 MHz, inside the guaranteed range; A2 AD9361/ADRV9002 evaluation pair, video 5.8 GHz plus uplink 2.4 GHz; A3 video pipeline on a K26-class board with a Rockchip/Pi-class ground decoder (`07` T-19).
+
 Phase A exit criteria: modem and MAC working over the air at 5/10/20 MHz; per-stage timestamps from every block (LAT-004); calibration loops
 (IQ, LO, power control, VSWR sensing with an external coupler) demonstrated on bench; measured, not assumed, values for the open items in `12`
 (turn-around time, hop time, encoder first-slice latency).

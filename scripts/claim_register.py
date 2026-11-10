@@ -34,6 +34,7 @@ OVERRIDE = {
     "MAC-001": ("C", "link_budget.py tdd_budget: uplink sized for MAC-007, guard from range"),
     "VID-021": ("C", "link_budget.py intra_refresh_table: 0.3% average at the target loss rate (cost ratio 4 is E)"),
     "PHY-011": ("C", "link_budget.py slice_protection_table: codeword error rate 1.2e-5"),
+    "PRO-007": ("S", "Pluto guaranteed range 325-3800 MHz (ADI); AD936x independent RX/TX synthesizers (ADI driver docs); AD9364 independent mode unconfirmed"),
     "PHY-015": ("E", "link_budget.py ldpc_estimate (assumed base matrix and iterations)"),
     "PHY-005": ("E", "codeword lengths from 802.11 LDPC family; coding gain difference from literature"),
     "PHY-014": ("E", "PAPR reduction of DFT-s-OFDM is typical literature value (about 3-4 dB), to be simulated"),

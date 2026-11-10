@@ -244,6 +244,21 @@ buying the commercial licence only if time-to-flight matters more than the legal
 Recommendation: **A for the first bench link (fast) and B for the calibration work** (CAL-005 DPD with an observation
 path). Keep the HAL (SW-002) so that both can be used.
 
+Review (iteration 9, T-11, T-12 and T-19 together, using the two-phase rule of `13`): the split-band architecture (T-03) needs a transmitter at the video band and a receiver at a
+different band at the same time. The AD936x family has two independent RF synthesizers, one for receive and one for transmit, and the receive and transmit LO frequencies are set
+independently ([ADI Linux driver documentation](https://analogdevicesinc.github.io/linux/drivers/iio-transceiver/ad9361.html), found by search); the independent FDD mode is pin-controlled; the AD9364 (1 Rx, 1 Tx) is mentioned only as the 1x1 variant and its
+independent-mode behaviour was **not** confirmed. Consequences and alternatives:
+
+| Phase A configuration | Radios | Covers | Limits |
+|---|---|---|---|
+| A1 | Two ADALM-PLUTO-class radios (AD9363, 325 MHz to 3.8 GHz guaranteed, 20 MHz) | The Class L split-band configuration: video at 2.4 GHz, uplink at 915 MHz, both inside the guaranteed range, no firmware modification; modem, MAC, sequencer, calibration hooks | 20 MHz only; no 5.8 GHz; no DPD; low power |
+| A2 | Pair of AD9361 (ground: 2 Rx at 5.8 GHz, 1 Tx at 2.4 GHz; air: AD9364-class 1 Tx at 5.8 GHz, 1 Rx at 2.4 GHz) or ADRV9002 evaluation boards | Class S/X split-band configuration at 5.8 GHz with 2.4 GHz uplink; turn-around, hop and isolation measurements | Cost; AD9364 independent mode to be confirmed; 40 MHz limit on ADRV9002 |
+| A3 | K26-class board (codec) plus Rockchip/Pi-class ground decoder | Video pipeline, VCU latency, slice handling, display lock | Not joined to the radio at low latency in phase A |
+
+Decision: **T-19 option A and B in parallel as planned, with A split into A1 (Pluto pair, 2.4 GHz + 915 MHz) and A2 (AD9361/ADRV9002, 5.8 GHz + 2.4 GHz)**; **T-12: AD936x for phase A, ADRV9002 for phase B** (it
+is the only part with sourced evidence for the 5 us turn-around and the hop time and has integrated DPD); **T-11: clean-room custom baseband** unchanged. New alternative rejected: using
+openwifi as the A1 baseline (AGPL, 20 MHz, 802.11 timing only) except as a behavioural reference.
+
 ## T-13 Antenna and diversity
 
 | Option | Description | Pros | Cons |
@@ -358,11 +373,11 @@ Recommendation: A for modem/MAC/calibration bring-up in parallel with B for the 
 | T-09 | Open stack with a signed RF limiter |
 | T-10 | Certified BLE/RID module |
 | T-11 | Wifi (P0), clean-room custom baseband (P1) |
-| T-12 | AD9361 first, ADRV9002 for the calibration work |
+| T-12 | AD936x in phase A, ADRV9002 in phase B (hop, turn-around, DPD evidence) |
 | T-13 | Diversity base, switched-beam ground accessory |
 | T-14 | Memory-polynomial DPD with LUT fallback |
 | T-15 | Static adaptive video channel, hopped control, separate beacon |
 | T-16 | LDPC data, short code or polar for control |
 | T-17 | Display locked to received timing |
 | T-18 | Real-time cores plus power-gated application core; air unit without Linux by default |
-| T-19 | Phase A on PlutoSDR-class board and a K26-class board in parallel |
+| T-19 | Phase A1 Pluto pair (2.4 GHz + 915 MHz), A2 AD9361/ADRV9002 pair (5.8 + 2.4 GHz), A3 K26-class video board, in parallel |
