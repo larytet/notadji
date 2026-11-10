@@ -38,6 +38,7 @@ OVERRIDE = {
     "REG-007": ("R", "47 CFR 2.944 text read via search; KDB revision to be checked by counsel"),
     "SEC-005": ("R", "47 CFR 2.944 and U-NII security guidance (search); counsel to confirm the limiter approach"),
     "ASC-006": ("C", "link_budget.py interface_table: 2.95 Gbit/s, 29-118 mW at 5-20 pJ/bit (energy per bit is E)"),
+    "VID-022": ("C", "link_budget.py range_vs_mcs_table: BPSK 1/2 6.9 Mbit/s, 10.3 km at 5.8 GHz, 25 km at 2.4 GHz (free space); video quality target is E"),
     "PHY-015": ("E", "link_budget.py ldpc_estimate (assumed base matrix and iterations)"),
     "PHY-005": ("E", "codeword lengths from 802.11 LDPC family; coding gain difference from literature"),
     "PHY-014": ("E", "PAPR reduction of DFT-s-OFDM is typical literature value (about 3-4 dB), to be simulated"),

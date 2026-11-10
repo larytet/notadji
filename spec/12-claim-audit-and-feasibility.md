@@ -113,12 +113,12 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 
 | Class | Requirements |
 |---|---|
-| C | 17 |
+| C | 18 |
 | E | 121 |
 | P | 30 |
 | R | 9 |
 | S | 16 |
-| total | 193 |
+| total | 194 |
 
 | ID | Class | Basis |
 |---|---|---|
@@ -153,6 +153,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | VID-019 | E | engineering target; proved by verification method T (see 08) |
 | VID-020 | S | waybeam: 120 fps VENC ceiling with silent reset to 30 fps; SDK calls that succeed but do not apply |
 | VID-021 | C | link_budget.py intra_refresh_table: 0.3% average at the target loss rate (cost ratio 4 is E) |
+| VID-022 | C | link_budget.py range_vs_mcs_table: BPSK 1/2 6.9 Mbit/s, 10.3 km at 5.8 GHz, 25 km at 2.4 GHz (free space); video quality target is E |
 | LAT-001 | S | OpenIPC latency-probe method (register step, one clock) |
 | LAT-002 | E | engineering target; proved by verification method T (see 08) |
 | LAT-003 | E | engineering target; proved by verification method T (see 08) |

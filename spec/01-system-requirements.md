@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 1.6 (T-08/T-18 iteration; revision 1.5 was the T-15/T-17 iteration; revision 1.4 was the T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 1.7 (T-01 iteration; revision 1.6 was the T-08/T-18 iteration; revision 1.5 was the T-15/T-17 iteration; revision 1.4 was the T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -21,7 +21,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 |----|-------------|-----|-------|-----|
 | SYS-001 | The link shall deliver live video from AU to GU with G2G latency (mean) of 20 ms or less at 1080p60 and 12 ms or less at 1080p120. [TBV] | M | P2 | T |
 | SYS-002 | The FPGA prototype shall reach G2G of 30 ms or less at 1080p60 (mean) as the first milestone. | M | P1 | T |
-| SYS-003 | The link shall sustain 1080p60 video (at least 10 Mbit/s net) with at least 6 dB free-space margin in these range classes (30 dBm conducted, 2-branch MRC on the ground unit, lowest MCS that meets the rate): **Class S** 5 km, 5.8 GHz, 20 MHz, 5/5 dBi antennas; **Class X** 10 km, 5.8 GHz, 20 MHz, 10 dBi ground antenna (for example the six-sector array of ANT-008); **Class L** 14 km, 2.4 GHz, 20 MHz, 5/5 dBi. Ranges under ETSI EIRP limits are specified separately (Class L is about 2.5 km at 20 dBm EIRP). Real-world margins per scenario are in `02` (G-02). Revised by T-01. | M | P2 | A,T |
+| SYS-003 | The link shall sustain 1080p60 video (at least 10 Mbit/s net) with at least 6 dB free-space margin in these range classes (30 dBm conducted, 2-branch MRC on the ground unit, lowest MCS that meets the rate): **Class S** 5 km, 5.8 GHz, 20 MHz, 5/5 dBi antennas; **Class X** 10 km, 5.8 GHz, 20 MHz, 10 dBi ground antenna (for example the six-sector array of ANT-008); **Class L** 14 km, 2.4 GHz, 20 MHz, 5/5 dBi. Ranges under ETSI EIRP limits are specified separately (Class L is about 2.5 km at 20 dBm EIRP). Real-world margins per scenario are in `02` (G-02). With the reduced-quality profile (VID-022, 6.9 Mbit/s) the ranges are 10.3 km at 5.8 GHz and 25 km at 2.4 GHz with 5/5 dBi antennas. Revised by T-01. | M | P2 | A,T |
 | SYS-004 | The video shall degrade gracefully (lower resolution/quality, never a frozen frame longer than 100 ms) as SNR drops, down to the lowest MCS. | M | | T |
 | SYS-005 | Air unit total DC input power, excluding the camera sensor module: at most 3.5 W at 25 dBm and 4.1 W at 27 dBm average output in any modulation; at most 6.0 W at 30 dBm in OFDM QPSK/16QAM and in the low-PAPR mode (64QAM and higher are capped at 27 dBm, RF-031). A separate 33 dBm SKU is allowed up to 10 W. Basis: PA model in `02` section 3 [E]. Revised by T-02. | M | P2 | T |
 | SYS-006 | Air unit mass, including the antennas' feed cables and the heatsink, shall not exceed 25 g. | S | P2 | I |
@@ -55,6 +55,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | VID-019 | Optional audio: 48 kHz, 32 to 128 kbit/s, end-to-end latency 20 ms or less, lip-sync within 40 ms of the video. | O | P2 | T |
 | VID-020 | No hidden encoder limits: every rate, intra-refresh and reference-structure parameter takes effect within one slice time without restarting the pipeline; unsupported values are rejected with an error and never silently replaced; input frame-rate ceilings of at least 120 fps at 1080p and 240 fps at 720p (source review S-4 to S-7). | M | | T |
 | VID-021 | Reactive slice refresh: a slice reported lost in the acknowledgement bitmap (MAC-004) shall be re-coded in intra mode in the next frame, provided the acknowledgement reaches the encoder within one frame time; average overhead at the target loss rate about 0.3% [E]. | M | | T |
+| VID-022 | Reduced-quality range profile: at 6 Mbit/s or less (BPSK 1/2, 6.9 Mbit/s net in the video band) the encoder shall deliver usable video of at least 720p30, giving 10.3 km at 5.8 GHz and 25 km at 2.4 GHz with 5/5 dBi antennas, 6 dB margin, free space (`07` T-01); usability is judged on the reference video set (objective score target to be set, [E]). | M | | T |
 
 ## 4. Latency and jitter (LAT)
 
@@ -316,3 +317,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 1.4 | G2-11 | T-13 iteration: sector-array gain corrected (4 sectors give 6.6-9.6 dBi, not 8-10 dB over omni), ANT-008 now 6 sectors, Class X antenna example |
 | 1.5 | G2-12 | T-15/T-17 iteration: hop overhead and genlock drift quantified, VID-018 gets steering range and resolution |
 | 1.6 | G2-13 | T-08/T-18 iteration: inter-die interface rate and power computed, ASC-006 added, T-18 confirmed on workload and power grounds |
+| 1.7 | G2-14 | T-01 iteration: range versus MCS computed, reduced-quality range profile VID-022 added, SYS-003 states reduced-rate ranges |

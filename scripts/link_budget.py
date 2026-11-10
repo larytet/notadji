@@ -295,6 +295,17 @@ def interface_table() -> str:
     return "\n".join(rows)
 
 
+def range_vs_mcs_table() -> str:
+    """Free-space range at 6 dB margin and net video-band rate per MCS (split-band mode, 20 MHz, 30 dBm, 5/5 dBi, 2-branch MRC) (T-01)."""
+    rows = ["| MCS | Net rate Mbit/s | Range km at 5.8 GHz | Range km at 2.4 GHz |", "|---|---|---|---|"]
+    for m in MCS_TABLE:
+        rate = DATA_TONES[20.0] * m.bits_per_sym / SYMBOL_US * DL_DUTY_SPLIT * 0.85
+        r58 = max_range_km(Scenario("x", 5800, 1, 30, 5, 5, diversity_gain_db=3), m)
+        r24 = max_range_km(Scenario("x", 2400, 1, 30, 5, 5, diversity_gain_db=3), m)
+        rows.append(f"| {m.name} | {rate:.1f} | {r58:.1f} | {r24:.1f} |")
+    return "\n".join(rows)
+
+
 def tdd_table() -> str:
     """TDD frame budget per range class with the range-adaptive frame length (T-03 option C)."""
     rows = ["| Range km | Frame ms | UL symbols (QPSK 1/2, 1 Mbit/s + 2 preamble) | UL us | Guard us | DL share of frame |", "|---|---|---|---|---|---|"]
@@ -346,3 +357,5 @@ if __name__ == "__main__":
     print(hop_overhead_table())
     print()
     print(interface_table())
+    print()
+    print(range_vs_mcs_table())

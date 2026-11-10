@@ -29,6 +29,21 @@ Recommendation: restate SYS-003 as **range classes** that combine A, B and D. Cl
 20 MHz, QPSK 3/4. Class X: 10 km, 10 dBi ground antenna (or switched-beam array), 5.8 GHz, 20 MHz. Class L: 15 km,
 2.4 GHz, 5/5 dBi, or 900 MHz variant. Give ETSI values separately.
 
+Review (iteration 14, T-01; after the T-03 iteration changed the uplink): the options A to D buy range with hardware (antenna, bandwidth, power, band). An option that needs no hardware was missing: (E) **trade video quality for
+range** by stepping down the MCS and the video bit rate, which the system already does (SYS-004). Range against MCS for the baseline antennas (split-band mode, 20 MHz, 30 dBm, 5/5 dBi, 2-branch MRC, 6 dB margin, free space;
+`scripts/link_budget.py`):
+
+| MCS | Net rate Mbit/s | Range km at 5.8 GHz | Range km at 2.4 GHz |
+|---|---|---|---|
+| BPSK 1/2 | 6.9 | 10.3 | 25.0 |
+| QPSK 3/4 | 20.8 | 5.8 | 14.1 |
+| 16QAM 3/4 | 41.7 | 2.3 | 5.6 |
+| 64QAM 3/4 | 62.5 | 1.2 | 2.8 |
+
+At BPSK 1/2 the video band carries about 6.9 Mbit/s and reaches 10.3 km at 5.8 GHz (25 km at 2.4 GHz) with ordinary 5 dBi antennas, so the 10 km range of Class X does **not** require the 10 dBi array if a reduced-quality profile
+(about 720p30 at 6 Mbit/s or less) is accepted; the array turns the same 10 km into the full 20 Mbit/s profile. Also considered: (F) a relay drone (research, not specified). Decision: keep the range classes, and add the
+**reduced-quality range profile** as the first step before any accessory (VID-022); SYS-003 states both the full-rate and the reduced-rate ranges.
+
 ## T-02 Power classes (G-06)
 
 Input power excluding the sensor, ASIC target, PAE 30% unless stated (`02` section 3): 25 dBm 2.9 W; 27 dBm 3.6 W;

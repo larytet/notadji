@@ -93,7 +93,7 @@ for m, e in zip(lb.MCS_TABLE, (-93, -88, -80, -74)):
 import subprocess  # noqa: E402
 
 out = subprocess.check_output([sys.executable, "-I", str(ROOT / "scripts" / "link_budget.py")], text=True)
-down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl, iface_tbl = out.strip().split("\n\n")
+down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl, iface_tbl, rng_tbl = out.strip().split("\n\n")
 check("02 contains the downlink table from the script", down.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the uplink table from the script", up.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the PA mode table from the script", pa_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
@@ -121,6 +121,11 @@ check("VID-018 drift figures (2.4 and 0.24 ms/min, 0.6 ms per 10 min)", abs(40e-
 check("07 contains the interface table", iface_tbl.strip() in TEXT["07-trade-studies.md"])
 _gbps = 61.44e6 * 2 * 12 * 2 / 1e9
 check("ASC-006: air unit 2.95 Gbit/s, 20 pJ/bit both ends stays under 120 mW", abs(_gbps - 2.95) < 0.01 and _gbps * 1e9 * 20e-12 * 2 * 1e3 <= 120 and "2.95 Gbit/s" in SRS)
+check("07 contains the range-versus-MCS table", rng_tbl.strip() in TEXT["07-trade-studies.md"])
+_b = lb.MCS_TABLE[0]
+_r58 = lb.max_range_km(lb.Scenario("x", 5800, 1, 30, 5, 5, diversity_gain_db=3), _b)
+_r24 = lb.max_range_km(lb.Scenario("x", 2400, 1, 30, 5, 5, diversity_gain_db=3), _b)
+check("SYS-003/VID-022 reduced-profile ranges 10.3 km and 25 km", abs(_r58 - 10.3) < 0.06 and abs(_r24 - 25.0) < 0.3 and "10.3 km at 5.8 GHz and 25 km at 2.4 GHz" in SRS)
 check("02 contains the split-band table from the script", split.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("split-band uplink margin >= 6 dB for all classes (MAC-007)", all(float(r.split("|")[7]) >= 6 for r in split.strip().split("\n")[2:]))
 check("MAC-007 states the split-band margins 17.0, 11.0 and 12.4", "17.0, 11.0 and 12.4 dB" in SRS)
