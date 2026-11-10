@@ -62,8 +62,14 @@ sized for MAC-007 (1 Mbit/s at QPSK 1/2, 100 feedback bits per frame, 2 preamble
 | B | Fixed 2.0 ms super-frame | Better efficiency at range (0.865 at 15 km, 0.815 at 30 km) | Feedback period 2 ms (MAC-005 looser); 0.899 at 5 km does not use the short-range advantage of fast feedback |
 | C | Range-adaptive frame: 1 ms to 7 km, 2 ms to 15 km, 4 ms beyond, from the measured round-trip delay | Best share at every range (0.852, 0.882, 0.865, 0.877) | More states to verify; the frame length change must be glitch-free; feedback period grows with range |
 
-Recommendation (to be revisited in the trade-off iteration for T-03, where a split-band uplink is evaluated): **C**, with the 1 ms frame as the
-default.
+| D | Split-band uplink: video band downlink-only, feedback/telemetry/RC on a 5 MHz channel in a far band (2.4 GHz for 5.8 GHz video, 900 MHz for 2.4 GHz video) | Uplink margin 11.0-17.0 dB instead of 4.3-6.3 dB (`02` section 1.1b); no guard, no timing advance, no uplink slot in the video band; video rate about 8% higher; the uplink can run continuously (feedback every 0.25 ms or faster, RC at 1 kHz); also provides the out-of-band beacon of ADA-005 | Second receive chain at the air unit and a 2.4 GHz/900 MHz transmit chain at the ground unit; TX-to-RX isolation requirement (RF-030); 900 MHz not usable for a 1 Mbit/s uplink in the EU; uplink channels are limited (16 at 5 MHz in 2.4 GHz) |
+| E | Same-band FDD (uplink 30 MHz away in the video band) | One band, no second radio | Rejected: about 67 dB of isolation needed at a 30 MHz offset [E, estimate in `02`] cannot be reached |
+
+Review (iteration 4): the two missing options were the split-band uplink (D) and same-band FDD (E). D beats in-band TDD on uplink margin and airtime,
+and removes the timing-advance and frame-length machinery from the video band; its cost is hardware (a second band) and regional dependence. E is
+physically infeasible. In-band TDD (C) stays as the fallback for single-band products and for regions where the second band is unusable.
+
+Decision: **D as the baseline architecture for Classes X and L where regulation allows (MAC-012); C as the fallback mode (MAC-001)**.
 
 ## T-04 Numerology (G-12, G-25)
 
@@ -253,7 +259,7 @@ Recommendation: A for modem/MAC/calibration bring-up in parallel with B for the 
 |---|---|
 | T-01 | Range classes S/X/L, per region |
 | T-02 | Three programmable power classes; 33 dBm separate SKU |
-| T-03 | Range-adaptive TDD frame, timing advance |
+| T-03 | Split-band uplink as baseline (D); range-adaptive in-band TDD as fallback (C) |
 | T-04 | 78.125 kHz sub-carrier spacing, FFT 64 to 512 |
 | T-05 | Frequency division with race mode; restate SYS-009 |
 | T-06 | AVC baseline plus HEVC quality mode; start licensing review |

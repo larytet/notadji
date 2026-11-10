@@ -30,6 +30,8 @@ OVERRIDE = {
     "PHY-003": ("C", "audit: symbol time, ICI -21.8 dB at 3.5 kHz, 32.7 dB at 1 kHz (Jakes approximation)"),
     "PHY-004": ("E", "256QAM needs EVM and Doppler limits that are unproven at 30 dBm"),
     "MAC-001": ("C", "link_budget.py tdd_budget: uplink sized for MAC-007, guard from range"),
+    "MAC-012": ("C", "link_budget.py split_band_uplink_table: uplink margin 11.0-17.0 dB, video rate +8%"),
+    "RF-030": ("E", "isolation estimate in 02 section 1.1b; bench-proven later"),
     "MAC-007": ("C", "link_budget.py: uplink budget and uplink slot capacity"),
     "RF-020": ("C", "audit: sensitivity model -101 dBm + NF + SNR + 2 dB; datasheet NF 2 dB best case for AD9361 [S]"),
     "RF-006": ("S", "AD9361 fast lock 15-25 us (ADI wiki); ADRV9002 13 us hop frames with about 3 us transition (Analog Dialogue)"),

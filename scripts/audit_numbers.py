@@ -93,9 +93,12 @@ for m, e in zip(lb.MCS_TABLE, (-93, -88, -80, -74)):
 import subprocess  # noqa: E402
 
 out = subprocess.check_output([sys.executable, "-I", str(ROOT / "scripts" / "link_budget.py")], text=True)
-down, up, tdd, cmp_ = out.strip().split("\n\n")
+down, up, tdd, cmp_, split = out.strip().split("\n\n")
 check("02 contains the downlink table from the script", down.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the uplink table from the script", up.strip() in TEXT["02-link-and-latency-budgets.md"])
+check("02 contains the split-band table from the script", split.strip() in TEXT["02-link-and-latency-budgets.md"])
+check("split-band uplink margin >= 6 dB for all classes (MAC-007)", all(float(r.split("|")[7]) >= 6 for r in split.strip().split("\n")[2:]))
+check("MAC-007 states the split-band margins 17.0, 11.0 and 12.4", "17.0, 11.0 and 12.4 dB" in SRS)
 check("02 contains the TDD table from the script", tdd.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("07 (T-03) contains the TDD comparison from the script", cmp_.strip() in TEXT["07-trade-studies.md"])
 _t = lb.tdd_budget(1.0, 5)

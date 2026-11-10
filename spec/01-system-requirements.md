@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 0.6 (verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 0.7 (T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -27,7 +27,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | SYS-006 | Air unit mass, including the antennas' feed cables and the heatsink, shall not exceed 25 g. | S | P2 | I |
 | SYS-007 | Ground unit shall operate from a 1S-6S battery for at least 3 h at the nominal consumption. | S | | T |
 | SYS-008 | One ground unit shall pair with up to 4 air units and receive one (or two, picture-in-picture, O) at a time. | S | | D |
-| SYS-009 | Co-located operation by frequency plan: at least 6 simultaneous links at 20 MHz and 12 at 10 MHz in 5.8 GHz; 4 at 20 MHz and 8 at 10 MHz in 2.4 GHz; a race mode with 5 MHz channels giving 25 links in 5.8 GHz and 16 in 2.4 GHz at reduced rate and range. Beyond these numbers the links shall degrade gracefully through ADA-001 and power control. Revised by T-05. | M | | T |
+| SYS-009 | Co-located operation by frequency plan: at least 6 simultaneous links at 20 MHz and 12 at 10 MHz in 5.8 GHz; 4 at 20 MHz and 8 at 10 MHz in 2.4 GHz; a race mode with 5 MHz channels giving 25 links in 5.8 GHz and 16 in 2.4 GHz at reduced rate and range. Beyond these numbers the links shall degrade gracefully through ADA-001 and power control. In split-band mode the 5 MHz uplink channels limit the count to 16 links in 2.4 GHz. Revised by T-05. | M | | T |
 | SYS-010 | Out of scope for version 1: goggles optics and head tracking (the ground unit outputs HDMI/DP/DSI), multi-camera switching. Audio is optional (VID-019). See assumption A-01. | M | | I |
 
 ## 3. Video (VID)
@@ -88,17 +88,18 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 
 | ID | Requirement | Pri | Phase | Ver |
 |----|-------------|-----|-------|-----|
-| MAC-001 | Time-division duplex with a super-frame of 1 ms up to 7 km, 2 ms up to 15 km and 4 ms beyond, selected from the measured round-trip delay; the uplink slot is sized for MAC-007 (7 symbols at 1 ms: 1 Mbit/s at QPSK 1/2 plus 100 feedback bits plus a 2-symbol preamble); the DL to UL guard is at least 2 x the one-way propagation delay plus 2 x 10 us turn-around (100 us + 20 us at 15 km); the guard shall also provide the idle period required by frame-based-equipment rules where applicable (G-21). Revised by T-03. | M | | T |
+| MAC-001 | In-band TDD mode (fallback, and for single-band products or regions where the second band is unusable): super-frame of 1 ms up to 7 km, 2 ms up to 15 km and 4 ms beyond, selected from the measured round-trip delay; the uplink slot is sized for MAC-007 (7 symbols at 1 ms: 1 Mbit/s at QPSK 1/2 plus 100 feedback bits plus a 2-symbol preamble); the DL to UL guard is at least 2 x the one-way propagation delay plus 2 x 10 us turn-around (100 us + 20 us at 15 km); the guard shall also provide the idle period required by frame-based-equipment rules where applicable (G-21). Revised by T-03. | M | | T |
 | MAC-002 | All airtime is scheduled by the ground unit or by the air unit master. No contention-based access (no CSMA) inside a link. Coexistence with other systems is done by channel selection (ADA-001). | M | | T |
 | MAC-003 | Time synchronisation between air and ground within 1 microsecond (derived from the preamble). | M | | T |
 | MAC-004 | Uplink slots carry channel feedback (CSI summary, MCS recommendation, RSSI, per-slice ACK/NAK bitmap) with 1 ms or less period. | M | | T |
 | MAC-005 | The air unit shall change MCS, power and slice budget within 2 ms of receiving the feedback. | M | | T |
 | MAC-006 | Selective retransmission of slices only if the slice deadline (display deadline) can still be met; otherwise drop. | M | | T |
-| MAC-007 | Telemetry/control channel carrying MAVLink, MSP and generic serial with latency of 5 ms or less: downlink at least 2 Mbit/s; uplink at least 1 Mbit/s (QPSK 1/2) within 5 km (Class S), 8 km (Class X) and 12 km (Class L), and at least 300 kbit/s (BPSK 1/2) out to the full class range; the link adapts the uplink MCS automatically (uplink budget in `02`). | M | | T |
+| MAC-007 | Telemetry/control channel carrying MAVLink, MSP and generic serial with latency of 5 ms or less: downlink at least 2 Mbit/s; uplink at least 1 Mbit/s with 6 dB margin at the full class range in split-band mode (margins 17.0, 11.0 and 12.4 dB for Classes S, X and L, `02`); in in-band TDD mode at least 1 Mbit/s (QPSK 1/2) within 5 km (Class S), 8 km (Class X) and 12 km (Class L) and at least 300 kbit/s (BPSK 1/2) out to the full class range, the uplink MCS adapting automatically. | M | | T |
 | MAC-008 | Optional hard real-time RC channel: 1 kHz update, 3 ms one-way latency, link-lost failsafe in 100 ms. | O | | T |
 | MAC-009 | Pairing and key exchange without a network connection (see SEC-001). Re-pairing in the field within 10 s. | M | | D |
 | MAC-010 | Multi-link: a link shall be able to survive a change of channel (frequency hop) with a gap in video of 1 frame or less. | M | | T |
 | MAC-011 | Timing advance: the ground unit shall estimate the round-trip delay from the preamble (resolution 0.1 us) and advance its uplink slot so that the uplink arrives aligned with the air unit's frame; the estimate is also reported to the pilot as range (O). | M | | T |
+| MAC-012 | Split-band mode (baseline for Classes X and L where regulation allows): the video band carries downlink only (5% idle for frame-based-equipment rules); feedback, telemetry and control use a 5 MHz uplink channel at 2.4 GHz (for 5.8 GHz video) or 900 MHz (for 2.4 GHz video, where the band allows continuous operation), with feedback every 0.25 ms or faster; the mode falls back to in-band TDD (MAC-001) when the uplink band is unavailable or fails. | M | | T |
 
 ## 7. RF front end (RF)
 
@@ -130,6 +131,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | RF-027 | Switchable antenna ports: at least 2 on the ground unit (diversity), 2 on the air unit (diversity or 2 TX streams). | M | | I |
 | RF-028 | External PA/FEM control interface: bias, enable, gain-step, temperature, and power detector signals shall be in the chip's I/O (analogue and digital lines) so that PAs from at least 3 vendors can be used. | M | P2 | I |
 | RF-029 | Adjacent-channel rejection (needed by SYS-009): with the wanted signal 3 dB above the QPSK 3/4 sensitivity, an interferer in the adjacent channel shall be tolerated up to +30 dB above the wanted signal and in the alternate channel up to +45 dB; the near-far case (two units 10 m apart) shall be analysed with the TX ACLR of RF-015 (G-27). [TBV] | M | | T |
+| RF-030 | Air unit TX-to-RX isolation for split-band mode: at least 70 dB from the 5.8 GHz transmit chain (30 dBm, with its broadband noise) to the 2.4 GHz uplink receive chain, by antenna separation plus transmit and receive filtering, such that the uplink sensitivity degrades by 1 dB or less. [E, TBV] | M | | T |
 
 ## 8. Antenna and antenna feedback (ANT)
 
@@ -158,7 +160,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | ADA-002 | Channel switch on degraded quality: decision latency of 20 ms or less, and execution as defined in MAC-010. | M | | T |
 | ADA-003 | Two hopping modes: (a) slow hop: change channel when the current one is bad (per ADA-002); (b) fast hop (for control/telemetry and as a robust fallback; in ETSI regions only in an adaptive form, because non-adaptive hopping is limited to a 5 ms on-time followed by a 5 ms gap [to be checked in EN 300 328]): frequency hopping with a dwell of 1 to 10 ms across at least 20 channels in a pseudo-random sequence shared at pairing. | M | | T |
 | ADA-004 | Band hopping: switching between 2.4 GHz and 5.8 GHz (and 900 MHz when fitted) in a link-loss case, with a re-establishment time of 300 ms or less (using the stored hop sequence and the control channel). | M | P2 | T |
-| ADA-005 | Out-of-band control: the beacon/control channel shall remain on a robust, low-rate, separate channel (e.g. 900 MHz or the 2.4 GHz band when video is on 5.8 GHz) so that the link can be re-established after loss. | S | | T |
+| ADA-005 | Out-of-band control: the beacon/control channel shall remain on a robust, low-rate, separate channel (e.g. 900 MHz or the 2.4 GHz band when video is on 5.8 GHz) so that the link can be re-established after loss; in split-band mode (MAC-012) the uplink channel is this channel. | S | | T |
 | ADA-006 | Regional compliance: the set of allowed channels, powers and dwell times is data-driven per region and locked at the factory (region code) with signed updates only. | M | | I |
 | ADA-007 | Spectrum analyser mode on the ground unit: occupancy per channel shown to the pilot (pre-flight and in-flight). | S | | D |
 | ADA-008 | DFS: radar detection in the bands where required (5250-5350 and 5470-5725 MHz), with channel move time of 10 s and channel closing transmission time of 260 ms. | S | P2 | T |
@@ -274,7 +276,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | PRO-005 | The RTL shall be written to be ASIC-portable (no vendor primitives outside a wrapper layer, clock-domain-crossing rules, lint and CDC clean). | M | P1 | I |
 | PRO-006 | P0 baseline: the camera half and G2G of a stock IP-camera pipeline shall be measured with the register-step method and with the rig and recorded as the reference for the budget in `02`. | M | P0 | T |
 | ASC-001 | First product: two dice, an RF die in a mature RF CMOS or FD-SOI node and a digital SoC in 12 to 22 nm, with a high-speed digital interface (JESD204 or LVDS); single-die 22 nm FD-SOI is a later cost-down. Decision recorded in T-08. | M | P2 | A |
-| ASC-002 | The two-die set shall integrate: transceiver (2 TX, 2 RX, observation receiver), ADC/DAC, PLL/VCO and temperature sensors (RF die); OFDM modem, FEC, video encoder and decoder, ISP-lite, CPU subsystem, memory interface and security block (digital SoC). | M | P2 | I |
+| ASC-002 | The two-die set shall integrate: transceiver (2 TX, 2 RX, observation receiver; air unit uses 1 TX at the video band and 1 RX at the uplink band, ground unit 2 RX at the video band and 1 TX at the uplink band), ADC/DAC, PLL/VCO and temperature sensors (RF die); OFDM modem, FEC, video encoder and decoder, ISP-lite, CPU subsystem, memory interface and security block (digital SoC). | M | P2 | I |
 | ASC-003 | Design for test: scan, BIST for memories, RF loop-back (TX to RX internal path) for production test, 60 s or less of production test time per unit. | M | P2 | T |
 | ASC-004 | Die area targets: digital SoC 30 mm2 or less, RF die 15 mm2 or less. [TBV, G-23] | S | P2 | A |
 | ASC-005 | Unit cost target at 100k units per year: below USD 12 for the chip (excluding PA/FEM and memory). [TBV] | S | P2 | A |
@@ -296,3 +298,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 0.4 | G2-1 | Source review (`10`): VID-006 hard bound, VID-020 added, IF-002 fixed frame period, LAT-001 register-step method, SEC-002 default cipher, PRO-006 added |
 | 0.5 | G2-2 | Patent search (`11`): REG-006 design-around register added, ADA-003 ETSI note |
 | 0.6 | G2-3 | Verification pass: MAC-001/MAC-007 re-derived (uplink sizing, range-adaptive frame), SYS-005 PAE threshold corrected, REG-002 via F3586-22, PWR-003/PWR-006 corrected, HSI-001..015 added (`13`), T-18/T-19 added |
+| 0.7 | G2-4 | T-03 iteration: split-band uplink baseline (MAC-012, RF-030), MAC-001 becomes the fallback mode, MAC-007 restated per mode, ADA-005/SYS-009/ASC-002 adjusted |

@@ -133,6 +133,27 @@ def uplink_table() -> str:
     return "\n".join(rows)
 
 
+SPLIT_UL_BW_MHZ = 5.0
+DL_DUTY_SPLIT = 0.95  # downlink share when the video band carries no uplink: 5% idle for frame-based-equipment rules and pilots
+
+
+def split_band_uplink_table() -> str:
+    """Split-band uplink: video band is downlink-only; feedback and telemetry on a narrowband channel in another band."""
+    rows = ["| Class | Video band | Uplink band | Range km | GU TX dBm | Antennas dBi (GU/AU) | Margin QPSK 1/2 at 5 MHz dB | Same-band TDD margin dB | Video net rate Mbit/s (split / TDD) |",
+            "|---|---|---|---|---|---|---|---|---|"]
+    cases = [("S", 5800, 2400, 5, 5, 5), ("X", 5800, 2400, 10, 5, 5), ("L", 2400, 915, 14, 3, 3)]
+    for name, vf, uf, d, g_gu, g_au in cases:
+        tx = min(27.0, fcc_conducted_limit_dbm(g_gu))
+        s = Scenario(name, uf, d, tx, g_gu, g_au, bw_mhz=SPLIT_UL_BW_MHZ)  # AU has one uplink receive chain: no MRC gain
+        m = margin_db(s, UPLINK_QPSK_HALF)
+        tdd = Scenario(name, vf, d, min(27.0, fcc_conducted_limit_dbm(10 if name == "X" else 5)), 10 if name == "X" else 5, 5, diversity_gain_db=3)
+        m_tdd = margin_db(tdd, UPLINK_QPSK_HALF)
+        rate_split = DATA_TONES[20.0] * MCS_TABLE[1].bits_per_sym / SYMBOL_US * DL_DUTY_SPLIT * 0.85
+        rate_tdd = phy_rate_mbps(MCS_TABLE[1], 20, d)
+        rows.append(f"| {name} | {vf / 1000:.1f} GHz | {uf / 1000:.3g} GHz | {d} | {tx:.0f} | {g_gu}/{g_au} | {m:.1f} | {m_tdd:.1f} | {rate_split:.1f} / {rate_tdd:.1f} |")
+    return "\n".join(rows)
+
+
 def tdd_table() -> str:
     """TDD frame budget per range class with the range-adaptive frame length (T-03 option C)."""
     rows = ["| Range km | Frame ms | UL symbols (QPSK 1/2, 1 Mbit/s + 2 preamble) | UL us | Guard us | DL share of frame |", "|---|---|---|---|---|---|"]
@@ -162,3 +183,5 @@ if __name__ == "__main__":
     print(tdd_table())
     print()
     print(tdd_compare_table())
+    print()
+    print(split_band_uplink_table())

@@ -76,7 +76,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 |---|---|---|---|
 | Range classes S/X/L (5/10/14 km, 1080p60) | Feasible in free space | Link budget; real clutter margin not defined (G-02); EU limits cut Class L to about 2.5 km | Range flights (TG-SYS) |
 | 10 km at 5 dBi both ends | **Changed** | Failed budget; replaced by range classes | n/a |
-| Uplink 1 Mbit/s at full class range | **Changed** | Uplink margin only 4.3-5.0 dB at X/L ranges; restated per range | Uplink budget, flights |
+| Uplink 1 Mbit/s at full class range | **Changed**, then feasible | In-band TDD gives only 4.3-5.0 dB margin at the X/L ranges; the split-band uplink (T-03 iteration 4) gives 11.0-17.0 dB; the second band is a regional and hardware dependency | Uplink budget, flights, isolation measurement (RF-030) |
 | G2G latency 20 ms at 1080p60, 12 ms at 120 fps | **Unproven** | Stage values are estimates; vendor stacks measured 80-95 ms camera half; no sourced latency for the VCU or any open encoder; HDZero claims are vendor claims | Phase B measurement with the rig (HSI-010) |
 | Encoder first slice 2.0 ms, decoder 2.0 ms | **Unproven** | Capability claims only | VCU measurement in phase A, custom encoder if it fails |
 | 5 us TDD turn-around | **At risk** (AD9361), plausible (ADRV9002) | AD9361 goes through ALERT/calibration; ADRV9002 transitions 3-6.6 us in a different use | Bench measurement on both parts |
@@ -102,7 +102,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 
 1. Latency stage values (encoder, decoder, display) - decided by phase A and B measurements, not by more analysis.
 2. PA efficiency and linearity at 30 dBm - needs the PA study before the power class table is frozen.
-3. Uplink at long range - addressed in the T-03 iteration (split-band uplink option).
+3. Split-band uplink isolation (RF-030, 70 dB unproven) and regional availability of the second band.
 4. Patent P-1 (antenna-aware DPD) and the unread claims of P-3 and P-4 - counsel.
 5. ASIC area, power and cost - unproven until a synthesis run exists.
 
@@ -112,12 +112,12 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 
 | Class | Requirements |
 |---|---|
-| C | 12 |
-| E | 119 |
+| C | 13 |
+| E | 120 |
 | P | 30 |
 | R | 7 |
 | S | 15 |
-| total | 183 |
+| total | 185 |
 
 | ID | Class | Basis |
 |---|---|---|
@@ -181,6 +181,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | MAC-009 | E | engineering target; proved by verification method D (see 08) |
 | MAC-010 | E | engineering target; proved by verification method T (see 08) |
 | MAC-011 | E | engineering target; proved by verification method T (see 08) |
+| MAC-012 | C | link_budget.py split_band_uplink_table: uplink margin 11.0-17.0 dB, video rate +8% |
 | RF-001 | R | band edges per FCC 15.247 / ETSI; verify by counsel |
 | RF-002 | E | engineering target; proved by verification method T (see 08) |
 | RF-003 | E | engineering target; proved by verification method T (see 08) |
@@ -207,6 +208,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | RF-027 | E | engineering target; proved by verification method I (see 08) |
 | RF-028 | E | engineering target; proved by verification method I (see 08) |
 | RF-029 | E | engineering target; proved by verification method T (see 08) |
+| RF-030 | E | isolation estimate in 02 section 1.1b; bench-proven later |
 | ANT-001 | S | coupler-based forward/reverse sensing appears in P-1 (patent), so not novel; design-around D-1 |
 | ANT-002 | E | engineering target; proved by verification method T (see 08) |
 | ANT-003 | E | engineering target; proved by verification method T (see 08) |

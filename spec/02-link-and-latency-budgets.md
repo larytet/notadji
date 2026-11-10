@@ -57,6 +57,28 @@ Class L. At the full range of each class only the BPSK 1/2 uplink (about 300 kbi
 (rev 0.6). The 10 dBi ground antenna of Class X does not help the uplink, because the FCC rule takes its gain back as lower
 transmit power.
 
+### 1.1b Split-band uplink (trade study T-03, iteration 4)
+
+Instead of an uplink slot inside the video band, feedback, telemetry and control use a narrowband (5 MHz) channel in another band, so the
+video band is downlink-only (5% idle kept for frame-based-equipment rules and pilots). The air unit receives on one chain (no MRC gain assumed).
+
+| Class | Video band | Uplink band | Range km | GU TX dBm | Antennas dBi (GU/AU) | Margin QPSK 1/2 at 5 MHz dB | Same-band TDD margin dB | Video net rate Mbit/s (split / TDD) |
+|---|---|---|---|---|---|---|---|---|
+| S | 5.8 GHz | 2.4 GHz | 5 | 27 | 5/5 | 17.0 | 6.3 | 20.8 / 18.7 |
+| X | 5.8 GHz | 2.4 GHz | 10 | 27 | 5/5 | 11.0 | 4.3 | 20.8 / 19.3 |
+| L | 2.4 GHz | 0.915 GHz | 14 | 27 | 3/3 | 12.4 | 5.0 | 20.8 / 19.1 |
+
+Findings: the uplink margin rises from 4.3 to 11.0 dB at Class X (10 km) and from 5.0 to 12.4 dB at Class L, because the lower band has 7.7 dB less
+free-space loss at 2.4 GHz than at 5.8 GHz and the 5 MHz channel is 6 dB more sensitive than 20 MHz; the video band needs no guard time, no
+timing advance and no uplink slot, and the net video rate rises by about 8% at 10 km. The cost is a second receive chain at the air unit, a transmit
+chain at 2.4 GHz (or 900 MHz) at the ground unit and TX-to-RX isolation (RF-030). The 900 MHz uplink for 2.4 GHz video is usable where the band
+allows continuous operation (US 902-928 MHz); in the EU 863-870 MHz band duty-cycle limits make it unsuitable for a 1 Mbit/s uplink, so Class L in
+the EU falls back to in-band TDD.
+
+Same-band FDD (uplink in the same 5.8 GHz band, 30 MHz from the video channel) was also evaluated and rejected [E]: the air unit would transmit
+30 dBm while receiving at about -96 dBm; with transmit noise around -65 dBc/MHz-class at that offset the leakage into a 5 MHz receive channel is
+about -35 dBm, so about 67 dB of isolation is needed at a 30 MHz offset, which antenna isolation (about 30 dB) plus a 125 MHz-wide band filter cannot give.
+
 ### 1.2 TX power and regulation
 
 Conducted 30 to 33 dBm is allowed in some FCC modes only with antenna gain limits. In ETSI regions the limit is
@@ -127,7 +149,7 @@ OFDM operating point; the 30% of PWR-004 is specified at 24 dBm, a different poi
 with enough back-off for 64QAM reach less (G-06). It cannot hold at 33 dBm. See T-02 in `07`. Public DJI figures are
 not available to us; the 5 to 9 W range quoted earlier in the project discussion is our estimate only.
 
-## 4. TDD frame budget
+## 4. In-band TDD frame budget (fallback mode, MAC-001)
 
 Rules (MAC-001, MAC-007, MAC-011): the downlink to uplink guard is `2 x 3.33 us per km x range + 2 x 10 us` (round-trip delay plus two
 turn-arounds); the uplink slot is sized to carry 1 Mbit/s at QPSK 1/2 (234 data tones per symbol at 20 MHz) plus 100 feedback bits per
