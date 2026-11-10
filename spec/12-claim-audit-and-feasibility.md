@@ -113,12 +113,12 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 
 | Class | Requirements |
 |---|---|
-| C | 16 |
+| C | 17 |
 | E | 121 |
 | P | 30 |
 | R | 9 |
 | S | 16 |
-| total | 192 |
+| total | 193 |
 
 | ID | Class | Basis |
 |---|---|---|
@@ -312,6 +312,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | ASC-003 | E | ASIC target; area and cost unproven (G-23) |
 | ASC-004 | E | ASIC target; area and cost unproven (G-23) |
 | ASC-005 | E | ASIC target; area and cost unproven (G-23) |
+| ASC-006 | C | link_budget.py interface_table: 2.95 Gbit/s, 29-118 mW at 5-20 pJ/bit (energy per bit is E) |
 | TST-001 | P | test infrastructure |
 | TST-002 | S | OpenIPC latency-probe method; rig accuracy is an engineering target |
 

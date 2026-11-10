@@ -37,6 +37,7 @@ OVERRIDE = {
     "PRO-007": ("S", "Pluto guaranteed range 325-3800 MHz (ADI); AD936x independent RX/TX synthesizers (ADI driver docs); AD9364 independent mode unconfirmed"),
     "REG-007": ("R", "47 CFR 2.944 text read via search; KDB revision to be checked by counsel"),
     "SEC-005": ("R", "47 CFR 2.944 and U-NII security guidance (search); counsel to confirm the limiter approach"),
+    "ASC-006": ("C", "link_budget.py interface_table: 2.95 Gbit/s, 29-118 mW at 5-20 pJ/bit (energy per bit is E)"),
     "PHY-015": ("E", "link_budget.py ldpc_estimate (assumed base matrix and iterations)"),
     "PHY-005": ("E", "codeword lengths from 802.11 LDPC family; coding gain difference from literature"),
     "PHY-014": ("E", "PAPR reduction of DFT-s-OFDM is typical literature value (about 3-4 dB), to be simulated"),

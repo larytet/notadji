@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 1.5 (T-15/T-17 iteration; revision 1.4 was the T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 1.6 (T-08/T-18 iteration; revision 1.5 was the T-15/T-17 iteration; revision 1.4 was the T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -287,6 +287,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | ASC-003 | Design for test: scan, BIST for memories, RF loop-back (TX to RX internal path) for production test, 60 s or less of production test time per unit. | M | P2 | T |
 | ASC-004 | Die area targets: digital SoC 30 mm2 or less, RF die 15 mm2 or less. [TBV, G-23] | S | P2 | A |
 | ASC-005 | Unit cost target at 100k units per year: below USD 12 for the chip (excluding PA/FEM and memory). [TBV] | S | P2 | A |
+| ASC-006 | Inter-die sample interface (RF die to digital die): at most 120 mW worst case for both ends at 40 MHz in the air unit (2.95 Gbit/s, 12-bit I/Q), target 60 mW; the DPD observation capture shall be held in a memory on the RF die and read out at low rate. [E] | S | P2 | T |
 
 ## 17. Verification (TST)
 
@@ -314,3 +315,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 1.3 | G2-10 | T-09/T-10 iteration: SEC-005 restated (hardware limiter, signed bitstream), REG-007 software security statement added; T-10 confirmed |
 | 1.4 | G2-11 | T-13 iteration: sector-array gain corrected (4 sectors give 6.6-9.6 dBi, not 8-10 dB over omni), ANT-008 now 6 sectors, Class X antenna example |
 | 1.5 | G2-12 | T-15/T-17 iteration: hop overhead and genlock drift quantified, VID-018 gets steering range and resolution |
+| 1.6 | G2-13 | T-08/T-18 iteration: inter-die interface rate and power computed, ASC-006 added, T-18 confirmed on workload and power grounds |

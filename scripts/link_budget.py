@@ -283,6 +283,18 @@ def hop_overhead_table() -> str:
     return "\n".join(rows)
 
 
+def interface_table() -> str:
+    """Inter-die sample interface between the RF die and the digital die (T-08): 12-bit I/Q samples."""
+    rows = ["| Mode | Sample rate MSPS | Chains crossing the interface | Bit rate Gbit/s | Power both ends at 5 / 10 / 20 pJ/bit mW |", "|---|---|---|---|---|"]
+    for name, msps, chains in (("40 MHz, air unit (1 Tx + 1 Rx)", 61.44, 2), ("40 MHz, ground unit (2 Rx + 1 Tx)", 61.44, 3), ("20 MHz, ground unit (2 Rx + 1 Tx)", 30.72, 3)):
+        gbps = msps * 1e6 * 2 * 12 * chains / 1e9
+        p5, p10, p20 = (gbps * 1e9 * pj * 1e-12 * 2 * 1e3 for pj in (5, 10, 20))
+        rows.append(f"| {name} | {msps} | {chains} | {gbps:.2f} | {p5:.0f} / {p10:.0f} / {p20:.0f} |")
+    obs_bits = 4096 * 2 * 12
+    rows.append(f"| DPD observation capture kept on the RF die ({obs_bits / 1e3:.0f} kbit per capture) | burst | 0 (read out slowly) | 0 | 0 |")
+    return "\n".join(rows)
+
+
 def tdd_table() -> str:
     """TDD frame budget per range class with the range-adaptive frame length (T-03 option C)."""
     rows = ["| Range km | Frame ms | UL symbols (QPSK 1/2, 1 Mbit/s + 2 preamble) | UL us | Guard us | DL share of frame |", "|---|---|---|---|---|---|"]
@@ -332,3 +344,5 @@ if __name__ == "__main__":
     print(genlock_table())
     print()
     print(hop_overhead_table())
+    print()
+    print(interface_table())

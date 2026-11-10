@@ -200,6 +200,20 @@ same quality (about 30 to 50% [E, literature]) which matters when the net link r
 Recommendation: **B for the first product, with C as the bridging step** (the FPGA prototype is already C), and
 A as a later cost-down. The RF die test chip (A1) in the plan is consistent with B.
 
+Review (iteration 13, T-08): the cost of option B (two dice) is the sample interface between them; it was computed for the chain counts of the split-band architecture (12-bit I/Q, `scripts/link_budget.py`; energy per bit is an assumption [E]):
+
+| Mode | Sample rate MSPS | Chains crossing the interface | Bit rate Gbit/s | Power both ends at 5 / 10 / 20 pJ/bit mW |
+|---|---|---|---|---|
+| 40 MHz, air unit (1 Tx + 1 Rx) | 61.44 | 2 | 2.95 | 29 / 59 / 118 |
+| 40 MHz, ground unit (2 Rx + 1 Tx) | 61.44 | 3 | 4.42 | 44 / 88 / 177 |
+| 20 MHz, ground unit (2 Rx + 1 Tx) | 30.72 | 3 | 2.21 | 22 / 44 / 88 |
+| DPD observation capture kept on the RF die (98 kbit per capture) | burst | 0 (read out slowly) | 0 | 0 |
+
+Findings: the air unit moves 2.95 Gbit/s across the interface at 40 MHz (30 to 120 mW for both ends depending on 5 to 20 pJ/bit; a serial JESD204-class link is in the lower part of that range, a parallel LVDS bus in the upper part), 2 to 10% of the 1.2 W
+transceiver plus baseband budget of `02`, and half at 20 MHz. The DPD observation path (a 3 to 5 times wider signal) does not cross the interface in real time: it is captured into a memory on the RF die (4096 complex samples are 98 kbit) and read out slowly, which
+removes the largest potential interface cost. Alternatives added: (D) a decimated 20 MHz interface for the default channel (halves the cost), (E) a single die in a mixed-signal/RF-capable node (no interface, higher risk and NRE, evaluated again after the RF test chip A1). Decision: **B unchanged**,
+with the observation capture on the RF die and a 120 mW worst-case interface limit (ASC-006).
+
 ## T-09 Open versus locked RF parameters (G-07)
 
 | Option | Description | Pros | Cons |
@@ -384,6 +398,11 @@ C is a later option for fixed-rate displays.
 | C | Real-time cores only on the air unit; Linux only on the ground unit or a companion board | Lowest power, fastest boot, smallest area | No on-board application services; update and configuration paths go through the real-time firmware |
 
 Recommendation: A for the first ASIC with C as the air-unit default configuration; B as a cost/IP study.
+
+Review (iteration 13, T-18; workload in `13` section 2): the control workload is 34 Mcycles/s with hardware assist (11% of a 300 MHz core, 49% if the DPD matrix and the encryption were in software), so the choice between ARM and RISC-V real-time cores is not driven by performance;
+any 300 MHz core with a double-precision-capable FPU (HSI-013) fits. The power anchors in `13` section 4 show the application core, not the real-time cores, dominates the processor power (about 0.5 W for one A53 at 1 GHz against an estimated 5 to 20 mW for a real-time core).
+Alternative added: (D) no processor at all for the loops that need microsecond response, only hardware state machines (already the sequencer of HSI-002), which keeps the processors out of the fast path but does not remove them from calibration and link adaptation. Decision: **A with C as the air-unit default unchanged**; the ISA question (B) is decided
+by the software-port cost from the ARM-based FPGA phases and by licence cost, not by performance or power.
 
 ## T-19 Phase A evaluation platform (see `13`)
 
