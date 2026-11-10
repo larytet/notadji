@@ -50,6 +50,7 @@ ground unit) built in two phases:
 - Verification: **T** test (measured), **A** analysis, **I** inspection, **D** demonstration, **S** simulation.
 - Numbers marked `[TBV]` are targets or assumptions to be verified. Numbers about DJI products are our
   estimates from public information and must not be quoted as DJI specifications.
+- Design stance: regional compliance (FCC, ETSI and others) is configuration, not a design driver; budgets are for the hardware capability and region profiles are derived (REG-008, `02` section 1.2). Operating rule: a prototype that radiates is operated only conducted into a load, in a shielded enclosure, or under a test or experimental authorisation.
 - Plain dash `-` is used throughout instead of the long dash.
 
 ## 4. Glossary

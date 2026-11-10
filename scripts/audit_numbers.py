@@ -93,7 +93,7 @@ for m, e in zip(lb.MCS_TABLE, (-93, -88, -80, -74)):
 import subprocess  # noqa: E402
 
 out = subprocess.check_output([sys.executable, "-I", str(ROOT / "scripts" / "link_budget.py")], text=True)
-down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl, iface_tbl, rng_tbl = out.strip().split("\n\n")
+down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl, iface_tbl, rng_tbl, reg_tbl = out.strip().split("\n\n")
 check("02 contains the downlink table from the script", down.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the uplink table from the script", up.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the PA mode table from the script", pa_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
@@ -127,6 +127,13 @@ _r58 = lb.max_range_km(lb.Scenario("x", 5800, 1, 30, 5, 5, diversity_gain_db=3),
 _r24 = lb.max_range_km(lb.Scenario("x", 2400, 1, 30, 5, 5, diversity_gain_db=3), _b)
 check("SYS-003/VID-022 reduced-profile ranges 10.3 km and 25 km", abs(_r58 - 10.3) < 0.06 and abs(_r24 - 25.0) < 0.3 and "10.3 km at 5.8 GHz and 25 km at 2.4 GHz" in SRS)
 check("ADA-003 overhead range matches the hop table (5% to 0.5%)", abs(50e-3 / 1.0 - 0.05) < 1e-9 and abs(50e-3 / 10.0 - 0.005) < 1e-9 and "5% to 0.5% of airtime" in SRS)
+check("02 contains the region profile table from the script", reg_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
+_ux = lb.Scenario("X", 5800, 10, lb.GU_TX_CAPABILITY_DBM, 10, 5, diversity_gain_db=3)
+_us = lb.Scenario("S", 5800, 5, lb.GU_TX_CAPABILITY_DBM, 5, 5, diversity_gain_db=3)
+_ul = lb.Scenario("L", 2400, 14, lb.GU_TX_CAPABILITY_DBM, 5, 5, diversity_gain_db=3)
+check("MAC-007 in-band uplink ranges 5/9/12 km hold with 6 dB margin at QPSK 1/2", lb.max_range_km(_us, lb.UPLINK_QPSK_HALF) >= 5 and lb.max_range_km(_ux, lb.UPLINK_QPSK_HALF) >= 9 and lb.max_range_km(_ul, lb.UPLINK_QPSK_HALF) >= 12 and "9 km (Class X)" in SRS)
+check("capability budget is not cut by the FCC rule (REG-008) and the FCC profile costs 4 dB at 10 dBi", lb.fcc_conducted_limit_dbm(10) == 26.0 and lb.GU_TX_CAPABILITY_DBM == 27.0 and "REG-008" in SRS)
+check("SYS-003 no longer carries an ETSI-specific range", "about 2.5 km at 20 dBm EIRP" not in SRS)
 check("02 contains the split-band table from the script", split.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("split-band uplink margin >= 6 dB for all classes (MAC-007)", all(float(r.split("|")[7]) >= 6 for r in split.strip().split("\n")[2:]))
 check("MAC-007 states the split-band margins 17.0, 11.0 and 12.4", "17.0, 11.0 and 12.4 dB" in SRS)

@@ -120,3 +120,4 @@ Statuses in section 5 are as of rev 0.3. Changes made by the second goal (iterat
 | G-27 | Resolved (analysis) | Near-far table in `07` T-05, RF-029 restated; receiver tolerance still to be measured |
 | G-02, G-17, G-22, G-23 | Open | Propagation study, PA datasheet, reliability requirements, ASIC cost model |
 | New (second goal) | See `12` section 3 (F-1 to F-17) and the feasibility register | Errors found by recomputation |
+| G-04 | Resolved | Capability ranges plus a derived per-profile table (`02` section 1.2, REG-008); real profile values are data for counsel |

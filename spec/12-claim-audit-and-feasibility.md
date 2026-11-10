@@ -38,7 +38,7 @@ requirement ID uniqueness and references, revision history, trace matrix currenc
 | F-13 | `10` (found in pass) | "No FPV project has any calibration code" | Wrong: the open Realtek driver has IQK, LCK, DPK, TSSI and thermal power tracking; the claim was corrected and used as a cross-check |
 | F-14 | REG-002 | Remote ID transports named loosely | Now cites ASTM F3586-22 and the transport rules (Bluetooth needs legacy plus Long Range) |
 | F-15 | `01` PHY-010 vs uplink slot | A 40 us acquisition preamble per burst would not fit an 80 us uplink slot | The uplink burst is frame-synchronous and uses a 2-symbol reference preamble; 40 us applies to first acquisition only |
-| F-16 | `02` | "5.8 GHz point-to-point exemption" implied for Class X | The FCC exemption is for fixed point-to-point installations; a mobile drone link does not qualify, so the general reduction is used |
+| F-16 | `02` | "5.8 GHz point-to-point exemption" implied for Class X | The FCC exemption is for fixed point-to-point installations; a mobile drone link does not qualify, so the general reduction was used. Superseded (iteration 16): regional rules are profiles, the budget uses capability and shows the FCC-type result only for comparison |
 | F-17 | `07` T-13 | "A 4-beam array of 90 degree sectors gives +8 to 10 dB" | Computed from beamwidths: 6.6 to 9.6 dBi, 1.6 to 4.6 dB over a 5 dBi omni; 10 dBi needs six sectors with 40 degree elevation (iteration 11) |
 
 ## 4. External facts register
@@ -75,9 +75,9 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 
 | Target | Verdict | Evidence and risk | What proves it |
 |---|---|---|---|
-| Range classes S/X/L (5/10/14 km, 1080p60) | Feasible in free space | Link budget; real clutter margin not defined (G-02); EU limits cut Class L to about 2.5 km | Range flights (TG-SYS) |
+| Range classes S/X/L (5/10/14 km, 1080p60) | Feasible in free space | Link budget; real clutter margin not defined (G-02); a 20 dBm EIRP cap cuts Class L to about 2.8 km (`02` section 1.2, derived per profile) | Range flights (TG-SYS) |
 | 10 km at 5 dBi both ends | **Changed** | Failed budget; replaced by range classes | n/a |
-| Uplink 1 Mbit/s at full class range | **Changed**, then feasible | In-band TDD gives only 4.3-5.0 dB margin at the X/L ranges; the split-band uplink (T-03 iteration 4) gives 11.0-17.0 dB; the second band is a regional and hardware dependency | Uplink budget, flights, isolation measurement (RF-030) |
+| Uplink 1 Mbit/s at full class range | **Changed**, then feasible | In-band TDD gives only 5.0-5.3 dB margin at the X/L ranges (capability budget); the split-band uplink (T-03 iteration 4) gives 11.0-17.0 dB; the second band is a regional and hardware dependency | Uplink budget, flights, isolation measurement (RF-030) |
 | G2G latency 20 ms at 1080p60, 12 ms at 120 fps | **Unproven** | Stage values are estimates; vendor stacks measured 80-95 ms camera half; no sourced latency for the VCU or any open encoder; HDZero claims are vendor claims | Phase B measurement with the rig (HSI-010) |
 | Encoder first slice 2.0 ms, decoder 2.0 ms | **Unproven** | Capability claims only | VCU measurement in phase A, custom encoder if it fails |
 | 5 us TDD turn-around | **At risk** (AD9361), plausible (ADRV9002) | AD9361 goes through ALERT/calibration; ADRV9002 transitions 3-6.6 us in a different use | Bench measurement on both parts |
@@ -115,10 +115,10 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 |---|---|
 | C | 18 |
 | E | 121 |
-| P | 30 |
-| R | 9 |
+| P | 32 |
+| R | 8 |
 | S | 16 |
-| total | 194 |
+| total | 195 |
 
 | ID | Class | Basis |
 |---|---|---|
@@ -196,7 +196,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | RF-007 | E | engineering target; proved by verification method T (see 08) |
 | RF-008 | E | engineering target; proved by verification method T (see 08) |
 | RF-009 | S | ADRV9002 transitions 3-6.6 us plausible; AD9361 TDD RX to TX goes via ALERT state, 5 us not demonstrated [at risk on P1] |
-| RF-010 | R | FCC 15.247: 1 W conducted, dB-for-dB reduction above 6 dBi (older CFR editions read); ETSI limits differ |
+| RF-010 | P | capability requirement; the allowed power is a region profile |
 | RF-011 | E | engineering target; proved by verification method T (see 08) |
 | RF-012 | E | engineering target; proved by verification method T (see 08) |
 | RF-013 | E | engineering target; proved by verification method T (see 08) |
@@ -270,6 +270,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | REG-005 | P | licence register from MANIFEST.tsv; clean-room policy |
 | REG-006 | S | US 12,456,952 B2 claims read (Skyworks); constraint D-1 in 11 |
 | REG-007 | R | 47 CFR 2.944 text read via search; KDB revision to be checked by counsel |
+| REG-008 | P | design stance from notes entry 9; region profile data is for counsel |
 | ENV-001 | E | ranges chosen to match consumer drone practice; thermal and cold-start behaviour unproven |
 | ENV-002 | E | engineering target; proved by verification method T (see 08) |
 | ENV-003 | E | engineering target; proved by verification method T (see 08) |

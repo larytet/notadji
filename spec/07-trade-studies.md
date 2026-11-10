@@ -16,7 +16,7 @@ T-16 FEC code, T-17 clock and genlock.
 
 Range for QPSK 3/4 20 MHz at 6 dB margin [calc]: 5.8 km with 5/5 dBi antennas; 10.3 km with a 10 dBi ground antenna;
 16.4 km with 14 dBi; 8.2 km at 10 MHz with 5/5 dBi; 8.2 km with a 33 dBm PA; 10.3 km if the video drops to BPSK 1/2.
-At 2.4 GHz with 5/5 dBi: 14.1 km. Under the ETSI limit of about 20 dBm EIRP at 2.4 GHz: about 2.5 km.
+At 2.4 GHz with 5/5 dBi: 14.1 km. With an EIRP cap of 20 dBm at 2.4 GHz (an ETSI-type profile): about 2.8 km (`02` section 1.2).
 
 | Option | Description | Pros | Cons |
 |---|---|---|---|
@@ -43,6 +43,11 @@ range** by stepping down the MCS and the video bit rate, which the system alread
 At BPSK 1/2 the video band carries about 6.9 Mbit/s and reaches 10.3 km at 5.8 GHz (25 km at 2.4 GHz) with ordinary 5 dBi antennas, so the 10 km range of Class X does **not** require the 10 dBi array if a reduced-quality profile
 (about 720p30 at 6 Mbit/s or less) is accepted; the array turns the same 10 km into the full 20 Mbit/s profile. Also considered: (F) a relay drone (research, not specified). Decision: keep the range classes, and add the
 **reduced-quality range profile** as the first step before any accessory (VID-022); SYS-003 states both the full-rate and the reduced-rate ranges.
+
+Review (iteration 16, design stance of `notes.md` entry 9): regional limits are no longer a design driver. The range options above were compared under regional caps (for example the
+FCC dB-for-dB rule in the uplink and the ETSI-type EIRP cap in Class L); they are now compared by capability, and a region profile is a derived column (`02` section 1.2). Effects: the in-band uplink at Class X
+reaches 9.2 km instead of 8.2 km (the FCC-type profile is shown as a comparison), the Class L figure of 2.5 km becomes one row (2.8 km at a 20 dBm EIRP cap) of the profile table, and the option "raise the PA to 33 dBm" (C) is judged by
+its power cost only. No option changes rank; the conclusions of T-01 stand, with SYS-003 stated as capability ranges.
 
 ## T-02 Power classes (G-06)
 
@@ -84,7 +89,7 @@ sized for MAC-007 (1 Mbit/s at QPSK 1/2, 100 feedback bits per frame, 2 preamble
 | B | Fixed 2.0 ms super-frame | Better efficiency at range (0.865 at 15 km, 0.815 at 30 km) | Feedback period 2 ms (MAC-005 looser); 0.899 at 5 km does not use the short-range advantage of fast feedback |
 | C | Range-adaptive frame: 1 ms to 7 km, 2 ms to 15 km, 4 ms beyond, from the measured round-trip delay | Best share at every range (0.852, 0.882, 0.865, 0.877) | More states to verify; the frame length change must be glitch-free; feedback period grows with range |
 
-| D | Split-band uplink: video band downlink-only, feedback/telemetry/RC on a 5 MHz channel in a far band (2.4 GHz for 5.8 GHz video, 900 MHz for 2.4 GHz video) | Uplink margin 11.0-17.0 dB instead of 4.3-6.3 dB (`02` section 1.1b); no guard, no timing advance, no uplink slot in the video band; video rate about 8% higher; the uplink can run continuously (feedback every 0.25 ms or faster, RC at 1 kHz); also provides the out-of-band beacon of ADA-005 | Second receive chain at the air unit and a 2.4 GHz/900 MHz transmit chain at the ground unit; TX-to-RX isolation requirement (RF-030); 900 MHz not usable for a 1 Mbit/s uplink in the EU; uplink channels are limited (16 at 5 MHz in 2.4 GHz) |
+| D | Split-band uplink: video band downlink-only, feedback/telemetry/RC on a 5 MHz channel in a far band (2.4 GHz for 5.8 GHz video, 900 MHz for 2.4 GHz video) | Uplink margin 11.0-17.0 dB instead of 5.0-6.3 dB (`02` section 1.1b); no guard, no timing advance, no uplink slot in the video band; video rate about 8% higher; the uplink can run continuously (feedback every 0.25 ms or faster, RC at 1 kHz); also provides the out-of-band beacon of ADA-005 | Second receive chain at the air unit and a 2.4 GHz/900 MHz transmit chain at the ground unit; TX-to-RX isolation requirement (RF-030); 900 MHz not usable for a 1 Mbit/s uplink in the EU; uplink channels are limited (16 at 5 MHz in 2.4 GHz) |
 | E | Same-band FDD (uplink 30 MHz away in the video band) | One band, no second radio | Rejected: about 67 dB of isolation needed at a 30 MHz offset [E, estimate in `02`] cannot be reached |
 
 Review (iteration 4): the two missing options were the split-band uplink (D) and same-band FDD (E). D beats in-band TDD on uplink margin and airtime,

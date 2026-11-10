@@ -41,21 +41,22 @@ a 13.6 us symbol (12.8 us + 0.8 us guard), 85% protocol efficiency, and the down
 ### 1.1a Uplink (ground unit transmits, air unit receives)
 
 The uplink carries feedback, telemetry and optional control (MAC-004, MAC-007). The air unit receives with two branches (3 dB MRC,
-5 dBi antennas). The ground unit transmits at 27 dBm conducted at most; with a ground antenna above 6 dBi the FCC general rule
-reduces conducted power dB for dB (30 dBm minus the excess over 6 dBi; the point-to-point exemption at 5.8 GHz applies only to
-fixed installations, so it is not assumed for a mobile ground unit [rule text read in older CFR editions, to be re-checked]).
+5 dBi antennas). The budget uses the **capability** of the hardware: the ground unit transmits at 27 dBm conducted [E: ground power-amplifier class]
+with the antenna gain of its class, and no regional rule is applied (design stance of REG-008: compliance is configuration, not a design driver).
+The last column shows, for comparison only, the FCC-type profile that cuts conducted power dB for dB above 6 dBi (30 dBm minus the excess; the
+5.8 GHz point-to-point exemption is for fixed installations and is not assumed [rule text read in older CFR editions, to be re-checked]).
 Sensitivity for QPSK 1/2 is -90 dBm (SNR 5 dB, same model as RF-020).
 
-| Class | GU antenna dBi | GU conducted dBm (FCC rule) | Range km | Margin at QPSK 1/2 dB | Margin at BPSK 1/2 dB | Max range for QPSK 1/2 at 6 dB km |
-|---|---|---|---|---|---|---|
-| S | 5 | 27 | 5 | 6.3 | 9.3 | 5.2 |
-| X | 10 | 26 | 10 | 4.3 | 7.3 | 8.2 |
-| L | 5 | 27 | 14 | 5.0 | 8.0 | 12.5 |
+| Class | GU antenna dBi | GU TX dBm (capability) | Range km | Margin at QPSK 1/2 dB | Margin at BPSK 1/2 dB | Max range for QPSK 1/2 at 6 dB km | Same, FCC-type profile (conducted power cut above 6 dBi) km |
+|---|---|---|---|---|---|---|---|
+| S | 5 | 27 | 5 | 6.3 | 9.3 | 5.2 | 5.2 |
+| X | 10 | 27 | 10 | 5.3 | 8.3 | 9.2 | 8.2 |
+| L | 5 | 27 | 14 | 5.0 | 8.0 | 12.5 | 12.5 |
 
-Finding: the 1 Mbit/s uplink of MAC-007 (QPSK 1/2) keeps 6 dB margin only to about 5 km in Class S, 8 km in Class X and 12.5 km in
-Class L. At the full range of each class only the BPSK 1/2 uplink (about 300 kbit/s) has margin. MAC-007 is restated accordingly
-(rev 0.6). The 10 dBi ground antenna of Class X does not help the uplink, because the FCC rule takes its gain back as lower
-transmit power.
+Finding: in in-band TDD mode the 1 Mbit/s uplink of MAC-007 (QPSK 1/2) keeps 6 dB margin to about 5 km in Class S, 9 km in Class X and 12.5 km in Class L
+(8 km in Class X under the FCC-type profile). At the full range of each class only the BPSK 1/2 uplink (about 300 kbit/s) has margin. MAC-007 is restated
+accordingly. The 10 dBi ground antenna of Class X adds 5 dB on the uplink under the capability budget; a profile that cuts conducted power above 6 dBi takes
+4 dB of it back. The split-band uplink of section 1.1b does not depend on this.
 
 ### 1.1b Split-band uplink (trade study T-03, iteration 4)
 
@@ -65,10 +66,10 @@ video band is downlink-only (5% idle kept for frame-based-equipment rules and pi
 | Class | Video band | Uplink band | Range km | GU TX dBm | Antennas dBi (GU/AU) | Margin QPSK 1/2 at 5 MHz dB | Same-band TDD margin dB | Video net rate Mbit/s (split / TDD) |
 |---|---|---|---|---|---|---|---|---|
 | S | 5.8 GHz | 2.4 GHz | 5 | 27 | 5/5 | 17.0 | 6.3 | 20.8 / 18.7 |
-| X | 5.8 GHz | 2.4 GHz | 10 | 27 | 5/5 | 11.0 | 4.3 | 20.8 / 19.3 |
+| X | 5.8 GHz | 2.4 GHz | 10 | 27 | 5/5 | 11.0 | 5.3 | 20.8 / 19.3 |
 | L | 2.4 GHz | 0.915 GHz | 14 | 27 | 3/3 | 12.4 | 5.0 | 20.8 / 19.1 |
 
-Findings: the uplink margin rises from 4.3 to 11.0 dB at Class X (10 km) and from 5.0 to 12.4 dB at Class L, because the lower band has 7.7 dB less
+Findings: the uplink margin rises from 5.3 to 11.0 dB at Class X (10 km) and from 5.0 to 12.4 dB at Class L (same-band TDD, capability budget), because the lower band has 7.7 dB less
 free-space loss at 2.4 GHz than at 5.8 GHz and the 5 MHz channel is 6 dB more sensitive than 20 MHz; the video band needs no guard time, no
 timing advance and no uplink slot, and the net video rate rises by about 8% at 10 km. The cost is a second receive chain at the air unit, a transmit
 chain at 2.4 GHz (or 900 MHz) at the ground unit and TX-to-RX isolation (RF-030). The 900 MHz uplink for 2.4 GHz video is usable where the band
@@ -79,13 +80,25 @@ Same-band FDD (uplink in the same 5.8 GHz band, 30 MHz from the video channel) w
 30 dBm while receiving at about -96 dBm; with transmit noise around -65 dBc/MHz-class at that offset the leakage into a 5 MHz receive channel is
 about -35 dBm, so about 67 dB of isolation is needed at a 30 MHz offset, which antenna isolation (about 30 dB) plus a 125 MHz-wide band filter cannot give.
 
-### 1.2 TX power and regulation
+### 1.2 Region profiles (derived ranges)
 
-Conducted 30 to 33 dBm is allowed in some FCC modes only with antenna gain limits. In ETSI regions the limit is
-about 20 dBm EIRP (2.4 GHz) and 14 to 25 dBm EIRP (5.8 GHz, depending on the sub-band and rule).
-Regional locking (ADA-006) means the headline range applies only to FCC-type regions; ETSI regions must be
-specified separately (G-04). The 5.8 GHz band edges and power limits shall be re-checked by regulatory
-counsel before the numbers are frozen.
+Power, band, dwell, DFS and listen-before-talk rules differ by region. They are **not** design drivers: the specification targets the best range, latency and
+robustness the hardware can deliver, and each region is a signed data table applied on top (ADA-006, SEC-005, REG-008). All ranges in this document are therefore
+capability ranges; the range under a region profile is derived by capping the air-unit EIRP. The profile caps below are illustrative values (not a statement of
+any regulation); real profiles are data to be filled by counsel. Downlink, air unit 5 dBi with 1 dB cable loss and at most 30 dBm conducted, ground 2-branch MRC,
+20 MHz, 6 dB margin, free space (`scripts/link_budget.py`):
+
+| Profile (EIRP cap at the air unit) | AU conducted dBm | 5.8 GHz QPSK 3/4 km | 5.8 GHz BPSK 1/2 km | 2.4 GHz QPSK 3/4 km | 2.4 GHz BPSK 1/2 km |
+|---|---|---|---|---|---|
+| Capability (no regional limit) | 30 | 5.8 | 10.3 | 14.1 | 25.0 |
+| EIRP cap 36 dBm (FCC-type 6 dBi antenna case) | 30 | 5.8 | 10.3 | 14.1 | 25.0 |
+| EIRP cap 25 dBm (illustrative) | 21 | 2.1 | 3.7 | 5.0 | 8.9 |
+| EIRP cap 20 dBm (ETSI-type 2.4 GHz case) | 16 | 1.2 | 2.1 | 2.8 | 5.0 |
+| EIRP cap 14 dBm (illustrative) | 10 | 0.6 | 1.0 | 1.4 | 2.5 |
+
+The hardware capability requirements stay unchanged (RF-010: 33 dBm capability, programmable power and bands) so that any profile can be configured. A prototype
+that radiates must still be operated lawfully (conducted into a load, in a shielded enclosure, or under a test or experimental authorisation); that is an operating rule
+(`00` section 3), not a design requirement.
 
 ## 2. Latency budget (glass to glass)
 

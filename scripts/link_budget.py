@@ -123,13 +123,17 @@ def main() -> None:
         print(f"| {s.name} | {fspl_db(s.freq_mhz, s.dist_km):.1f} | {label} | {rate} | {margin_db(s, MCS_TABLE[0]):.1f} |")
 
 
+GU_TX_CAPABILITY_DBM = 27.0  # ground-unit transmit capability (E: battery-powered PA class); regional limits are profiles, not design drivers
+
+
 def uplink_table() -> str:
-    """Uplink (ground unit transmits, air unit receives with 2-branch MRC, 5 dBi)."""
-    rows = ["| Class | GU antenna dBi | GU conducted dBm (FCC rule) | Range km | Margin at QPSK 1/2 dB | Margin at BPSK 1/2 dB | Max range for QPSK 1/2 at 6 dB km |", "|---|---|---|---|---|---|---|"]
+    """Uplink (ground unit transmits, air unit receives with 2-branch MRC, 5 dBi). Capability first, then the FCC-type profile for comparison."""
+    rows = ["| Class | GU antenna dBi | GU TX dBm (capability) | Range km | Margin at QPSK 1/2 dB | Margin at BPSK 1/2 dB | Max range for QPSK 1/2 at 6 dB km | Same, FCC-type profile (conducted power cut above 6 dBi) km |", "|---|---|---|---|---|---|---|---|"]
     for name, f, d, gu_ant in [("S", 5800, 5, 5), ("X", 5800, 10, 10), ("L", 2400, 14, 5)]:
-        tx = min(27.0, fcc_conducted_limit_dbm(gu_ant))
+        tx = GU_TX_CAPABILITY_DBM
         s = Scenario(name, f, d, tx, gu_ant, 5, diversity_gain_db=3)
-        rows.append(f"| {name} | {gu_ant} | {tx:.0f} | {d} | {margin_db(s, UPLINK_QPSK_HALF):.1f} | {margin_db(s, MCS_TABLE[0]):.1f} | {max_range_km(s, UPLINK_QPSK_HALF):.1f} |")
+        s_fcc = Scenario(name, f, d, min(tx, fcc_conducted_limit_dbm(gu_ant)), gu_ant, 5, diversity_gain_db=3)
+        rows.append(f"| {name} | {gu_ant} | {tx:.0f} | {d} | {margin_db(s, UPLINK_QPSK_HALF):.1f} | {margin_db(s, MCS_TABLE[0]):.1f} | {max_range_km(s, UPLINK_QPSK_HALF):.1f} | {max_range_km(s_fcc, UPLINK_QPSK_HALF):.1f} |")
     return "\n".join(rows)
 
 
@@ -143,10 +147,10 @@ def split_band_uplink_table() -> str:
             "|---|---|---|---|---|---|---|---|---|"]
     cases = [("S", 5800, 2400, 5, 5, 5), ("X", 5800, 2400, 10, 5, 5), ("L", 2400, 915, 14, 3, 3)]
     for name, vf, uf, d, g_gu, g_au in cases:
-        tx = min(27.0, fcc_conducted_limit_dbm(g_gu))
+        tx = GU_TX_CAPABILITY_DBM
         s = Scenario(name, uf, d, tx, g_gu, g_au, bw_mhz=SPLIT_UL_BW_MHZ)  # AU has one uplink receive chain: no MRC gain
         m = margin_db(s, UPLINK_QPSK_HALF)
-        tdd = Scenario(name, vf, d, min(27.0, fcc_conducted_limit_dbm(10 if name == "X" else 5)), 10 if name == "X" else 5, 5, diversity_gain_db=3)
+        tdd = Scenario(name, vf, d, GU_TX_CAPABILITY_DBM, 10 if name == "X" else 5, 5, diversity_gain_db=3)
         m_tdd = margin_db(tdd, UPLINK_QPSK_HALF)
         rate_split = DATA_TONES[20.0] * MCS_TABLE[1].bits_per_sym / SYMBOL_US * DL_DUTY_SPLIT * 0.85
         rate_tdd = phy_rate_mbps(MCS_TABLE[1], 20, d)
@@ -306,6 +310,20 @@ def range_vs_mcs_table() -> str:
     return "\n".join(rows)
 
 
+def region_range_table() -> str:
+    """Downlink range as a derived column per region profile (illustrative EIRP caps; real profiles are data, REG-008).
+    Air unit 5 dBi, 1 dB cable loss, conducted power at most 30 dBm, ground 2-branch MRC, 20 MHz, 6 dB margin, free space."""
+    rows = ["| Profile (EIRP cap at the air unit) | AU conducted dBm | 5.8 GHz QPSK 3/4 km | 5.8 GHz BPSK 1/2 km | 2.4 GHz QPSK 3/4 km | 2.4 GHz BPSK 1/2 km |", "|---|---|---|---|---|---|"]
+    for name, cap in (("Capability (no regional limit)", None), ("EIRP cap 36 dBm (FCC-type 6 dBi antenna case)", 36.0), ("EIRP cap 25 dBm (illustrative)", 25.0), ("EIRP cap 20 dBm (ETSI-type 2.4 GHz case)", 20.0), ("EIRP cap 14 dBm (illustrative)", 14.0)):
+        tx = 30.0 if cap is None else min(30.0, cap - 5 + 1)
+        vals = []
+        for f in (5800, 2400):
+            for m in (MCS_TABLE[1], MCS_TABLE[0]):
+                vals.append(max_range_km(Scenario("x", f, 1, tx, 5, 5, diversity_gain_db=3), m))
+        rows.append(f"| {name} | {tx:.0f} | " + " | ".join(f"{v:.1f}" for v in (vals[0], vals[1], vals[2], vals[3])) + " |")
+    return "\n".join(rows)
+
+
 def tdd_table() -> str:
     """TDD frame budget per range class with the range-adaptive frame length (T-03 option C)."""
     rows = ["| Range km | Frame ms | UL symbols (QPSK 1/2, 1 Mbit/s + 2 preamble) | UL us | Guard us | DL share of frame |", "|---|---|---|---|---|---|"]
@@ -359,3 +377,5 @@ if __name__ == "__main__":
     print(interface_table())
     print()
     print(range_vs_mcs_table())
+    print()
+    print(region_range_table())
