@@ -84,7 +84,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | ID | Requirement | Pri | Phase | Ver |
 |----|-------------|-----|-------|-----|
 | MAC-001 | Time-division duplex with a fixed super-frame (default 1.0 ms), slots assigned downlink : uplink at 9:1 by default. [TBV: see trade study T-03] | M | | T |
-| MAC-002 | All airtime is scheduled by the ground unit or by the air unit master. No contention-based access (no CSMA) inside a link. Coexistence with other systems is done by channel selection (FHSS-ADA-001). | M | | T |
+| MAC-002 | All airtime is scheduled by the ground unit or by the air unit master. No contention-based access (no CSMA) inside a link. Coexistence with other systems is done by channel selection (ADA-001). | M | | T |
 | MAC-003 | Time synchronisation between air and ground within 1 microsecond (derived from the preamble). | M | | T |
 | MAC-004 | Uplink slots carry channel feedback (CSI summary, MCS recommendation, RSSI, per-slice ACK/NAK bitmap) with 1 ms or less period. | M | | T |
 | MAC-005 | The air unit shall change MCS, power and slice budget within 2 ms of receiving the feedback. | M | | T |
