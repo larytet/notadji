@@ -68,7 +68,7 @@ timeout, a bounded latency for each payload), adaptive frequency hopping with a 
 |---|---|---|---|
 | A0 | Architecture, bit-accurate models (Python/C++), RTL for FPGA | in P1 | included |
 | A1 | RF test chip: transceiver, PLL, observation receiver, in a mature RF node, used with the FPGA as baseband | 12 to 18 months | MPW run of about USD 0.3 to 1 M [TBV] |
-| A2 | Baseband ASIC: modem, FEC, encoder/decoder, CPU, in 22 nm or 28 nm | 18 to 24 months in parallel with A1 | NRE USD 5 to 10 M [TBV] |
+| A2 | Baseband ASIC: modem, FEC, encoder/decoder, CPU, in 22 nm or 28 nm | 18 to 24 months in parallel with A1 (a team of about 60 would need about 2.5 years for the 265 to 330 person-years of `effort.md`) | NRE USD 5 to 10 M [TBV] covers masks, IP licences and tools only; team labour is separate (about 240 person-years of digital SoC work at USD 0.15 M each is about USD 35 M [E, `effort.md`]) |
 | A3 | Integration: one-chip (or two-chip) product, certification | 12 months | USD 3 to 8 M [TBV] |
 
 Options (A: one die, B: two dice, C: SiP) are evaluated in trade study T-08. The numbers are order-of-magnitude

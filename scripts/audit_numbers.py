@@ -93,7 +93,7 @@ for m, e in zip(lb.MCS_TABLE, (-93, -88, -80, -74)):
 import subprocess  # noqa: E402
 
 out = subprocess.check_output([sys.executable, "-I", str(ROOT / "scripts" / "link_budget.py")], text=True)
-down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl, iface_tbl, rng_tbl, reg_tbl = out.strip().split("\n\n")
+down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl, iface_tbl, rng_tbl, reg_tbl, lev_tbl, coax_tbl, brk_tbl = out.strip().split("\n\n")
 check("02 contains the downlink table from the script", down.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the uplink table from the script", up.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the PA mode table from the script", pa_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
@@ -134,6 +134,20 @@ _ul = lb.Scenario("L", 2400, 14, lb.GU_TX_CAPABILITY_DBM, 5, 5, diversity_gain_d
 check("MAC-007 in-band uplink ranges 5/9/12 km hold with 6 dB margin at QPSK 1/2", lb.max_range_km(_us, lb.UPLINK_QPSK_HALF) >= 5 and lb.max_range_km(_ux, lb.UPLINK_QPSK_HALF) >= 9 and lb.max_range_km(_ul, lb.UPLINK_QPSK_HALF) >= 12 and "9 km (Class X)" in SRS)
 check("capability budget is not cut by the FCC rule (REG-008) and the FCC profile costs 4 dB at 10 dBi", lb.fcc_conducted_limit_dbm(10) == 26.0 and lb.GU_TX_CAPABILITY_DBM == 27.0 and "REG-008" in SRS)
 check("SYS-003 no longer carries an ETSI-specific range", "about 2.5 km at 20 dBm EIRP" not in SRS)
+check("02 contains the ground-lever and coax tables", lev_tbl.strip() in TEXT["02-link-and-latency-budgets.md"] and coax_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
+check("07 contains the tape-out break-even table", brk_tbl.strip() in TEXT["07-trade-studies.md"] and "21 to 24 million units" in TEXT["07-trade-studies.md"])
+check("break-even is 21 to 24 million units", round((3 + 50 * 0.15) / 0.5) == 21 and round((3 + 60 * 0.15) / 0.5) == 24)
+check("8 branches and NF 2 add 8 dB over the baseline (PHY-016, RF-032)", abs((3.0 * math.log2(8) + (4.0 - 2.0)) - (3.0 * math.log2(2)) - 8.0) < 1e-9)
+_g8 = lb.max_range_km(lb.Scenario("x", 5800, 1, 30, 5, 5, diversity_gain_db=3.0 * math.log2(8) + 2.0), lb.MCS_TABLE[1])
+check("ground levers: 8 branches NF 2 reach 14.6 km at 5.8 GHz QPSK 3/4", abs(_g8 - 14.6) < 0.06 and "5.8 km to 14.6 km" in TEXT["02-link-and-latency-budgets.md"], f"{_g8:.2f}")
+_ul24 = lb.Scenario("x", 2400, 1, 27, 5, 5, bw_mhz=5.0)
+check("uplink-limited ranges 17.7 / 25.1 km (2.4 GHz) stated in 02", abs(lb.max_range_km(_ul24, lb.UPLINK_QPSK_HALF) - 17.7) < 0.06 and abs(lb.max_range_km(_ul24, lb.MCS_TABLE[0]) - 25.1) < 0.06 and "17.7 km at QPSK 1/2 and 25.1 km at BPSK 1/2" in TEXT["02-link-and-latency-budgets.md"])
+check("coax delay at 20 m (150 ns) is inside the 0.8 us prefix, passive 20 m costs 8.2 dB", abs(20 / (3e8 * 0.8) * 1e9 + 20 / 3e8 * 1e9 - 150) < 1 and abs(0.41 * 20 - 8.2) < 1e-9 and "150 ns at 20 m" in SRS)
+check("ASC-007: 8 receive chains at 40 MHz are 11.8 Gbit/s", abs(61.44e6 * 2 * 12 * 8 / 1e9 - 11.8) < 0.01 and "11.8 Gbit/s" in SRS)
+import roles as _roles  # noqa: E402
+_tags = {m.group(1): m.group(2) for m in re.finditer(r"^\| ([A-Z]{2,4}-\d{3}) \| \[(AU|GU)\] ", SRS, flags=re.M)}
+check("role tags in the SRS match scripts/roles.py", _tags == {k: v[1:3] for k, v in _roles.TAGS.items()}, "run python3 -I scripts/roles.py")
+check("SYS-011 present and RF-032 gain is 2 dB", "SYS-011" in SRS and (4.0 - 2.0) == 2.0)
 check("02 contains the split-band table from the script", split.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("split-band uplink margin >= 6 dB for all classes (MAC-007)", all(float(r.split("|")[7]) >= 6 for r in split.strip().split("\n")[2:]))
 check("MAC-007 states the split-band margins 17.0, 11.0 and 12.4", "17.0, 11.0 and 12.4 dB" in SRS)

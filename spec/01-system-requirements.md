@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 1.9 (region profiles; revision 1.8 was the consolidation; revision 1.7 was the T-01 iteration; revision 1.6 was the T-08/T-18 iteration; revision 1.5 was the T-15/T-17 iteration; revision 1.4 was the T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 2.0 (ground unit and silicon family; revision 1.9 was the region profiles; revision 1.8 was the consolidation; revision 1.7 was the T-01 iteration; revision 1.6 was the T-08/T-18 iteration; revision 1.5 was the T-15/T-17 iteration; revision 1.4 was the T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -13,7 +13,7 @@ Status: DRAFT, revision 1.9 (region profiles; revision 1.8 was the consolidation
 ```
 
 The system is a bidirectional TDD link. The downlink carries video, the uplink carries link feedback,
-telemetry and optional control frames. The air unit and the ground unit use the same silicon, configured by role.
+telemetry and optional control frames. The air unit and the ground unit may use the same silicon configured by role (the baseline) or different silicon (SYS-011). Requirements are tagged [AU] (air unit only), [GU] (ground unit only) or untagged (both).
 
 ## 2. Top-level targets
 
@@ -23,39 +23,40 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | SYS-002 | The FPGA prototype shall reach G2G of 30 ms or less at 1080p60 (mean) as the first milestone. | M | P1 | T |
 | SYS-003 | The link shall sustain 1080p60 video (at least 10 Mbit/s net) with at least 6 dB free-space margin in these range classes (30 dBm conducted, 2-branch MRC on the ground unit, lowest MCS that meets the rate): **Class S** 5 km, 5.8 GHz, 20 MHz, 5/5 dBi antennas; **Class X** 10 km, 5.8 GHz, 20 MHz, 10 dBi ground antenna (for example the six-sector array of ANT-008); **Class L** 14 km, 2.4 GHz, 20 MHz, 5/5 dBi. These are capability ranges: regional limits are profiles, not design drivers (REG-008), and the range under a profile is derived (`02` section 1.2). Real-world margins per scenario are in `02` (G-02). With the reduced-quality profile (VID-022, 6.9 Mbit/s) the ranges are 10.3 km at 5.8 GHz and 25 km at 2.4 GHz with 5/5 dBi antennas. Revised by T-01. | M | P2 | A,T |
 | SYS-004 | The video shall degrade gracefully (lower resolution/quality, never a frozen frame longer than 100 ms) as SNR drops, down to the lowest MCS. | M | | T |
-| SYS-005 | Air unit total DC input power, excluding the camera sensor module: at most 3.5 W at 25 dBm and 4.1 W at 27 dBm average output in any modulation; at most 6.0 W at 30 dBm in OFDM QPSK/16QAM and in the low-PAPR mode (64QAM and higher are capped at 27 dBm, RF-031). A separate 33 dBm SKU is allowed up to 10 W. Basis: PA model in `02` section 3 [E]. Revised by T-02. | M | P2 | T |
-| SYS-006 | Air unit mass, including the antennas' feed cables and the heatsink, shall not exceed 25 g. | S | P2 | I |
-| SYS-007 | Ground unit shall operate from a 1S-6S battery for at least 3 h at the nominal consumption. | S | | T |
-| SYS-008 | One ground unit shall pair with up to 4 air units and receive one (or two, picture-in-picture, O) at a time. | S | | D |
+| SYS-005 | [AU] Air unit total DC input power, excluding the camera sensor module: at most 3.5 W at 25 dBm and 4.1 W at 27 dBm average output in any modulation; at most 6.0 W at 30 dBm in OFDM QPSK/16QAM and in the low-PAPR mode (64QAM and higher are capped at 27 dBm, RF-031). A separate 33 dBm SKU is allowed up to 10 W. Basis: PA model in `02` section 3 [E]. Revised by T-02. | M | P2 | T |
+| SYS-006 | [AU] Air unit mass, including the antennas' feed cables and the heatsink, shall not exceed 25 g. | S | P2 | I |
+| SYS-007 | [GU] Ground unit shall operate from a 1S-6S battery for at least 3 h at the nominal consumption. | S | | T |
+| SYS-008 | [GU] One ground unit shall pair with up to 4 air units and receive one (or two, picture-in-picture, O) at a time. | S | | D |
 | SYS-009 | Co-located operation by frequency plan. Race mode (all links within 500 m of their pilots, air units at least 7 m apart, adjacent channels allowed): at least 6 simultaneous links at 20 MHz and 12 at 10 MHz in 5.8 GHz; 4 at 20 MHz and 8 at 10 MHz in 2.4 GHz; with 5 MHz channels 25 links in 5.8 GHz and 16 in 2.4 GHz at reduced rate and range. Long-range operation (links beyond 500 m): alternate channels only (3, 6 and 13 links at 20, 10 and 5 MHz in 5.8 GHz; 2, 4 and 8 in 2.4 GHz) unless neighbouring air units are at least 184 m apart (ACLR -45 dBc, `07` T-05). Beyond these numbers the links shall degrade gracefully through ADA-001 and power control. In split-band mode the 5 MHz uplink channels limit the count to 16 links in 2.4 GHz. Revised by T-05. | M | | T |
 | SYS-010 | Out of scope for version 1: goggles optics and head tracking (the ground unit outputs HDMI/DP/DSI), multi-camera switching. Audio is optional (VID-019). See assumption A-01. | M | | I |
+| SYS-011 | Role independence: the air unit and the ground unit may be built on different silicon (different digital SoC, RF die count, front end and antenna set); they interoperate only through the on-air protocol (frame formats, numerology, MCS set, feedback messages, split-band channel plan) documented under SW-003 and verified by conformance tests. A basic ground unit built from the air-unit silicon and an enhanced ground unit shall both pair with any air unit. Requirements carry a role tag ([AU], [GU] or none). | M | | I |
 
 ## 3. Video (VID)
 
 | ID | Requirement | Pri | Phase | Ver |
 |----|-------------|-----|-------|-----|
-| VID-001 | Input formats: 1080p at 30, 50, 60, 90, 100, 120 fps; 720p up to 240 fps; 4K at 30 and 60 fps (4K may exceed the latency in SYS-001 by up to 1.5 frame times). | M | P2 | T |
-| VID-002 | Sensor interface: MIPI CSI-2, 4 lanes, D-PHY 2.5 Gbit/s per lane minimum. | M | | I |
+| VID-001 | [AU] Input formats: 1080p at 30, 50, 60, 90, 100, 120 fps; 720p up to 240 fps; 4K at 30 and 60 fps (4K may exceed the latency in SYS-001 by up to 1.5 frame times). | M | P2 | T |
+| VID-002 | [AU] Sensor interface: MIPI CSI-2, 4 lanes, D-PHY 2.5 Gbit/s per lane minimum. | M | | I |
 | VID-003 | Codecs: AVC (H.264) high profile as the baseline in P1 and P2; HEVC (H.265) main profile as the quality mode in P2. The encoder architecture shall be codec-agnostic at slice level. Revised by T-06. | M | | T |
 | VID-004 | The encoder shall be slice-based with at least 8 slices per frame, each slice independently decodable and independently protected. | M | | T |
-| VID-005 | No I-frames in steady state. A rolling intra-refresh wave with a period of 60 frames or less acts as the safety net (about 5% bit-rate overhead [E]); recovery from detected losses uses reactive slice refresh (VID-021). Revised by T-07. | M | | T |
-| VID-006 | Rate control: per-slice constant bit budget with a rate buffer of at most 1 slice, retargeted every slice from the MCS in force; hard bound: no slice shall exceed 105% of its budget, verified on the encoded bitstream and not from encoder readback (source review S-4). | M | | T |
-| VID-007 | Encoder pipeline latency (first pixel in to first slice bits out) of 2.0 ms or less at 1080p60 and 1.2 ms or less at 1080p120 (the stage values of the latency budget in `02`; no open or vendor figure exists to confirm them, G-05). | M | P2 | T |
-| VID-008 | Decoder pipeline latency (first slice bits in to first line out) of 2.0 ms or less at 1080p60 and 1.2 ms or less at 1080p120 (budget in `02`; G-05). | M | P2 | T |
+| VID-005 | [AU] No I-frames in steady state. A rolling intra-refresh wave with a period of 60 frames or less acts as the safety net (about 5% bit-rate overhead [E]); recovery from detected losses uses reactive slice refresh (VID-021). Revised by T-07. | M | | T |
+| VID-006 | [AU] Rate control: per-slice constant bit budget with a rate buffer of at most 1 slice, retargeted every slice from the MCS in force; hard bound: no slice shall exceed 105% of its budget, verified on the encoded bitstream and not from encoder readback (source review S-4). | M | | T |
+| VID-007 | [AU] Encoder pipeline latency (first pixel in to first slice bits out) of 2.0 ms or less at 1080p60 and 1.2 ms or less at 1080p120 (the stage values of the latency budget in `02`; no open or vendor figure exists to confirm them, G-05). | M | P2 | T |
+| VID-008 | [GU] Decoder pipeline latency (first slice bits in to first line out) of 2.0 ms or less at 1080p60 and 1.2 ms or less at 1080p120 (budget in `02`; G-05). | M | P2 | T |
 | VID-009 | Video bit rate range: 1 to 80 Mbit/s, adjustable per frame. | M | | T |
 | VID-010 | Loss concealment: a lost slice shall be concealed from the previous frame (motion-compensated, O) and recovered by reactive slice refresh in the next frame (VID-021) or at the latest by the rolling wave within 60 frames. | M | | T |
 | VID-011 | Unequal error protection: slice header and parameter data shall have at least 6 dB more protection than residual data. | S | | T |
 | VID-012 | 10-bit input and HDR10/HLG pass-through. | O | P2 | T |
-| VID-013 | Optional on-air stabilisation using gyro data (electronic image stabilisation) with an added latency of at most 1 frame. The mode shall be switchable so a zero-added-latency path exists. | O | | T |
-| VID-014 | Optional local recording at 100 Mbit/s or higher to SD/NVMe, independent of the radio link (full quality copy on the air unit). | S | | D |
-| VID-015 | The ground unit shall output HDMI 2.0, DisplayPort and/or MIPI DSI with a fixed line-synchronised scan-out (display starts scanning a frame before it is completely decoded). | M | | T |
-| VID-016 | On-screen display overlay (OSD) in the ground unit, MSP DisplayPort and MAVLink sources. | M | | D |
+| VID-013 | [AU] Optional on-air stabilisation using gyro data (electronic image stabilisation) with an added latency of at most 1 frame. The mode shall be switchable so a zero-added-latency path exists. | O | | T |
+| VID-014 | [AU] Optional local recording at 100 Mbit/s or higher to SD/NVMe, independent of the radio link (full quality copy on the air unit). | S | | D |
+| VID-015 | [GU] The ground unit shall output HDMI 2.0, DisplayPort and/or MIPI DSI with a fixed line-synchronised scan-out (display starts scanning a frame before it is completely decoded). | M | | T |
+| VID-016 | [GU] On-screen display overlay (OSD) in the ground unit, MSP DisplayPort and MAVLink sources. | M | | D |
 | VID-017 | Codec licensing: a royalty and patent-pool review for AVC and HEVC shall be completed before P2 funding; the product shall ship with the pool licences or the codec shall be disabled in that region. | M | P2 | I |
-| VID-018 | Display synchronisation: the ground unit shall lock the display scan-out to the received frame timing, steering the display pixel clock by at least +/-50 ppm with 0.1 ppm resolution (the free-running drift is 2.4 ms per minute for two 20 ppm crystals and 0.24 ms per minute for two TCXOs, `07` T-17), so that latency varies by no more than 1 ms over a 10 minute flight (residual 1 ppm gives 0.6 ms) and no visible glitch is produced. Revised by T-17. | M | | T |
+| VID-018 | [GU] Display synchronisation: the ground unit shall lock the display scan-out to the received frame timing, steering the display pixel clock by at least +/-50 ppm with 0.1 ppm resolution (the free-running drift is 2.4 ms per minute for two 20 ppm crystals and 0.24 ms per minute for two TCXOs, `07` T-17), so that latency varies by no more than 1 ms over a 10 minute flight (residual 1 ppm gives 0.6 ms) and no visible glitch is produced. Revised by T-17. | M | | T |
 | VID-019 | Optional audio: 48 kHz, 32 to 128 kbit/s, end-to-end latency 20 ms or less, lip-sync within 40 ms of the video. | O | P2 | T |
-| VID-020 | No hidden encoder limits: every rate, intra-refresh and reference-structure parameter takes effect within one slice time without restarting the pipeline; unsupported values are rejected with an error and never silently replaced; input frame-rate ceilings of at least 120 fps at 1080p and 240 fps at 720p (source review S-4 to S-7). | M | | T |
-| VID-021 | Reactive slice refresh: a slice reported lost in the acknowledgement bitmap (MAC-004) shall be re-coded in intra mode in the next frame, provided the acknowledgement reaches the encoder within one frame time; average overhead at the target loss rate about 0.3% [E]. | M | | T |
-| VID-022 | Reduced-quality range profile: at 6 Mbit/s or less (BPSK 1/2, 6.9 Mbit/s net in the video band) the encoder shall deliver usable video of at least 720p30, giving 10.3 km at 5.8 GHz and 25 km at 2.4 GHz with 5/5 dBi antennas, 6 dB margin, free space (`07` T-01); usability is judged on the reference video set (objective score target to be set, [E]). | M | | T |
+| VID-020 | [AU] No hidden encoder limits: every rate, intra-refresh and reference-structure parameter takes effect within one slice time without restarting the pipeline; unsupported values are rejected with an error and never silently replaced; input frame-rate ceilings of at least 120 fps at 1080p and 240 fps at 720p (source review S-4 to S-7). | M | | T |
+| VID-021 | [AU] Reactive slice refresh: a slice reported lost in the acknowledgement bitmap (MAC-004) shall be re-coded in intra mode in the next frame, provided the acknowledgement reaches the encoder within one frame time; average overhead at the target loss rate about 0.3% [E]. | M | | T |
+| VID-022 | [AU] Reduced-quality range profile: at 6 Mbit/s or less (BPSK 1/2, 6.9 Mbit/s net in the video band) the encoder shall deliver usable video of at least 720p30, giving 10.3 km at 5.8 GHz and 25 km at 2.4 GHz with 5/5 dBi antennas, 6 dB margin, free space (`07` T-01); usability is judged on the reference video set (objective score target to be set, [E]). | M | | T |
 
 ## 4. Latency and jitter (LAT)
 
@@ -77,7 +78,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | PHY-003 | Default sub-carrier spacing 78.125 kHz (symbol 12.8 us); cyclic prefix selectable among 1/16, 1/8, 1/4. Maximum Doppler for full-rate operation: 3.5 kHz for BPSK to 64QAM (inter-carrier interference about -22 dB, verified by simulation, G-25) and 1.0 kHz for 256QAM. | M | | S |
 | PHY-004 | Modulations: BPSK, QPSK, 16QAM, 64QAM, 256QAM (256QAM in P2 and only when EVM allows). | M | | T |
 | PHY-005 | FEC: LDPC with code rates 1/2, 2/3, 3/4, 5/6; codeword length 648 bits in race mode (lowest latency) and 1944 bits in cruise mode; slice-aligned codeword packing. Revised by T-16. | M | | S,T |
-| PHY-006 | Spatial: 2 RX chains at the ground unit with MRC or better. Two TX chains (STBC or spatial multiplexing) as option in P2. | M(RX) / O(TX) | | T |
+| PHY-006 | [GU] Spatial: 2 RX chains at the ground unit with MRC or better (basic ground unit); 4 to 8 receive branches in the enhanced configuration (PHY-016). Two TX chains (STBC or spatial multiplexing) as option in P2. | M(RX) / O(TX) | | T |
 | PHY-007 | Pilot design shall track a channel that changes within a frame: midambles/pilots at least every 0.25 ms of airtime at the highest Doppler setting. | M | | S |
 | PHY-008 | Carrier frequency offset tolerance: initial 25 ppm; after acquisition residual below 0.1 ppm equivalent. | M | | T |
 | PHY-009 | Peak-to-average power reduction (clipping with filtering or tone reservation) plus DPD so that the PA meets RF-014 and RF-015 with a back-off of at most 7 dB for 64QAM and 6 dB for QPSK/16QAM OFDM (the 4 dB of rev 0.6 was unrealistic). | M | P2 | T |
@@ -87,6 +88,8 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | PHY-013 | The numerology shall be programmable (not hard-wired) so that the same engine can run a WiFi-compatible mode (see PRO-001) for the prototype. | M | P1 | I |
 | PHY-014 | Optional low-PAPR mode: DFT-spread OFDM for BPSK, QPSK and 16QAM with a PAPR at least 3 dB below plain OFDM at a CCDF of 1e-3 [E], selectable per link; it is the mitigation if the PA study shows less than 27% PAE at OFDM QPSK/16QAM. | O | P2 | S,T |
 | PHY-015 | LDPC decoder throughput of at least 155 Mbit/s of information (3 layered-decoder instances at 200 MHz in the model of `07` T-16, or equivalent) and a codeword decode time of 10 us or less. [E, TBV] | M | | S,T |
+| PHY-016 | [GU] Enhanced ground configuration: 4 to 8 receive branches with combining across all of them (about 3 dB per doubling of branches in the noise-limited case, minus a correlation loss of at most 1.5 dB [E]); the branch count is a configuration value and the air unit is unchanged (SYS-011). | O | P2 | T |
+| PHY-017 | [GU] Heavier decoding in the enhanced ground configuration: at least twice the LDPC iterations of the basic unit and soft (chase) combining of retransmitted slices (MAC-006), within the demodulation-plus-decoding latency of the budget in `02`; the decoder area grows to hold the latency. [E] | O | P2 | T |
 
 ## 6. MAC and framing (MAC)
 
@@ -102,7 +105,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | MAC-008 | Optional hard real-time RC channel: 1 kHz update, 3 ms one-way latency, link-lost failsafe in 100 ms. | O | | T |
 | MAC-009 | Pairing and key exchange without a network connection (see SEC-001). Re-pairing in the field within 10 s. | M | | D |
 | MAC-010 | Multi-link: a link shall be able to survive a change of channel (frequency hop) with a gap in video of 1 frame or less. | M | | T |
-| MAC-011 | Timing advance: the ground unit shall estimate the round-trip delay from the preamble (resolution 0.1 us) and advance its uplink slot so that the uplink arrives aligned with the air unit's frame; the estimate is also reported to the pilot as range (O). | M | | T |
+| MAC-011 | [GU] Timing advance: the ground unit shall estimate the round-trip delay from the preamble (resolution 0.1 us) and advance its uplink slot so that the uplink arrives aligned with the air unit's frame; the estimate is also reported to the pilot as range (O). | M | | T |
 | MAC-012 | Split-band mode (baseline for Classes X and L where regulation allows): the video band carries downlink only (5% idle for frame-based-equipment rules); feedback, telemetry and control use a 5 MHz uplink channel at 2.4 GHz (for 5.8 GHz video) or 900 MHz (for 2.4 GHz video, where the band allows continuous operation), with feedback every 0.25 ms or faster; the mode falls back to in-band TDD (MAC-001) when the uplink band is unavailable or fails. | M | | T |
 
 ## 7. RF front end (RF)
@@ -135,8 +138,9 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | RF-027 | Switchable antenna ports: at least 2 on the ground unit (diversity), 2 on the air unit (diversity or 2 TX streams). | M | | I |
 | RF-028 | External PA/FEM control interface: bias, enable, gain-step, temperature, and power detector signals shall be in the chip's I/O (analogue and digital lines) so that PAs from at least 3 vendors can be used. | M | P2 | I |
 | RF-029 | Interference tolerance (needed by SYS-009): with the wanted signal 3 dB above the QPSK 3/4 sensitivity, the receiver shall tolerate an adjacent-channel interferer of -30 dBm and an alternate-channel interferer of -25 dBm with 1 dB or less desensitisation (a 35 dBm EIRP neighbour at 10 m gives about -33 dBm); the transmit leakage of RF-015 is the separate limit that sets the separation of `07` T-05 (G-27). [E, TBV] | M | | T |
-| RF-030 | Air unit TX-to-RX isolation for split-band mode: at least 70 dB from the 5.8 GHz transmit chain (30 dBm, with its broadband noise) to the 2.4 GHz uplink receive chain, by antenna separation plus transmit and receive filtering, such that the uplink sensitivity degrades by 1 dB or less. [E, TBV] | M | | T |
+| RF-030 | [AU] Air unit TX-to-RX isolation for split-band mode: at least 70 dB from the 5.8 GHz transmit chain (30 dBm, with its broadband noise) to the 2.4 GHz uplink receive chain, by antenna separation plus transmit and receive filtering, such that the uplink sensitivity degrades by 1 dB or less. [E, TBV] | M | | T |
 | RF-031 | Average output power cap by modulation: 64QAM and 256QAM at most 27 dBm, other modes up to the class limit (RF-010), enforced by the transmit power control (SYS-005, `02`). | M | | T |
+| RF-032 | [GU] Enhanced ground front end: system noise figure of 2.0 dB or better at 5.8 GHz and 2.4 GHz with a discrete low-noise amplifier and a preselector filter (the basic unit keeps RF-021); worth 2 dB of sensitivity (4.0 - 2.0). | O | | T |
 
 ## 8. Antenna and antenna feedback (ANT)
 
@@ -151,26 +155,28 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | ANT-004 | Antenna-fault detection: open, short, wrong antenna (band) and detuned antenna (e.g. hand covering it) shall be flagged to the host and to the pilot's OSD. | M | | D |
 | ANT-005 | Optional digitally tunable antenna match (tunable capacitor bank), controlled from the VSWR reading, adjustment time 1 ms. | O | P2 | T |
 | ANT-006 | Antenna diversity selection per frame (switching in the guard time) using the preamble RSSI, or combining (MRC) on 2 receive chains. | M | | T |
-| ANT-007 | The system shall support a pattern database per antenna type: gain, 3 dB beamwidth and polarisation, used by the link budget estimator and by the antenna-tracking option. | S | | I |
-| ANT-008 | Support for a ground unit with a switched-beam patch array of at least 6 sectors (60 degrees azimuth, 40 degrees elevation or narrower, 10 dBi or better per beam, `07` T-13) with beam choice per frame from the preamble. The 4-sector version of rev 0.5 gave only 6.6 to 9.6 dBi. | S | P2 | T |
-| ANT-009 | Support for electronically steered beamforming with 4 or more elements in the ground unit (phase and amplitude weights per element, calibration per element). | O | P2 | T |
-| ANT-010 | Cross-polar mismatch (circular versus linear) shall be handled by a 2-antenna receiver covering both polarisations. | S | | T |
-| ANT-011 | Antenna return loss and pattern data shall be taken into account by the link-budget estimator displayed to the pilot (predicted range and margin). | O | | D |
+| ANT-007 | [GU] The system shall support a pattern database per antenna type: gain, 3 dB beamwidth and polarisation, used by the link budget estimator and by the antenna-tracking option. | S | | I |
+| ANT-008 | [GU] Support for a ground unit with a switched-beam patch array of at least 6 sectors (60 degrees azimuth, 40 degrees elevation or narrower, 10 dBi or better per beam, `07` T-13) with beam choice per frame from the preamble. The 4-sector version of rev 0.5 gave only 6.6 to 9.6 dBi. | S | P2 | T |
+| ANT-009 | [GU] Support for electronically steered beamforming with 4 or more elements in the ground unit (phase and amplitude weights per element, calibration per element). | O | P2 | T |
+| ANT-010 | [GU] Cross-polar mismatch (circular versus linear) shall be handled by a 2-antenna receiver covering both polarisations. | S | | T |
+| ANT-011 | [GU] Antenna return loss and pattern data shall be taken into account by the link-budget estimator displayed to the pilot (predicted range and margin). | O | | D |
+| ANT-012 | [GU] External antennas: up to two receive antennas connected to the ground unit by coax. Passive cable up to 2 m (about 0.8 dB at 5.8 GHz [E]); beyond 5 m an LNA and preselector filter at the antenna, powered through a bias tee on the coax (200 mW or less); receive only, so the VSWR measurement (ANT-002/003) stays valid; combining needs no phase alignment as long as the extra delay (about 150 ns at 20 m, `02` section 1.4) stays inside the cyclic prefix (0.8 us or more); coherent beamforming (ANT-009) additionally needs cable delay and phase calibration with temperature tracking (CAL-010); surge and ESD protection of the antenna port (ENV-004); cable type and length are inputs to the link-budget estimator (ANT-011) and the antenna database (ANT-007). | S | | T |
 
 ## 9. Frequency use: adaptive selection and hopping (ADA)
 
 | ID | Requirement | Pri | Phase | Ver |
 |----|-------------|-----|-------|-----|
-| ADA-001 | Adaptive frequency selection: the ground unit shall scan the permitted channels (spectrum sensing using the receiver, 50 microsecond dwell per channel per scan) and rank them by interference energy and by decoded video quality. | M | | T |
-| ADA-002 | Channel switch on degraded quality: decision latency of 20 ms or less, and execution as defined in MAC-010. | M | | T |
+| ADA-001 | [GU] Adaptive frequency selection: the ground unit shall scan the permitted channels (spectrum sensing using the receiver, 50 microsecond dwell per channel per scan) and rank them by interference energy and by decoded video quality. | M | | T |
+| ADA-002 | [GU] Channel switch on degraded quality: decision latency of 20 ms or less, and execution as defined in MAC-010. | M | | T |
 | ADA-003 | Two channel modes: (a) static adaptive channel (default for the video band and for the uplink/control channel): change channel when the current one is bad (per ADA-002), with a fallback channel list; (b) fast hopping, used only in anti-jam mode (SEC-004): dwell of 1 to 10 ms across at least 20 channels in a pseudo-random sequence shared at pairing, costing 5% to 0.5% of airtime at a 50 us settle time (`07` T-15); in ETSI regions only in an adaptive form, because non-adaptive hopping is limited to a 5 ms on-time followed by a 5 ms gap [to be checked in EN 300 328]. Revised by T-15. | M | | T |
 | ADA-004 | Band hopping: switching between 2.4 GHz and 5.8 GHz (and 900 MHz when fitted) in a link-loss case, with a re-establishment time of 300 ms or less (using the stored hop sequence and the control channel). | M | P2 | T |
 | ADA-005 | Out-of-band control: the beacon/control channel shall remain on a robust, low-rate, separate channel (e.g. 900 MHz or the 2.4 GHz band when video is on 5.8 GHz) so that the link can be re-established after loss; in split-band mode (MAC-012) the uplink channel is this channel. | S | | T |
 | ADA-006 | Regional compliance: the set of allowed channels, powers and dwell times is data-driven per region (REG-008) and locked at the factory (region code) with signed updates only. | M | | I |
-| ADA-007 | Spectrum analyser mode on the ground unit: occupancy per channel shown to the pilot (pre-flight and in-flight). | S | | D |
+| ADA-007 | [GU] Spectrum analyser mode on the ground unit: occupancy per channel shown to the pilot (pre-flight and in-flight). | S | | D |
 | ADA-008 | DFS: radar detection in the bands where required (5250-5350 and 5470-5725 MHz), with channel move time of 10 s and channel closing transmission time of 260 ms. | S | P2 | T |
 | ADA-009 | Listen-before-talk, where regulation requires (e.g. EN 300 328 adaptivity), shall be implemented without exceeding the LAT-003 budget by using the TDD slot structure for sensing. | M | | T |
-| ADA-010 | Neighbour awareness: from the spectrum scan (ADA-001) the ground unit shall detect strong adjacent-channel signals (above -60 dBm) and prefer an alternate channel or lower power, and shall report the interference to the pilot. | S | | T |
+| ADA-010 | [GU] Neighbour awareness: from the spectrum scan (ADA-001) the ground unit shall detect strong adjacent-channel signals (above -60 dBm) and prefer an alternate channel or lower power, and shall report the interference to the pilot. | S | | T |
+| ADA-011 | [GU] Dedicated scan receiver in the enhanced ground configuration: continuous wideband spectrum sensing, interference ranking and, where a region profile requires it, radar detection, without taking airtime from the video receiver; the basic ground unit scans with the video receiver as in ADA-001. | O | P2 | T |
 
 ## 10. Calibration (CAL) - details in document 03
 
@@ -185,7 +191,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | CAL-007 | Calibration shall never emit outside the permitted spectrum mask or beyond the permitted power, including during the self-test tone phase. | M | | T |
 | CAL-008 | Antenna-feedback-aware calibration: when VSWR changes by more than 0.5 (e.g. different antenna, or antenna touched), the TX gain, DPD and power detector offsets shall be re-calibrated within 50 ms. | M | | T |
 | CAL-009 | Calibration status (valid/stale/failed) and the last calibration age shall be available in telemetry. | S | | D |
-| CAL-010 | Multi-antenna (ANT-009) per-element phase and gain calibration with an internal reference tone or over-the-air calibration at start-up. | O | P2 | T |
+| CAL-010 | [GU] Multi-antenna (ANT-009) per-element phase and gain calibration with an internal reference tone or over-the-air calibration at start-up. | O | P2 | T |
 
 ## 11. Thermal and monitoring (THM)
 
@@ -194,7 +200,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | THM-001 | At least 4 temperature sensors: PA/FEM, transceiver die, baseband/SoC die and board (near the battery connector). Accuracy +/- 2 deg C, resolution 0.25 deg C, 100 Hz sampling at the PA sensor. | M | | T |
 | THM-002 | Sensor data shall feed the calibration (CAL-003) and the power control (derating) in real time. | M | | T |
 | THM-003 | Thermal throttling in steps: reduce TX power, then video bitrate, then frame rate, then shut-down. No hard failure below a junction temperature of 125 deg C. Thresholds configurable. | M | | T |
-| THM-004 | Operation without airflow (hover, no propwash) for 10 min at 40 deg C ambient at 4 W average, with a stated heatsink. | M | | T |
+| THM-004 | [AU] Operation without airflow (hover, no propwash) for 10 min at 40 deg C ambient at 4 W average, with a stated heatsink. | M | | T |
 | THM-005 | Supply voltage, current (shunt) and PA current monitoring at 1 kHz, for efficiency tracking and anomaly detection. | S | | T |
 | THM-006 | Hardware over-temperature trip independent of software (comparator on the PA sensor). | M | | T |
 
@@ -202,12 +208,12 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 
 | ID | Requirement | Pri | Phase | Ver |
 |----|-------------|-----|-------|-----|
-| PWR-001 | Input supply 6.0 V to 30 V (2S to 6S) with reverse polarity, surge (60 V 1 ms) and ripple (up to 2 Vpp at 100 Hz to 100 kHz from the ESCs) tolerance. | M | | T |
+| PWR-001 | [AU] Input supply 6.0 V to 30 V (2S to 6S) with reverse polarity, surge (60 V 1 ms) and ripple (up to 2 Vpp at 100 Hz to 100 kHz from the ESCs) tolerance. | M | | T |
 | PWR-002 | The system shall start up (boot to video) in 3 s or less, and recover from a brown-out in 1 s. | M | | T |
 | PWR-003 | SoC/baseband plus transceiver power (excluding PA and sensor): at most 1.5 W typical for the ASIC; at most 9.5 W for the FPGA prototype (a K26-class module is 7.5 W typical [S] plus a 1.5 W transceiver; was 8 W in rev 0.4, corrected after the vendor figure was found). | M | | T |
 | PWR-004 | PA power-added efficiency at average output with DPD: 27.5% or better for OFDM QPSK/16QAM and 32% or better in the low-PAPR mode at 30 dBm; 24.5% or better for OFDM 64QAM at 27 dBm. [E, from the model in `02`; the PA study shall confirm or replace the values.] Revised by T-02, T-14. | S | | T |
-| PWR-005 | Standby (link established, no video) of 1.0 W or less. | S | | T |
-| PWR-006 | Sleep: main device 5 mW or less (RAM retention); Remote ID is served by the separate certified module (REG-002), whose own power is at most 50 mW. | S | P2 | T |
+| PWR-005 | [AU] Standby (link established, no video) of 1.0 W or less. | S | | T |
+| PWR-006 | [AU] Sleep: main device 5 mW or less (RAM retention); Remote ID is served by the separate certified module (REG-002), whose own power is at most 50 mW. | S | P2 | T |
 
 ## 13. Security and compliance (SEC, REG)
 
@@ -219,7 +225,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | SEC-004 | Jam resistance: detection of wideband jamming and automatic fallback to fast hopping and to lower rate (ADA-003). | S | | T |
 | SEC-005 | RF limits (region, power, band, dwell, DFS) shall be enforced by a hardware-locked limiter (modem register lock set from a signed, region-bound table) in the ASIC and by a signed bitstream in FPGA builds; the rest of the stack stays open. The limiter design and the signing process shall be published for audit. FPGA prototypes are not sold and run in conducted or shielded set-ups or under the applicable test authorisation. Revised by T-09. | M | | I |
 | REG-001 | FCC Part 15 (15.247, 15.407), ETSI EN 300 328 and EN 301 893, ISED RSS-247, and the Radio Equipment Directive (RED) cyber-security delegated act (EN 18031). | M | P2 | T |
-| REG-002 | Remote ID: broadcast RID from a certified separate BLE/WiFi module (T-10) that works with the main device off, meeting the FAA-accepted means of compliance ASTM F3586-22 (an overlay on ASTM F3411-22a) for Part 89 and the EU Direct RID rules; a Bluetooth implementation shall include both Bluetooth 4 legacy advertising and Bluetooth 5 Long Range with extended advertising, a WiFi implementation NAN or beacon frames (at least one transport); the RID data (position, altitude, ID) comes from the flight controller or GNSS over IF-001. A later revision may integrate it. | M | | T |
+| REG-002 | [AU] Remote ID: broadcast RID from a certified separate BLE/WiFi module (T-10) that works with the main device off, meeting the FAA-accepted means of compliance ASTM F3586-22 (an overlay on ASTM F3411-22a) for Part 89 and the EU Direct RID rules; a Bluetooth implementation shall include both Bluetooth 4 legacy advertising and Bluetooth 5 Long Range with extended advertising, a WiFi implementation NAN or beacon frames (at least one transport); the RID data (position, altitude, ID) comes from the flight controller or GNSS over IF-001. A later revision may integrate it. | M | | T |
 | REG-003 | Export classification and licensing review (encryption, EAR 5D002 / dual-use) before shipping. | M | | I |
 | REG-004 | RoHS, REACH, and battery-related requirements where applicable. | M | P2 | I |
 | REG-005 | IP policy: RTL and software derived from GPL, AGPL, non-commercial or unlicensed references shall be written clean-room (behavioural reference only); a licence register shall be kept for every reference (`reference/MANIFEST.tsv`); a freedom-to-operate patent search shall be completed before P2 funding. | M | | I |
@@ -232,8 +238,8 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | ID | Requirement | Pri | Phase | Ver |
 |----|-------------|-----|-------|-----|
 | ENV-001 | Full-specification ambient range -10 deg C to +50 deg C; operating range (link functional, EVM relaxed by up to 3 dB) -20 deg C to +60 deg C; storage -40 to +85 deg C. | M | | T |
-| ENV-002 | Vibration: random 20 Hz to 2 kHz, 10 g RMS (propeller harmonics); no loss of lock, no connector failure. Crystal/TCXO micro-phonics: phase-noise degradation below 1 dB at 10 g. | M | | T |
-| ENV-003 | Shock: 100 g, 6 ms (crash). The air unit shall boot after the shock. | M | | T |
+| ENV-002 | [AU] Vibration: random 20 Hz to 2 kHz, 10 g RMS (propeller harmonics); no loss of lock, no connector failure. Crystal/TCXO micro-phonics: phase-noise degradation below 1 dB at 10 g. | M | | T |
+| ENV-003 | [AU] Shock: 100 g, 6 ms (crash). The air unit shall boot after the shock. | M | | T |
 | ENV-004 | ESD: IEC 61000-4-2 contact +/- 4 kV, air +/- 8 kV on antenna and user ports. | M | | T |
 | ENV-005 | Humidity: 95% non-condensing. Water resistance IPX4 (O, variant). | S | | T |
 | ENV-006 | Altitude to 5000 m (thermal derating). | S | | A |
@@ -243,9 +249,9 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 
 | ID | Requirement | Pri | Phase | Ver |
 |----|-------------|-----|-------|-----|
-| IF-001 | Host interface (flight controller): UART (up to 3 Mbaud) and USB 2.0 / CAN-FD (P2). MSP, MAVLink 2. | M | | T |
-| IF-002 | Camera: MIPI CSI-2 (VID-002), I2C/SPI control, sensor sync (FSIN) output for rolling-shutter alignment; fixed frame period policy: exposure is limited below the frame time so that the sensor never stretches the frame (source review S-5); sensor readout time of 8 ms or less at 1080p60 and 4 ms or less at 1080p120 (the assumption of the latency budget in `02`, G-15). | M | | I |
-| IF-003 | Ground unit host interface: HDMI/DP/DSI out, USB-C (video and data), Ethernet 1 Gbit (O), 5 GHz WiFi/BLE for the phone app (low-priority sideband). | M | | I |
+| IF-001 | [AU] Host interface (flight controller): UART (up to 3 Mbaud) and USB 2.0 / CAN-FD (P2). MSP, MAVLink 2. | M | | T |
+| IF-002 | [AU] Camera: MIPI CSI-2 (VID-002), I2C/SPI control, sensor sync (FSIN) output for rolling-shutter alignment; fixed frame period policy: exposure is limited below the frame time so that the sensor never stretches the frame (source review S-5); sensor readout time of 8 ms or less at 1080p60 and 4 ms or less at 1080p120 (the assumption of the latency budget in `02`, G-15). | M | | I |
+| IF-003 | [GU] Ground unit host interface: HDMI/DP/DSI out, USB-C (video and data), Ethernet 1 Gbit (O), 5 GHz WiFi/BLE for the phone app (low-priority sideband). | M | | I |
 | IF-004 | Debug: JTAG/SWD, UART console, a trace port for the latency timestamps, and a test header for RF conducted measurements (U.FL). | M | P1 | I |
 | SW-001 | Control plane in Linux (or Zephyr/RTOS) on the application CPU; data plane in hardware. The data plane shall continue to work if the application CPU stalls for 100 ms. | M | | T |
 | SW-002 | A hardware abstraction (HAL) shall isolate the modem from the transceiver, so that the same software runs on the AD936x/ADRV9002-based prototype and the ASIC. | M | | I |
@@ -266,7 +272,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | HSI-007 | Boot to first video in 3 s or less (target 1.5 s) with the real-time path only; the application core shall not be in the critical path. | M | | T |
 | HSI-008 | Real-time core interrupt entry within 5 us at 300 MHz (to the first instruction of the handler). [TBV] | M | | T |
 | HSI-009 | Processor subsystem power (all cores, caches and SRAM) of the ASIC: 100 mW or less in the streaming state with the application core gated; 5 mW or less in sleep (RAM retention). [target, TBV] | S | P2 | T |
-| HSI-010 | Platform phasing: phase A on low-cost evaluation boards (waveform, MAC, calibration, partial latency); phase B on a custom board with the target controllers (latency, thermal, mass); phase C ASIC. Latency measured in phase A shall not be used to claim SYS-001 or SYS-002. | M | | I |
+| HSI-010 | Platform phasing: phase A on low-cost evaluation boards (waveform, MAC, calibration, partial latency); phase B on a custom board with the target controllers (latency, thermal, mass); phase C ASIC. The air-unit and ground-unit boards in phases A and B may use different hardware (SYS-011). Latency measured in phase A shall not be used to claim SYS-001 or SYS-002. | M | | I |
 | HSI-011 | A stalled control core (no table update for two frames) shall be detected by the sequencer, which falls back to a safe schedule (lowest MCS, reduced power) and keeps the video running. | M | | T |
 | HSI-012 | All modem and RF control shall go through a documented register map and a versioned HAL (SW-002, SW-003) so that phase A, B and C software share the same interface. | M | | I |
 | HSI-013 | The DPD solve shall be validated numerically (conditioning, precision, coefficient drift) before the real-time core is selected; double precision or a demonstrated stable single-precision method. | M | P1 | S |
@@ -290,6 +296,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | ASC-004 | Die area targets: digital SoC 30 mm2 or less, RF die 15 mm2 or less. [TBV, G-23] | S | P2 | A |
 | ASC-005 | Unit cost target at 100k units per year: below USD 12 for the chip (excluding PA/FEM and memory). [TBV] | S | P2 | A |
 | ASC-006 | Inter-die sample interface (RF die to digital die): at most 120 mW worst case for both ends at 40 MHz in the air unit (2.95 Gbit/s, 12-bit I/Q), target 60 mW; the DPD observation capture shall be held in a memory on the RF die and read out at low rate. [E] | S | P2 | T |
+| ASC-007 | Silicon family: the digital SoC and the RF die shall allow a ground unit with up to 8 receive branches by replicating the RF die on one digital SoC (11.8 Gbit/s sample interface for 8 receive chains at 40 MHz, `07` T-21) with a common reference clock; a dedicated ground chip is allowed (SYS-011) but is not required for the base product (`07` T-22). | S | P2 | I |
 
 ## 17. Verification (TST)
 
@@ -321,3 +328,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 1.7 | G2-14 | T-01 iteration: range versus MCS computed, reduced-quality range profile VID-022 added, SYS-003 states reduced-rate ranges |
 | 1.8 | G2-15 | Consolidation: VID-007/008 per frame rate, IF-002 sensor readout time (G-05, G-15 closed), ADA-003 aligned with the T-15 decision |
 | 1.9 | G3-1 | Notes entry 9: regional limits become region profiles; capability budgets, REG-008, MAC-007 in-band ranges (9 km Class X), RF-010 and SYS-003 reworded |
+| 2.0 | G3-2 | Notes entries 5, 6, 7: role tags and SYS-011 (separate air and ground silicon allowed), enhanced ground configuration (PHY-016/017, RF-032, ADA-011), external antennas ANT-012, ASC-007; T-21 and T-22 added |

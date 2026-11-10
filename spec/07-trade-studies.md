@@ -227,6 +227,7 @@ Review (iteration 13, T-08): the cost of option B (two dice) is the sample inter
 | 40 MHz, air unit (1 Tx + 1 Rx) | 61.44 | 2 | 2.95 | 29 / 59 / 118 |
 | 40 MHz, ground unit (2 Rx + 1 Tx) | 61.44 | 3 | 4.42 | 44 / 88 / 177 |
 | 20 MHz, ground unit (2 Rx + 1 Tx) | 30.72 | 3 | 2.21 | 22 / 44 / 88 |
+| 40 MHz, enhanced ground unit (8 Rx + 1 Tx) | 61.44 | 9 | 13.27 | 133 / 265 / 531 |
 | DPD observation capture kept on the RF die (98 kbit per capture) | burst | 0 (read out slowly) | 0 | 0 |
 
 Findings: the air unit moves 2.95 Gbit/s across the interface at 40 MHz (30 to 120 mW for both ends depending on 5 to 20 pJ/bit; a serial JESD204-class link is in the lower part of that range, a parallel LVDS bus in the upper part), 2 to 10% of the 1.2 W
@@ -446,6 +447,41 @@ Without steering, 20 ppm crystals wander the latency by 24 ms in 10 minutes and 
 violates LAT-002 (p99 within 3 ms of the mean). Alternative added: (D) free-running displays disciplined only by the TCXOs plus an occasional deliberate frame drop (a glitch about once per hour): rejected for the latency creep.
 Decision: **B (display scan-out locked to the received frame timing) confirmed**, needing a display controller whose pixel clock can be steered by at least +/-50 ppm with 0.1 ppm resolution [E] (VID-018); option C (air unit slaved to the display) stays a later option.
 
+## T-21 Ground-unit configuration (notes entries 5, 6, 7)
+
+The ground unit can be larger, heavier and more power-hungry than the air unit, and its bill of materials matters less. Levers (numbers in `02` sections 1.3 and 1.4): more receive branches
+(about 3 dB per doubling), a lower noise figure (a discrete LNA and preselector filter, 2 dB instead of 4 dB), better antennas (six-sector array, tracker), heavier decoding (more LDPC iterations, soft combining of
+retransmitted slices), a dedicated scan receiver, external antennas on coax with an LNA at the antenna. The uplink is the weak direction and these levers do not help it (`02` section 1.3).
+
+| Option | Description | Pros | Cons |
+|---|---|---|---|
+| A | Symmetric: both units use the same silicon and two receive branches | One design, lowest cost; sufficient for the range classes S, X and L | No use of the ground unit's freedom; no scan receiver (the video receiver scans, taking airtime) |
+| B | Enhanced ground unit from the same silicon: the digital SoC with replicated RF dice (up to 8 receive branches, one die as scan receiver), a discrete front end and external antennas | +8 dB with 8 branches and a 2 dB noise figure (`02` section 1.3); no new tape-out; the air unit and the protocol are unchanged; interface to 8 receive chains is 11.8 Gbit/s | Board complexity and cost (not silicon); the ADC dynamic range stays that of the RF die; more digital power (not critical on the ground) |
+| C | Dedicated ground chip (more receive chains, higher-resolution converters, bigger decoder) | Best converters and decoder; fewer chips on the board | A second tape-out (T-22); the area saving of an air-only chip is small |
+| D | Programmable ground station (FPGA or SDR hardware, as in phase B) for professional or low-volume use | No tape-out; any number of branches; the phase B ground board is this already | Not a consumer product; power and size |
+
+Decision: **A for the base pair, B as the enhanced configuration on silicon, D for professional/low-volume use (it is also the phase B ground board)**; C only if T-22 justifies it. The enhanced configuration is described by configuration
+values and requirements tagged [GU] (PHY-016, PHY-017, RF-032, ADA-011, ANT-012); the on-air protocol and the air unit do not change (SYS-011).
+
+## T-22 Silicon family: one pair of chips or separate air and ground chips (notes entry 5)
+
+The first draft assumed the same silicon in both roles. The estimate in `effort.md` (area and effort estimates [E]) puts a separate air chip at about 25 mm2 (no decoder, no display PHY) and a separate ground chip at about 24 mm2 (no encoder, no ISP, no CSI)
+against about 29 mm2 for the shared design: a saving of about 5 mm2 each (about 15%, roughly USD 0.5 per unit), at the price of a second tape-out (about 3 M for masks and 50 to 60 person-years). Break-even (`scripts/link_budget.py`):
+
+| Second tape-out effort PY | Cost MUSD (masks 3 + labour at 0.15 MUSD/PY) | Saving per unit USD (about 5 mm2, 15%) | Break-even volume million units |
+|---|---|---|---|
+| 50 | 10.5 | 0.5 | 21 |
+| 60 | 12.0 | 0.5 | 24 |
+
+| Option | Description | Pros | Cons |
+|---|---|---|---|
+| S1 | One digital SoC and one RF die for both roles (baseline) | One tape-out pair; the same software and test environment; a basic ground unit is the air-unit silicon | A little area wasted in each role |
+| S2 | Separate air and ground digital chips (and possibly RF dice) | Each optimised: air chip without decoder and display PHY, ground chip with more branches and a bigger decoder | Second tape-out with a break-even of 21 to 24 million units on area alone; two verification environments; split software |
+| S3 | S1 plus board-level enhancement of the ground unit (replicated RF dice, discrete front end, T-21 option B) | Gets most of the ground benefit without a second tape-out | Limited to what replication and discrete parts give (not better converters) |
+
+Decision: **S1 with S3 for the enhanced ground unit**; S2 is allowed by the specification (SYS-011: units interoperate only through the on-air protocol, so a ground-only chip can be introduced later without touching the air unit) but is justified only by volume of tens of millions of units or by
+a capability that replication cannot give (for example converter dynamic range). The multi-die capability is a day-one requirement (ASC-007).
+
 ---
 
 ## Summary of recommendations
@@ -471,3 +507,5 @@ Decision: **B (display scan-out locked to the received frame timing) confirmed**
 | T-17 | Display locked to received timing |
 | T-18 | Real-time cores plus power-gated application core; air unit without Linux by default |
 | T-19 | Phase A1 Pluto pair (2.4 GHz + 915 MHz), A2 AD9361/ADRV9002 pair (5.8 + 2.4 GHz), A3 K26-class video board, in parallel |
+| T-21 | Symmetric base pair; enhanced ground unit from the same silicon (replicated RF dice, discrete front end); FPGA ground station for professional use |
+| T-22 | One pair of chips for both roles with board-level ground enhancement; separate air and ground chips allowed but justified only by volume or capability |

@@ -290,7 +290,7 @@ def hop_overhead_table() -> str:
 def interface_table() -> str:
     """Inter-die sample interface between the RF die and the digital die (T-08): 12-bit I/Q samples."""
     rows = ["| Mode | Sample rate MSPS | Chains crossing the interface | Bit rate Gbit/s | Power both ends at 5 / 10 / 20 pJ/bit mW |", "|---|---|---|---|---|"]
-    for name, msps, chains in (("40 MHz, air unit (1 Tx + 1 Rx)", 61.44, 2), ("40 MHz, ground unit (2 Rx + 1 Tx)", 61.44, 3), ("20 MHz, ground unit (2 Rx + 1 Tx)", 30.72, 3)):
+    for name, msps, chains in (("40 MHz, air unit (1 Tx + 1 Rx)", 61.44, 2), ("40 MHz, ground unit (2 Rx + 1 Tx)", 61.44, 3), ("20 MHz, ground unit (2 Rx + 1 Tx)", 30.72, 3), ("40 MHz, enhanced ground unit (8 Rx + 1 Tx)", 61.44, 9)):
         gbps = msps * 1e6 * 2 * 12 * chains / 1e9
         p5, p10, p20 = (gbps * 1e9 * pj * 1e-12 * 2 * 1e3 for pj in (5, 10, 20))
         rows.append(f"| {name} | {msps} | {chains} | {gbps:.2f} | {p5:.0f} / {p10:.0f} / {p20:.0f} |")
@@ -321,6 +321,53 @@ def region_range_table() -> str:
             for m in (MCS_TABLE[1], MCS_TABLE[0]):
                 vals.append(max_range_km(Scenario("x", f, 1, tx, 5, 5, diversity_gain_db=3), m))
         rows.append(f"| {name} | {tx:.0f} | " + " | ".join(f"{v:.1f}" for v in (vals[0], vals[1], vals[2], vals[3])) + " |")
+    return "\n".join(rows)
+
+
+def ground_levers_table() -> str:
+    """Ground-unit receive levers (notes entries 5 and 6): branch count (ideal MRC, 10 log N), noise figure, antenna gain.
+    Downlink range at 6 dB margin, 20 MHz, 30 dBm, air unit 5 dBi, free space. Correlation loss between branches (about 0.5 to 1.5 dB [E]) is not included."""
+    rows = ["| Ground configuration | Branches | NF dB | Ground antenna dBi | Gain over baseline dB | 5.8 GHz QPSK 3/4 km | 5.8 GHz BPSK 1/2 km | 2.4 GHz BPSK 1/2 km |", "|---|---|---|---|---|---|---|---|"]
+    base_gain = 3.0 * math.log2(2)
+    cfgs = [("Baseline: 2 branches, NF 4 dB", 2, 4.0, 5.0), ("4 branches, NF 4 dB", 4, 4.0, 5.0), ("4 branches, NF 2.5 dB", 4, 2.5, 5.0),
+            ("8 branches, NF 2 dB", 8, 2.0, 5.0), ("8 branches, NF 2 dB, 10 dBi antenna", 8, 2.0, 10.0)]
+    for name, n, nf, ant in cfgs:
+        div = 3.0 * math.log2(n) + (4.0 - nf)  # about 3 dB per doubling of branches (ideal MRC)
+        gain = div + (ant - 5.0) - base_gain
+        r = lambda f, m: max_range_km(Scenario("x", f, 1, 30, 5, ant, diversity_gain_db=div), m)
+        rows.append(f"| {name} | {n} | {nf:g} | {ant:g} | {gain:+.1f} | {r(5800, MCS_TABLE[1]):.1f} | {r(5800, MCS_TABLE[0]):.1f} | {r(2400, MCS_TABLE[0]):.1f} |")
+    return "\n".join(rows)
+
+
+COAX_LOSS_DB_PER_M = {5800: 0.41, 2400: 0.22}  # low-loss coax (E, to be verified against a datasheet)
+VELOCITY_FACTOR = 0.8  # coax velocity factor (E)
+
+
+def _db_to_lin(x: float) -> float:
+    return 10 ** (x / 10)
+
+
+def coax_table() -> str:
+    """External antenna on coax (notes entry 7): system noise figure with a passive cable versus an LNA at the antenna (Friis), and the extra delay against the cyclic prefix."""
+    nf_rx, nf_lna, g_lna = 4.0, 1.5, 20.0
+    rows = ["| Cable m | Loss at 5.8 GHz dB | System NF passive cable dB | System NF with LNA at the antenna dB | Sensitivity penalty passive / with LNA dB | Extra delay ns (cable + 20 m geometry) |", "|---|---|---|---|---|---|"]
+    for length in (1, 2, 5, 10, 20):
+        loss = COAX_LOSS_DB_PER_M[5800] * length
+        nf_passive = loss + nf_rx
+        f_sys = _db_to_lin(nf_lna) + (_db_to_lin(loss) - 1) / _db_to_lin(g_lna) + (_db_to_lin(nf_rx) - 1) / (_db_to_lin(g_lna) / _db_to_lin(loss))
+        nf_lna_sys = 10 * math.log10(f_sys)
+        delay_ns = length / (3e8 * VELOCITY_FACTOR) * 1e9 + 20 / 3e8 * 1e9
+        rows.append(f"| {length} | {loss:.1f} | {nf_passive:.1f} | {nf_lna_sys:.1f} | {nf_passive - nf_rx:+.1f} / {nf_lna_sys - nf_rx:+.1f} | {delay_ns:.0f} |")
+    return "\n".join(rows)
+
+
+def tapeout_breakeven_table() -> str:
+    """Break-even volume of a second tape-out for separate air and ground chips (T-22). Inputs from spec/effort.md [E]."""
+    mask_musd, usd_per_py_m, saving_usd_per_unit = 3.0, 0.15, 0.5
+    rows = ["| Second tape-out effort PY | Cost MUSD (masks 3 + labour at 0.15 MUSD/PY) | Saving per unit USD (about 5 mm2, 15%) | Break-even volume million units |", "|---|---|---|---|"]
+    for py in (50, 60):
+        cost = mask_musd + py * usd_per_py_m
+        rows.append(f"| {py} | {cost:.1f} | {saving_usd_per_unit:.1f} | {cost / saving_usd_per_unit:.0f} |")
     return "\n".join(rows)
 
 
@@ -379,3 +426,9 @@ if __name__ == "__main__":
     print(range_vs_mcs_table())
     print()
     print(region_range_table())
+    print()
+    print(ground_levers_table())
+    print()
+    print(coax_table())
+    print()
+    print(tapeout_breakeven_table())

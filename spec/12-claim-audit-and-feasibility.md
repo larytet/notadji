@@ -113,12 +113,12 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 
 | Class | Requirements |
 |---|---|
-| C | 18 |
-| E | 121 |
-| P | 32 |
+| C | 22 |
+| E | 122 |
+| P | 34 |
 | R | 8 |
 | S | 16 |
-| total | 195 |
+| total | 202 |
 
 | ID | Class | Basis |
 |---|---|---|
@@ -132,6 +132,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | SYS-008 | E | engineering target; proved by verification method D (see 08) |
 | SYS-009 | C | audit: channel counts from band widths; link_budget.py near_far_table: 184 m / 7 m; RF-029 and ACLR unproven |
 | SYS-010 | E | engineering target; proved by verification method I (see 08) |
+| SYS-011 | P | design stance from notes entry 5; conformance tests prove interoperation |
 | VID-001 | E | engineering target; proved by verification method T (see 08) |
 | VID-002 | E | engineering target; proved by verification method I (see 08) |
 | VID-003 | E | engineering target; proved by verification method T (see 08) |
@@ -175,6 +176,8 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | PHY-013 | E | engineering target; proved by verification method I (see 08) |
 | PHY-014 | E | PAPR reduction of DFT-s-OFDM is typical literature value (about 3-4 dB), to be simulated |
 | PHY-015 | E | link_budget.py ldpc_estimate (assumed base matrix and iterations) |
+| PHY-016 | C | link_budget.py ground_levers_table: +3 dB per doubling (ideal), correlation loss E |
+| PHY-017 | E | decoder sizing not yet done |
 | MAC-001 | C | link_budget.py tdd_budget: uplink sized for MAC-007, guard from range |
 | MAC-002 | E | engineering target; proved by verification method T (see 08) |
 | MAC-003 | E | engineering target; proved by verification method T (see 08) |
@@ -215,6 +218,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | RF-029 | E | near-far levels from the table in 07 T-05; receiver tolerance unproven |
 | RF-030 | E | isolation estimate in 02 section 1.1b; bench-proven later |
 | RF-031 | C | link_budget.py pa_mode_table: 64QAM at 30 dBm would be 6.3 W |
+| RF-032 | C | 2 dB NF is 2 dB of sensitivity; the 2 dB figure is E (discrete LNA plus preselector) |
 | ANT-001 | S | coupler-based forward/reverse sensing appears in P-1 (patent), so not novel; design-around D-1 |
 | ANT-002 | E | engineering target; proved by verification method T (see 08) |
 | ANT-003 | E | engineering target; proved by verification method T (see 08) |
@@ -226,6 +230,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | ANT-009 | E | engineering target; proved by verification method T (see 08) |
 | ANT-010 | E | engineering target; proved by verification method T (see 08) |
 | ANT-011 | E | engineering target; proved by verification method D (see 08) |
+| ANT-012 | C | link_budget.py coax_table (Friis); cable loss figures are E |
 | ADA-001 | E | engineering target; proved by verification method T (see 08) |
 | ADA-002 | E | engineering target; proved by verification method T (see 08) |
 | ADA-003 | S | ETSI non-adaptive hopping limit 5 ms on-time / 5 ms gap (search summary of EN 300 328; to be checked) |
@@ -236,6 +241,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | ADA-008 | E | engineering target; proved by verification method T (see 08) |
 | ADA-009 | R | EN 300 328 adaptivity; frame-based idle period figures found in TI notes, band attribution unverified |
 | ADA-010 | P | scan-based behaviour |
+| ADA-011 | P | scan-receiver behaviour |
 | CAL-001 | E | engineering target; proved by verification method T (see 08) |
 | CAL-002 | E | engineering target; proved by verification method T (see 08) |
 | CAL-003 | E | engineering target; proved by verification method T (see 08) |
@@ -315,6 +321,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | ASC-004 | E | ASIC target; area and cost unproven (G-23) |
 | ASC-005 | E | ASIC target; area and cost unproven (G-23) |
 | ASC-006 | C | link_budget.py interface_table: 2.95 Gbit/s, 29-118 mW at 5-20 pJ/bit (energy per bit is E) |
+| ASC-007 | C | link_budget.py interface_table: 8 Rx at 40 MHz is 11.8 Gbit/s |
 | TST-001 | P | test infrastructure |
 | TST-002 | S | OpenIPC latency-probe method; rig accuracy is an engineering target |
 

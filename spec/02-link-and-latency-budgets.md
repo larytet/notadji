@@ -100,6 +100,43 @@ The hardware capability requirements stay unchanged (RF-010: 33 dBm capability, 
 that radiates must still be operated lawfully (conducted into a load, in a shielded enclosure, or under a test or experimental authorisation); that is an operating rule
 (`00` section 3), not a design requirement.
 
+### 1.3 Ground-unit levers (enhanced ground configuration)
+
+The ground unit is not limited by size, mass or power as the air unit is, so its receive side can be improved without changing the air unit or the on-air protocol (SYS-011).
+Downlink range at 6 dB margin, 20 MHz, 30 dBm, air unit 5 dBi, free space; the branch gain is about 3 dB per doubling of branches (ideal combining, a correlation loss of about 0.5 to 1.5 dB is not
+included [E]); the noise figure of the basic unit is 4 dB (RF-021) and an enhanced front end reaches 2 dB (RF-032, a discrete LNA and preselector filter [E]):
+
+| Ground configuration | Branches | NF dB | Ground antenna dBi | Gain over baseline dB | 5.8 GHz QPSK 3/4 km | 5.8 GHz BPSK 1/2 km | 2.4 GHz BPSK 1/2 km |
+|---|---|---|---|---|---|---|---|
+| Baseline: 2 branches, NF 4 dB | 2 | 4 | 5 | +0.0 | 5.8 | 10.3 | 25.0 |
+| 4 branches, NF 4 dB | 4 | 4 | 5 | +3.0 | 8.2 | 14.6 | 35.3 |
+| 4 branches, NF 2.5 dB | 4 | 2.5 | 5 | +4.5 | 9.8 | 17.4 | 42.0 |
+| 8 branches, NF 2 dB | 8 | 2 | 5 | +8.0 | 14.6 | 26.0 | 62.8 |
+| 8 branches, NF 2 dB, 10 dBi antenna | 8 | 2 | 10 | +13.0 | 26.0 | 46.2 | 111.6 |
+
+Findings: eight branches with a 2 dB noise figure add 8 dB and move the 5.8 GHz QPSK 3/4 range from 5.8 km to 14.6 km (and the reduced-quality BPSK 1/2 range from 10.3 to 26.0 km) with 5 dBi antennas; with a 10 dBi
+antenna on top, the free-space figures exceed any realistic line of sight at low altitude, so the radio horizon and terrain become the limit. The uplink does not scale the same way: the split-band uplink
+(2.4 GHz, 5 MHz, ground unit 27 dBm and 5 dBi, one air-unit receive chain) holds a 6 dB margin to 17.7 km at QPSK 1/2 and 25.1 km at BPSK 1/2 (46.5 and 65.7 km if the uplink is at 915 MHz), so beyond about 18 to 25 km the uplink,
+not the downlink, limits the range; the air-unit receive side (size, mass, power) is the real uplink bottleneck, and the lever there is the lower uplink band, not ground-side hardware.
+
+### 1.4 External ground antennas on coax
+
+An external receive antenna on a coaxial cable (loss assumed 0.41 dB/m at 5.8 GHz and 0.22 dB/m at 2.4 GHz [E, to be checked against a cable datasheet]; velocity factor 0.8 [E]); system noise figure by the Friis formula
+for a 4 dB receiver, with and without a 20 dB gain, 1.5 dB noise figure LNA at the antenna:
+
+| Cable m | Loss at 5.8 GHz dB | System NF passive cable dB | System NF with LNA at the antenna dB | Sensitivity penalty passive / with LNA dB | Extra delay ns (cable + 20 m geometry) |
+|---|---|---|---|---|---|
+| 1 | 0.4 | 4.4 | 1.6 | +0.4 / -2.4 | 71 |
+| 2 | 0.8 | 4.8 | 1.6 | +0.8 / -2.4 | 75 |
+| 5 | 2.0 | 6.0 | 1.6 | +2.0 / -2.4 | 88 |
+| 10 | 4.1 | 8.1 | 1.7 | +4.1 / -2.3 | 108 |
+| 20 | 8.2 | 12.2 | 2.0 | +8.2 / -2.0 | 150 |
+
+A passive cable of 10 m costs about 4 dB and 20 m about 8 dB of sensitivity; an LNA at the antenna (bias tee, DC over the coax, 200 mW or less) keeps the system noise figure at about 2 dB for any of these lengths. For
+diversity and combining no phase alignment is needed, only a channel estimate per branch, as long as the extra delay stays inside the cyclic prefix: 150 ns at 20 m (cable plus 67 ns of geometry) against 0.8 us (1/16) or
+1.6 us (1/8), about 19% of the shorter prefix. Coherent beamforming would additionally need cable delay and phase calibration with temperature tracking (CAL-010). Transmission through a long cable loses power and hides antenna faults from the
+reflection measurement (the cable loss counts twice), so external antennas are receive-only (ANT-012).
+
 ## 2. Latency budget (glass to glass)
 
 Frame time at 60 fps is 16.67 ms. A slice is 1/8 of a frame (2.08 ms of video). All stages are cut-through
