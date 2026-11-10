@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 1.3 (T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 1.4 (T-13 iteration; revision 1.3 was the T-09/T-10 iteration; revision 1.2 was the T-11/T-12/T-19 iteration; revision 1.1 was the T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -21,7 +21,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 |----|-------------|-----|-------|-----|
 | SYS-001 | The link shall deliver live video from AU to GU with G2G latency (mean) of 20 ms or less at 1080p60 and 12 ms or less at 1080p120. [TBV] | M | P2 | T |
 | SYS-002 | The FPGA prototype shall reach G2G of 30 ms or less at 1080p60 (mean) as the first milestone. | M | P1 | T |
-| SYS-003 | The link shall sustain 1080p60 video (at least 10 Mbit/s net) with at least 6 dB free-space margin in these range classes (30 dBm conducted, 2-branch MRC on the ground unit, lowest MCS that meets the rate): **Class S** 5 km, 5.8 GHz, 20 MHz, 5/5 dBi antennas; **Class X** 10 km, 5.8 GHz, 20 MHz, 10 dBi ground antenna; **Class L** 14 km, 2.4 GHz, 20 MHz, 5/5 dBi. Ranges under ETSI EIRP limits are specified separately (Class L is about 2.5 km at 20 dBm EIRP). Real-world margins per scenario are in `02` (G-02). Revised by T-01. | M | P2 | A,T |
+| SYS-003 | The link shall sustain 1080p60 video (at least 10 Mbit/s net) with at least 6 dB free-space margin in these range classes (30 dBm conducted, 2-branch MRC on the ground unit, lowest MCS that meets the rate): **Class S** 5 km, 5.8 GHz, 20 MHz, 5/5 dBi antennas; **Class X** 10 km, 5.8 GHz, 20 MHz, 10 dBi ground antenna (for example the six-sector array of ANT-008); **Class L** 14 km, 2.4 GHz, 20 MHz, 5/5 dBi. Ranges under ETSI EIRP limits are specified separately (Class L is about 2.5 km at 20 dBm EIRP). Real-world margins per scenario are in `02` (G-02). Revised by T-01. | M | P2 | A,T |
 | SYS-004 | The video shall degrade gracefully (lower resolution/quality, never a frozen frame longer than 100 ms) as SNR drops, down to the lowest MCS. | M | | T |
 | SYS-005 | Air unit total DC input power, excluding the camera sensor module: at most 3.5 W at 25 dBm and 4.1 W at 27 dBm average output in any modulation; at most 6.0 W at 30 dBm in OFDM QPSK/16QAM and in the low-PAPR mode (64QAM and higher are capped at 27 dBm, RF-031). A separate 33 dBm SKU is allowed up to 10 W. Basis: PA model in `02` section 3 [E]. Revised by T-02. | M | P2 | T |
 | SYS-006 | Air unit mass, including the antennas' feed cables and the heatsink, shall not exceed 25 g. | S | P2 | I |
@@ -151,7 +151,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | ANT-005 | Optional digitally tunable antenna match (tunable capacitor bank), controlled from the VSWR reading, adjustment time 1 ms. | O | P2 | T |
 | ANT-006 | Antenna diversity selection per frame (switching in the guard time) using the preamble RSSI, or combining (MRC) on 2 receive chains. | M | | T |
 | ANT-007 | The system shall support a pattern database per antenna type: gain, 3 dB beamwidth and polarisation, used by the link budget estimator and by the antenna-tracking option. | S | | I |
-| ANT-008 | Support for a ground unit with switched-beam patch array (at least 4 beams, 90 degrees each) with beam choice per frame from the preamble. | S | P2 | T |
+| ANT-008 | Support for a ground unit with a switched-beam patch array of at least 6 sectors (60 degrees azimuth, 40 degrees elevation or narrower, 10 dBi or better per beam, `07` T-13) with beam choice per frame from the preamble. The 4-sector version of rev 0.5 gave only 6.6 to 9.6 dBi. | S | P2 | T |
 | ANT-009 | Support for electronically steered beamforming with 4 or more elements in the ground unit (phase and amplitude weights per element, calibration per element). | O | P2 | T |
 | ANT-010 | Cross-polar mismatch (circular versus linear) shall be handled by a 2-antenna receiver covering both polarisations. | S | | T |
 | ANT-011 | Antenna return loss and pattern data shall be taken into account by the link-budget estimator displayed to the pilot (predicted range and margin). | O | | D |
@@ -312,3 +312,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 1.1 | G2-8 | T-06/T-07 iteration: slice PER to codeword error rate, intra-refresh cost, VID-005/010 revised, VID-021 reactive slice refresh added, PHY-011 clarified |
 | 1.2 | G2-9 | T-11/T-12/T-19 iteration: phase A configurations A1/A2/A3, ADRV9002 for phase B, PRO-007 added |
 | 1.3 | G2-10 | T-09/T-10 iteration: SEC-005 restated (hardware limiter, signed bitstream), REG-007 software security statement added; T-10 confirmed |
+| 1.4 | G2-11 | T-13 iteration: sector-array gain corrected (4 sectors give 6.6-9.6 dBi, not 8-10 dB over omni), ANT-008 now 6 sectors, Class X antenna example |

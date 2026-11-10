@@ -105,7 +105,7 @@ Requirements: 192
 | ANT-005 | Optional digitally tunable antenna match (tunable capacitor bank), controlled from the VSW | O | P2 | T | TG-ANT antenna and VSWR |
 | ANT-006 | Antenna diversity selection per frame (switching in the guard time) using the preamble RSS | M | P1,P2 | T | TG-ANT antenna and VSWR |
 | ANT-007 | The system shall support a pattern database per antenna type: gain, 3 dB beamwidth and pol | S | P1,P2 | I | TG-ANT antenna and VSWR |
-| ANT-008 | Support for a ground unit with switched-beam patch array (at least 4 beams, 90 degrees eac | S | P2 | T | TG-ANT antenna and VSWR |
+| ANT-008 | Support for a ground unit with a switched-beam patch array of at least 6 sectors (60 degre | S | P2 | T | TG-ANT antenna and VSWR |
 | ANT-009 | Support for electronically steered beamforming with 4 or more elements in the ground unit  | O | P2 | T | TG-ANT antenna and VSWR |
 | ANT-010 | Cross-polar mismatch (circular versus linear) shall be handled by a 2-antenna receiver cov | S | P1,P2 | T | TG-ANT antenna and VSWR |
 | ANT-011 | Antenna return loss and pattern data shall be taken into account by the link-budget estima | O | P1,P2 | D | TG-ANT antenna and VSWR |

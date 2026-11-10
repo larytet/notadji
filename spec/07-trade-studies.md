@@ -274,11 +274,26 @@ openwifi as the A1 baseline (AGPL, 20 MHz, 802.11 timing only) except as a behav
 | Option | Description | Pros | Cons |
 |---|---|---|---|
 | A | 2 omni antennas on the air unit, 2 on the ground (spatial diversity, MRC) | Simple; robust to shadowing and polarisation mismatch | Limited gain (about 3 dB from MRC only) |
-| B | Ground switched-beam patch array (4 beams, 90 degrees each) plus 1 omni for acquisition | +8 to 10 dB gain; no moving parts; fits Class X | Cost; the beam choice per frame must be fast (ANT-008); hand-held tolerance |
+| B | Ground switched-beam patch array (six 60-degree sectors with 40-degree elevation beams, 10.1 dBi per beam, see the review below) plus 1 omni for acquisition | 5 dB over a 5 dBi omni, no moving parts, fits Class X | Cost; the beam choice per frame must be fast (ANT-008); hand-held tolerance; four 90-degree sectors would give only 6.6 to 9.6 dBi |
 | C | Ground phased array (4 to 8 elements, beamforming) | Tracking without pointing; interference nulling | Calibration complexity (CAL-010); cost; power |
 
 Recommendation: **A for P1 and the base product, B as the long-range accessory**, C as a research item on the SDR
 (it exercises CAL-010).
+
+Review (iteration 11): the first-round claim that a 4-beam array of 90-degree sectors gives "+8 to 10 dB" was wrong. Beam gain from the beamwidths (`G = 0.6 x 41253 / (azimuth x elevation)`, patch-array efficiency 0.6 [E]):
+
+| Sectors | Azimuth beamwidth | Gain dBi, elevation 60 deg | 40 deg | 30 deg |
+|---|---|---|---|---|
+| 4 | 90 deg | 6.6 | 8.4 | 9.6 |
+| 6 | 60 deg | 8.4 | 10.1 | 11.4 |
+| 8 | 45 deg | 9.6 | 11.4 | 12.6 |
+| 12 | 30 deg | 11.4 | 13.1 | 14.4 |
+
+Four 90-degree sectors give only 6.6 to 9.6 dBi, 1.6 to 4.6 dB better than the 5 dBi omni assumed in the budget; the 10 dBi of Class X needs six sectors with 40-degree elevation beams (10.1 dBi) or eight sectors at
+60 degrees (9.6 dBi, 11.4 at 40 degrees). For long range the drone is near the horizon, so a narrow elevation beam (30 to 40 degrees) is acceptable, but it must be wide enough for the minimum flight distance and altitude.
+Alternatives added: (D) a motorised tracking antenna (14 to 18 dBi directional, pointed from the telemetry position): 14 dBi gives 16.4 km at Class X power (T-01 numbers), at the cost of a motor, a pointing loop and
+a failure mode when the position is lost; (E) a helical or patch antenna on a tripod for fixed sites. Decision: **A (diversity) for the base product; B revised to a six-sector array with 40-degree elevation beams as the Class X
+accessory; D as an option for ranges beyond 10 km; C (phased array) stays research.**
 
 ## T-14 DPD architecture
 
@@ -384,7 +399,7 @@ Recommendation: A for modem/MAC/calibration bring-up in parallel with B for the 
 | T-10 | Certified BLE/RID module |
 | T-11 | Wifi (P0), clean-room custom baseband (P1) |
 | T-12 | AD936x in phase A, ADRV9002 in phase B (hop, turn-around, DPD evidence) |
-| T-13 | Diversity base, switched-beam ground accessory |
+| T-13 | Diversity base; six-sector (40 degree elevation) ground accessory for Class X; tracker option beyond 10 km |
 | T-14 | Memory-polynomial DPD with LUT fallback |
 | T-15 | Static adaptive video channel, hopped control, separate beacon |
 | T-16 | LDPC data, short code or polar for control |

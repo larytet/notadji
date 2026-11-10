@@ -253,6 +253,18 @@ def intra_refresh_table() -> str:
     return "\n".join(rows)
 
 
+def sector_gain_dbi(sectors: int, elevation_deg: float, eta: float = 0.6) -> float:
+    """Directivity of one beam of a switched-sector array: eta x 41253 / (azimuth x elevation beamwidth in degrees^2) (E: patch-array efficiency 0.6)."""
+    return 10 * math.log10(eta * 41253 / ((360 / sectors) * elevation_deg))
+
+
+def sector_table() -> str:
+    rows = ["| Sectors | Azimuth beamwidth | Gain dBi, elevation 60 deg | 40 deg | 30 deg |", "|---|---|---|---|---|"]
+    for n in (4, 6, 8, 12):
+        rows.append(f"| {n} | {360 // n} deg | {sector_gain_dbi(n, 60):.1f} | {sector_gain_dbi(n, 40):.1f} | {sector_gain_dbi(n, 30):.1f} |")
+    return "\n".join(rows)
+
+
 def tdd_table() -> str:
     """TDD frame budget per range class with the range-adaptive frame length (T-03 option C)."""
     rows = ["| Range km | Frame ms | UL symbols (QPSK 1/2, 1 Mbit/s + 2 preamble) | UL us | Guard us | DL share of frame |", "|---|---|---|---|---|---|"]
@@ -296,3 +308,5 @@ if __name__ == "__main__":
     print(slice_protection_table())
     print()
     print(intra_refresh_table())
+    print()
+    print(sector_table())

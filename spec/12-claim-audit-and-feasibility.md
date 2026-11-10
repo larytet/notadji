@@ -39,6 +39,7 @@ requirement ID uniqueness and references, revision history, trace matrix currenc
 | F-14 | REG-002 | Remote ID transports named loosely | Now cites ASTM F3586-22 and the transport rules (Bluetooth needs legacy plus Long Range) |
 | F-15 | `01` PHY-010 vs uplink slot | A 40 us acquisition preamble per burst would not fit an 80 us uplink slot | The uplink burst is frame-synchronous and uses a 2-symbol reference preamble; 40 us applies to first acquisition only |
 | F-16 | `02` | "5.8 GHz point-to-point exemption" implied for Class X | The FCC exemption is for fixed point-to-point installations; a mobile drone link does not qualify, so the general reduction is used |
+| F-17 | `07` T-13 | "A 4-beam array of 90 degree sectors gives +8 to 10 dB" | Computed from beamwidths: 6.6 to 9.6 dBi, 1.6 to 4.6 dB over a 5 dBi omni; 10 dBi needs six sectors with 40 degree elevation (iteration 11) |
 
 ## 4. External facts register
 
