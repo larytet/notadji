@@ -176,6 +176,39 @@ def pa_mode_table() -> str:
     return "\n".join(rows)
 
 
+def numerology_table() -> str:
+    """Doppler and delay-spread limits for three sub-carrier spacings (T-04). ICI SIR = 3 / (pi fd T)^2 (Jakes approximation)."""
+    rows = ["| Spacing kHz | Symbol us | CP 1/16 us | CP 1/8 us | Max Doppler Hz for 21 dB SIR (64QAM) | for 28 dB SIR (256QAM) | Closing speed km/h at 5.8 GHz for 28 dB |", "|---|---|---|---|---|---|---|"]
+    for khz in (39.0625, 78.125, 156.25):
+        t_us = 1e3 / khz
+        def fd_max(sir_db: float) -> float:
+            return math.sqrt(3 * 10 ** (-sir_db / 10)) * khz * 1e3 / math.pi
+        v_kmh = fd_max(28) * 3e8 / 5.8e9 * 3.6
+        rows.append(f"| {khz:g} | {t_us:.1f} | {t_us / 16:.2f} | {t_us / 8:.2f} | {fd_max(21):.0f} | {fd_max(28):.0f} | {v_kmh:.0f} |")
+    return "\n".join(rows)
+
+
+LDPC_BASE_NONZERO = 90  # assumed non-zero entries of a 648-bit rate-1/2 quasi-cyclic base matrix (E)
+LDPC_ITERATIONS = 10
+LDPC_FCLK_MHZ = 200
+LDPC_INFO_BITS = 324
+
+
+def ldpc_estimate() -> str:
+    """Layered min-sum decoder sized for peak PHY rate (T-16): one pass per base-matrix entry with the lifting size processed in parallel."""
+    cycles = LDPC_BASE_NONZERO * LDPC_ITERATIONS
+    t_us = cycles / LDPC_FCLK_MHZ
+    thr = LDPC_INFO_BITS / t_us
+    peak = DATA_TONES[40.0] * MCS_TABLE[3].bits_per_sym / SYMBOL_US  # 40 MHz 64QAM 3/4, no duty or overhead
+    rows = ["| Quantity | Value |", "|---|---|",
+            f"| Cycles per codeword ({LDPC_BASE_NONZERO} entries x {LDPC_ITERATIONS} iterations) | {cycles} |",
+            f"| Time per codeword at {LDPC_FCLK_MHZ} MHz | {t_us:.1f} us |",
+            f"| Throughput per decoder instance (K = {LDPC_INFO_BITS}) | {thr:.0f} Mbit/s |",
+            f"| Peak PHY information rate (40 MHz, 64QAM 3/4) | {peak:.0f} Mbit/s |",
+            f"| Decoder instances needed | {math.ceil(peak / thr)} |"]
+    return "\n".join(rows)
+
+
 def tdd_table() -> str:
     """TDD frame budget per range class with the range-adaptive frame length (T-03 option C)."""
     rows = ["| Range km | Frame ms | UL symbols (QPSK 1/2, 1 Mbit/s + 2 preamble) | UL us | Guard us | DL share of frame |", "|---|---|---|---|---|---|"]
@@ -209,3 +242,7 @@ if __name__ == "__main__":
     print(split_band_uplink_table())
     print()
     print(pa_mode_table())
+    print()
+    print(numerology_table())
+    print()
+    print(ldpc_estimate())

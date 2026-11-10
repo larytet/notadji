@@ -93,13 +93,17 @@ for m, e in zip(lb.MCS_TABLE, (-93, -88, -80, -74)):
 import subprocess  # noqa: E402
 
 out = subprocess.check_output([sys.executable, "-I", str(ROOT / "scripts" / "link_budget.py")], text=True)
-down, up, tdd, cmp_, split, pa_tbl = out.strip().split("\n\n")
+down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl = out.strip().split("\n\n")
 check("02 contains the downlink table from the script", down.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the uplink table from the script", up.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the PA mode table from the script", pa_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("SYS-005 limits hold in the PA model", lb.input_power_w(25, 7.0) <= 3.5 and lb.input_power_w(27, 7.0) <= 4.1 and lb.input_power_w(30, 6.0) <= 6.0 and lb.input_power_w(30, 4.5) <= 6.0)
 check("64QAM at 30 dBm would exceed 6.0 W (justifies RF-031)", lb.input_power_w(30, 7.0) > 6.0)
 check("PWR-004 values consistent with the model", lb.pae(6.0) >= 0.275 and lb.pae(4.5) >= 0.32 and lb.pae(7.0) >= 0.245)
+check("07 contains the numerology table from the script", numer_tbl.strip() in TEXT["07-trade-studies.md"])
+check("07 contains the LDPC decoder table from the script", ldpc_tbl.strip() in TEXT["07-trade-studies.md"])
+check("PHY-003 Doppler limits have margin (3.5 kHz for 64QAM, 1.0 kHz for 256QAM)", math.sqrt(3 * 10 ** -2.1) * SCS / math.pi >= 3500 and math.sqrt(3 * 10 ** -2.8) * SCS / math.pi >= 1000)
+check("PHY-015 states 3 instances for 155 Mbit/s", "155 Mbit/s" in SRS and math.ceil(lb.DATA_TONES[40.0] * 4.5 / lb.SYMBOL_US / 72) == 3)
 check("02 contains the split-band table from the script", split.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("split-band uplink margin >= 6 dB for all classes (MAC-007)", all(float(r.split("|")[7]) >= 6 for r in split.strip().split("\n")[2:]))
 check("MAC-007 states the split-band margins 17.0, 11.0 and 12.4", "17.0, 11.0 and 12.4 dB" in SRS)

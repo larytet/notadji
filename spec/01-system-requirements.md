@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 0.8 (T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 0.9 (T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -74,7 +74,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | PHY-002 | Channel bandwidths: 5, 10, 20, 40 MHz mandatory; 80 MHz optional (P2). | M | | T |
 | PHY-003 | Default sub-carrier spacing 78.125 kHz (symbol 12.8 us); cyclic prefix selectable among 1/16, 1/8, 1/4. Maximum Doppler for full-rate operation: 3.5 kHz for BPSK to 64QAM (inter-carrier interference about -22 dB, verified by simulation, G-25) and 1.0 kHz for 256QAM. | M | | S |
 | PHY-004 | Modulations: BPSK, QPSK, 16QAM, 64QAM, 256QAM (256QAM in P2 and only when EVM allows). | M | | T |
-| PHY-005 | FEC: LDPC with code rates 1/2, 2/3, 3/4, 5/6, codeword lengths adapted to the slice size (short codeword of 648 bits or less for the lowest latency). | M | | S,T |
+| PHY-005 | FEC: LDPC with code rates 1/2, 2/3, 3/4, 5/6; codeword length 648 bits in race mode (lowest latency) and 1944 bits in cruise mode; slice-aligned codeword packing. Revised by T-16. | M | | S,T |
 | PHY-006 | Spatial: 2 RX chains at the ground unit with MRC or better. Two TX chains (STBC or spatial multiplexing) as option in P2. | M(RX) / O(TX) | | T |
 | PHY-007 | Pilot design shall track a channel that changes within a frame: midambles/pilots at least every 0.25 ms of airtime at the highest Doppler setting. | M | | S |
 | PHY-008 | Carrier frequency offset tolerance: initial 25 ppm; after acquisition residual below 0.1 ppm equivalent. | M | | T |
@@ -84,6 +84,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | PHY-012 | The PHY shall run at least 4 MCS adaptation steps per second and up to one per frame (see MAC-005). | M | | T |
 | PHY-013 | The numerology shall be programmable (not hard-wired) so that the same engine can run a WiFi-compatible mode (see PRO-001) for the prototype. | M | P1 | I |
 | PHY-014 | Optional low-PAPR mode: DFT-spread OFDM for BPSK, QPSK and 16QAM with a PAPR at least 3 dB below plain OFDM at a CCDF of 1e-3 [E], selectable per link; it is the mitigation if the PA study shows less than 27% PAE at OFDM QPSK/16QAM. | O | P2 | S,T |
+| PHY-015 | LDPC decoder throughput of at least 155 Mbit/s of information (3 layered-decoder instances at 200 MHz in the model of `07` T-16, or equivalent) and a codeword decode time of 10 us or less. [E, TBV] | M | | S,T |
 
 ## 6. MAC and framing (MAC)
 
@@ -302,3 +303,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 0.6 | G2-3 | Verification pass: MAC-001/MAC-007 re-derived (uplink sizing, range-adaptive frame), SYS-005 PAE threshold corrected, REG-002 via F3586-22, PWR-003/PWR-006 corrected, HSI-001..015 added (`13`), T-18/T-19 added |
 | 0.7 | G2-4 | T-03 iteration: split-band uplink baseline (MAC-012, RF-030), MAC-001 becomes the fallback mode, MAC-007 restated per mode, ADA-005/SYS-009/ASC-002 adjusted |
 | 0.8 | G2-5 | T-02/T-14 iteration: SYS-005 and PWR-004 per mode, PHY-009 corrected, PHY-014 (low-PAPR option) and RF-031 added |
+| 0.9 | G2-6 | T-04/T-16 iteration: numerology and decoder sizing quantified; PHY-005 per-mode codeword length, PHY-015 added, PHY-003 prefix note |

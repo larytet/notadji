@@ -113,11 +113,11 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | Class | Requirements |
 |---|---|
 | C | 14 |
-| E | 121 |
+| E | 122 |
 | P | 30 |
 | R | 7 |
 | S | 15 |
-| total | 187 |
+| total | 188 |
 
 | ID | Class | Basis |
 |---|---|---|
@@ -161,7 +161,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | PHY-002 | E | engineering target; proved by verification method T (see 08) |
 | PHY-003 | C | audit: symbol time, ICI -21.8 dB at 3.5 kHz, 32.7 dB at 1 kHz (Jakes approximation) |
 | PHY-004 | E | 256QAM needs EVM and Doppler limits that are unproven at 30 dBm |
-| PHY-005 | E | engineering target; proved by verification method S,T (see 08) |
+| PHY-005 | E | codeword lengths from 802.11 LDPC family; coding gain difference from literature |
 | PHY-006 | E | engineering target; proved by verification method T (see 08) |
 | PHY-007 | E | engineering target; proved by verification method S (see 08) |
 | PHY-008 | E | engineering target; proved by verification method T (see 08) |
@@ -171,6 +171,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | PHY-012 | E | engineering target; proved by verification method T (see 08) |
 | PHY-013 | E | engineering target; proved by verification method I (see 08) |
 | PHY-014 | E | PAPR reduction of DFT-s-OFDM is typical literature value (about 3-4 dB), to be simulated |
+| PHY-015 | E | link_budget.py ldpc_estimate (assumed base matrix and iterations) |
 | MAC-001 | C | link_budget.py tdd_budget: uplink sized for MAC-007, guard from range |
 | MAC-002 | E | engineering target; proved by verification method T (see 08) |
 | MAC-003 | E | engineering target; proved by verification method T (see 08) |

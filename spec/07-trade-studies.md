@@ -89,6 +89,21 @@ Decision: **D as the baseline architecture for Classes X and L where regulation 
 Recommendation: **A** with FFT 64 added to PHY-001 (and a 78.125 kHz default). Run an S (simulation) item for
 the ICI loss against the maximum Doppler and restrict 256QAM to Doppler below 1 kHz (G-25).
 
+Review (iteration 6, numbers from `scripts/link_budget.py`, Jakes ICI approximation):
+
+| Spacing kHz | Symbol us | CP 1/16 us | CP 1/8 us | Max Doppler Hz for 21 dB SIR (64QAM) | for 28 dB SIR (256QAM) | Closing speed km/h at 5.8 GHz for 28 dB |
+|---|---|---|---|---|---|---|
+| 39.0625 | 25.6 | 1.60 | 3.20 | 1919 | 857 | 160 |
+| 78.125 | 12.8 | 0.80 | 1.60 | 3839 | 1715 | 319 |
+| 156.25 | 6.4 | 0.40 | 0.80 | 7678 | 3429 | 639 |
+
+Findings: (1) Option C (156 kHz) has a 0.4 us cyclic prefix, too short for the 0.5 to 2 us delay spreads that low-altitude forest or urban sites can have [E, typical
+literature values, not measured here], although it tolerates 640 km/h closing speed for 256QAM; it is rejected. (2) Option B (39 kHz) gives a 1.6 us prefix at 6% overhead but
+halves the Doppler margin to 160 km/h for 256QAM; the same 1.6 us is available in option A with the 1/8 prefix at 11% overhead, so the saving is about 5 points of airtime
+and does not justify a second numerology. (3) The 78.125 kHz default holds 64QAM to 3.8 kHz Doppler and 256QAM to 1.7 kHz, so PHY-003 (3.5 kHz and 1.0 kHz) has margin.
+Open-field delay spread is far smaller (a two-ray ground reflection at 100 m altitude and 1 km gives about 1 ns of extra delay, `2 h1 h2 / (d c)`). Decision: **A unchanged**, with the
+1/8 prefix selectable for forest and urban use.
+
 ## T-05 Co-located links (G-20)
 
 2.4 GHz band: 4/8/16 channels at 20/10/5 MHz; 5.8 GHz: 6/12/25 channels [calc: 83.5 and 125 MHz].
@@ -232,6 +247,22 @@ band (900 MHz when fitted, otherwise 2.4 GHz). The fast hop of the video (B) is 
 
 Recommendation: **A for the data**, **B (or the same LDPC with a short code) for the control/feedback burst**; keep C's
 packet-level FEC as an optional outer code across slices in cruise mode (LAT-006).
+
+Review (iteration 6): decoder feasibility was checked, since a short-block decoder must keep up with the peak PHY rate (`scripts/link_budget.py`, [E]: base-matrix size and iteration count are assumptions):
+
+| Quantity | Value |
+|---|---|
+| Cycles per codeword (90 entries x 10 iterations) | 900 |
+| Time per codeword at 200 MHz | 4.5 us |
+| Throughput per decoder instance (K = 324) | 72 Mbit/s |
+| Peak PHY information rate (40 MHz, 64QAM 3/4) | 155 Mbit/s |
+| Decoder instances needed | 3 |
+
+One layered decoder instance handles about 72 Mbit/s of information at 200 MHz, so the 155 Mbit/s peak (40 MHz, 64QAM 3/4, before duty and overhead) needs 3 instances; at the
+typical 20 MHz QPSK 3/4 operating point (about 20 Mbit/s) one instance has 3.6x margin. Added alternatives: (D) packet-level erasure code across slices (Raptor-style) instead of
+retransmission, and (E) turbo codes; D is kept only for cruise mode (LAT-006) because it adds the latency of a whole block, E offers no advantage over LDPC at these lengths. Codeword length
+policy: 648 bits in race mode (shortest latency), 1944 bits in cruise mode (about 0.5 to 1 dB more coding gain [E, literature]). Decision: **A (LDPC) unchanged**, codeword length per mode (PHY-005), decoder sizing
+as a requirement (PHY-015).
 
 ## T-17 Clocking, genlock and timing (G-16)
 
