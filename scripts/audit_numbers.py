@@ -93,7 +93,7 @@ for m, e in zip(lb.MCS_TABLE, (-93, -88, -80, -74)):
 import subprocess  # noqa: E402
 
 out = subprocess.check_output([sys.executable, "-I", str(ROOT / "scripts" / "link_budget.py")], text=True)
-down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl, iface_tbl, rng_tbl, reg_tbl, lev_tbl, coax_tbl, brk_tbl = out.strip().split("\n\n")
+down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl, iface_tbl, rng_tbl, reg_tbl, lev_tbl, coax_tbl, brk_tbl, aoa_tbl, bf_tbl = out.strip().split("\n\n")
 check("02 contains the downlink table from the script", down.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the uplink table from the script", up.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the PA mode table from the script", pa_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
@@ -148,6 +148,13 @@ import roles as _roles  # noqa: E402
 _tags = {m.group(1): m.group(2) for m in re.finditer(r"^\| ([A-Z]{2,4}-\d{3}) \| \[(AU|GU)\] ", SRS, flags=re.M)}
 check("role tags in the SRS match scripts/roles.py", _tags == {k: v[1:3] for k, v in _roles.TAGS.items()}, "run python3 -I scripts/roles.py")
 check("SYS-011 present and RF-032 gain is 2 dB", "SYS-011" in SRS and (4.0 - 2.0) == 2.0)
+check("02 contains the AoA and beamforming tables", aoa_tbl.strip() in TEXT["02-link-and-latency-budgets.md"] and bf_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
+_err = math.radians(5.0) / (2 * math.pi * 0.5)
+check("ANT-013: 1.6 degrees and 139 m at 5 km (half-wavelength, 5 degrees phase error); range resolution 15 m", abs(math.degrees(_err) - 1.59) < 0.01 and round(5000 * _err) == 139 and abs(3e8 * 0.1e-6 / 2 - 15) < 1e-9 and "1.6 degrees" in SRS and "139 m of cross-range" in SRS and "about 15 m of range" in SRS)
+check("AoA unambiguous field of view of a 5-wavelength baseline is 5.7 degrees", abs(math.degrees(math.asin(1 / (2 * 5))) - 5.7) < 0.05)
+_b = lb.max_range_km(lb.Scenario("x", 5800, 1, 30, 5, 5, diversity_gain_db=3), lb.MCS_TABLE[1])
+check("beamforming: +6 dB doubles the range (5.8 -> 11.6 km), +3 dB gives 8.2 km", abs(_b * 10 ** (6 / 20) - 11.6) < 0.1 and abs(_b * 10 ** (3 / 20) - 8.2) < 0.1)
+check("ASC-008 area overhead 1.5-4 mm2 is 5% to 14% of 29 mm2", abs(1.5 / 29 - 0.052) < 0.001 and abs(4 / 29 - 0.138) < 0.001 and "about 5% to 14% of the die" in TEXT["07-trade-studies.md"])
 check("02 contains the split-band table from the script", split.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("split-band uplink margin >= 6 dB for all classes (MAC-007)", all(float(r.split("|")[7]) >= 6 for r in split.strip().split("\n")[2:]))
 check("MAC-007 states the split-band margins 17.0, 11.0 and 12.4", "17.0, 11.0 and 12.4 dB" in SRS)

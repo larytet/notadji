@@ -371,6 +371,30 @@ def tapeout_breakeven_table() -> str:
     return "\n".join(rows)
 
 
+def aoa_table(phase_error_deg: float = 5.0) -> str:
+    """Angle of arrival from the phase difference of two antennas (notes entry 10): angle error at broadside, unambiguous field of view, cross-range position error."""
+    rows = [f"| Baseline d / wavelength | Unambiguous half field of view deg | Angle error deg at {phase_error_deg:g} deg phase error | Cross-range error at 1 km m | at 5 km m | at 10 km m |", "|---|---|---|---|---|---|"]
+    for d in (0.5, 1.0, 2.0, 5.0):
+        half_fov = math.degrees(math.asin(min(1.0, 1 / (2 * d))))
+        err = math.radians(phase_error_deg) / (2 * math.pi * d)  # radians, broadside
+        rows.append(f"| {d:g} | {half_fov:.1f} | {math.degrees(err):.2f} | {1000 * err:.0f} | {5000 * err:.0f} | {10000 * err:.0f} |")
+    return "\n".join(rows)
+
+
+def beamforming_table() -> str:
+    """Air-unit beamforming options (notes entry 11). Gain, mass and power are the estimates of the notes [E]; ranges follow from the gain (range scales as 10^(G/20))."""
+    base = max_range_km(Scenario("x", 5800, 1, 30, 5, 5, diversity_gain_db=3), MCS_TABLE[1])
+    rows = ["| Option | Gain dB (same total power) [E] | Mass [E] | Extra DC power [E] | Class S range at 5.8 GHz, QPSK 3/4 km | Note |", "|---|---|---|---|---|---|"]
+    for name, gain, mass, power, note in (
+        ("A two omni antennas, diversity (baseline)", 0.0, "baseline", "none", "no pointing needed"),
+        ("B switched sectors on several faces, one RF chain, GPS plus IMU selection", 3.0, "2 to 4 g", "below 0.1 W", "+2 to 4 dB, midpoint used"),
+        ("C analogue beamformer, 4 elements per face, one chain", 5.5, "4 to 8 g per face", "0.2 to 0.4 W", "+5 to 6 dB per face, midpoint used; about 6 faces for 360 degrees at 60 degrees each"),
+        ("D digital beamforming, N = 4 full TX/RX chains", 6.0, "8 to 15 g", "0.5 to 1 W", "10 log N for the same total power; per-element calibration and a DPD per chain"),
+    ):
+        rows.append(f"| {name} | {gain:+.1f} | {mass} | {power} | {base * 10 ** (gain / 20):.1f} | {note} |")
+    return "\n".join(rows)
+
+
 def tdd_table() -> str:
     """TDD frame budget per range class with the range-adaptive frame length (T-03 option C)."""
     rows = ["| Range km | Frame ms | UL symbols (QPSK 1/2, 1 Mbit/s + 2 preamble) | UL us | Guard us | DL share of frame |", "|---|---|---|---|---|---|"]
@@ -432,3 +456,7 @@ if __name__ == "__main__":
     print(coax_table())
     print()
     print(tapeout_breakeven_table())
+    print()
+    print(aoa_table())
+    print()
+    print(beamforming_table())

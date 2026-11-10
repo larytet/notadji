@@ -482,6 +482,24 @@ against about 29 mm2 for the shared design: a saving of about 5 mm2 each (about 
 Decision: **S1 with S3 for the enhanced ground unit**; S2 is allowed by the specification (SYS-011: units interoperate only through the on-air protocol, so a ground-only chip can be introduced later without touching the air unit) but is justified only by volume of tens of millions of units or by
 a capability that replication cannot give (for example converter dynamic range). The multi-die capability is a day-one requirement (ASC-007).
 
+## T-23 Air-unit beamforming and the single-silicon option set (notes entries 10, 11, 12)
+
+For large drones (payload, mass and power far above the 25 g class) beamforming makes sense as a product-class option (options A to D, table in `02` section 1.5). The wish of the review is that **no option needs a new tape-out or die variant**: one chip contains all options and
+the selection is a signed value in non-volatile memory (or a fuse); larger arrays are built by replicating the chip or the RF die.
+
+| Option | Description | Pros | Cons |
+|---|---|---|---|
+| S-a | A die or variant per product class | Each product carries only what it uses | Several tape-outs; rejected by the review |
+| S-b | One die with every option present, power-gated and clock-gated, enabled by a signed NVM value (the same mechanism as the region profiles, SEC-005) | One tape-out; a field upgrade is a signed update; entitlement can be bound to the product; disabled options cost only unused gates | Area for the logic that simple products never use; verification of every option state |
+| S-c | Same die, but options selected by factory fuses only | Simple, tamper-resistant | No field upgrade; fuse count and test flow |
+| S-d | Beyond the built-in chains, replicate the RF die or the whole chip with a shared reference clock and LO | Scales without a new design | Needs multi-chip coherence from day one: a chip-to-chip interface, a shared clock/LO scheme and per-element calibration |
+
+Cost of S-b from `effort.md` [E]: beamforming logic 0.5 to 2 mm2 plus a chip-to-chip interface of 1 to 2 mm2 on the 29 mm2 digital SoC is 1.5 to 4 mm2, about 5% to 14% of the die; verification effort rises by about 10 to 15% because every option state, fuse state, band and role must be verified even when disabled (mitigation: keep the options orthogonal and verify the power
+and clock gating once). Caveat: gating removes the digital logic cost but not the RF cost: extra on-die RF chains, converters and mixers cost area, leakage and routing, so the maximum number of on-die chains is fixed at design time (T-08) and only enabled in software; per-element power amplifiers and front ends are external (RF-028), so their cost is board-level.
+The air-unit range gains are 3 dB (B), 5.5 dB (C) and 6 dB (D, N = 4), which doubles the Class S range at 5.8 GHz for D (`02` section 1.5).
+
+Decision: **S-b with S-d** (ASC-008, ASC-009, SEC-006); the day-one list that avoids a respin is in ASC-009. The beamforming options are a product-class option for large drones (ANT-014), not a requirement of the small-drone class.
+
 ---
 
 ## Summary of recommendations
@@ -509,3 +527,4 @@ a capability that replication cannot give (for example converter dynamic range).
 | T-19 | Phase A1 Pluto pair (2.4 GHz + 915 MHz), A2 AD9361/ADRV9002 pair (5.8 + 2.4 GHz), A3 K26-class video board, in parallel |
 | T-21 | Symmetric base pair; enhanced ground unit from the same silicon (replicated RF dice, discrete front end); FPGA ground station for professional use |
 | T-22 | One pair of chips for both roles with board-level ground enhancement; separate air and ground chips allowed but justified only by volume or capability |
+| T-23 | One die with all beamforming options gated and enabled by a signed NVM value; scaling by replicating the RF die with shared clock and LO |

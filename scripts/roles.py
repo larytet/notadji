@@ -19,13 +19,13 @@ AU_ONLY = {
     "REG-002",                                              # Remote ID module
     "PWR-001", "PWR-005", "PWR-006",                        # battery input, standby, sleep
     "THM-004", "ENV-002", "ENV-003",                        # hover thermal, vibration, shock
-    "RF-030",                                               # TX-to-RX isolation of the air unit in split-band mode
+    "RF-030", "ANT-014",                                    # TX-to-RX isolation of the air unit in split-band mode, air-unit beamforming
 }
 GU_ONLY = {
     "SYS-007", "SYS-008",                                   # ground battery life, several air units
     "VID-008", "VID-015", "VID-016", "VID-018",             # decoder, display output, OSD, display lock
     "PHY-006", "PHY-016", "PHY-017",                        # receive branches, enhanced decoding
-    "ANT-007", "ANT-008", "ANT-009", "ANT-010", "ANT-011", "ANT-012", "CAL-010",
+    "ANT-007", "ANT-008", "ANT-009", "ANT-010", "ANT-011", "ANT-012", "ANT-013", "CAL-010",
     "ADA-001", "ADA-002", "ADA-007", "ADA-010", "ADA-011",  # the ground unit scans and decides
     "MAC-011",                                              # timing advance estimated at the ground unit
     "IF-003", "RF-032",                                     # display and host interfaces, enhanced front end

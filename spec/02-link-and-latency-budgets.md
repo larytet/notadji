@@ -137,6 +137,32 @@ diversity and combining no phase alignment is needed, only a channel estimate pe
 1.6 us (1/8), about 19% of the shorter prefix. Coherent beamforming would additionally need cable delay and phase calibration with temperature tracking (CAL-010). Transmission through a long cable loses power and hides antenna faults from the
 reflection measurement (the cable loss counts twice), so external antennas are receive-only (ANT-012).
 
+### 1.5 Direction finding and air-unit beamforming
+
+**Angle of arrival at the ground unit** (ANT-013). With two antennas the phase difference of the per-branch channel estimates gives the bearing: `phase = 2 pi d sin(theta) / lambda`. Bearing error at broadside for a 5 degree phase error, the unambiguous field of view, and the
+cross-range position error that results (range comes from the round-trip delay of MAC-011: 0.1 us resolution is about 15 m; error grows as 1/cos(theta) away from broadside):
+
+| Baseline d / wavelength | Unambiguous half field of view deg | Angle error deg at 5 deg phase error | Cross-range error at 1 km m | at 5 km m | at 10 km m |
+|---|---|---|---|---|---|
+| 0.5 | 90.0 | 1.59 | 28 | 139 | 278 |
+| 1 | 30.0 | 0.80 | 14 | 69 | 139 |
+| 2 | 14.5 | 0.40 | 7 | 35 | 69 |
+| 5 | 5.7 | 0.16 | 3 | 14 | 28 |
+
+At half-wavelength spacing 5 degrees of phase error is 1.6 degrees of bearing (139 m of cross-range at 5 km); wider baselines are finer but ambiguous (a 5-wavelength baseline sees only +/-5.7 degrees unambiguously), so a coarse estimate from a short baseline or the sector array comes first, and wide
+baselines need phase-coherent receive chains (shared clock, calibrated and temperature-tracked cable delay), which plain combining does not.
+
+**Air-unit beamforming options** (ANT-014; gain, mass and power are estimates [E] from the review notes; the range follows from the gain). Gain is `10 log N` for the same total radiated power, so the DC power of the PA stays about the same:
+
+| Option | Gain dB (same total power) [E] | Mass [E] | Extra DC power [E] | Class S range at 5.8 GHz, QPSK 3/4 km | Note |
+|---|---|---|---|---|---|
+| A two omni antennas, diversity (baseline) | +0.0 | baseline | none | 5.8 | no pointing needed |
+| B switched sectors on several faces, one RF chain, GPS plus IMU selection | +3.0 | 2 to 4 g | below 0.1 W | 8.2 | +2 to 4 dB, midpoint used |
+| C analogue beamformer, 4 elements per face, one chain | +5.5 | 4 to 8 g per face | 0.2 to 0.4 W | 11.0 | +5 to 6 dB per face, midpoint used; about 6 faces for 360 degrees at 60 degrees each |
+| D digital beamforming, N = 4 full TX/RX chains | +6.0 | 8 to 15 g | 0.5 to 1 W | 11.6 | 10 log N for the same total power; per-element calibration and a DPD per chain |
+
+One flat array covers only about 50 to 60 degrees, so full coverage needs arrays on several faces; pointing is open-loop from the GNSS positions of both ends rotated by the attitude of the air unit (attitude at about 1 kHz or once per frame, ground position sent in the uplink), so no channel sounding is needed.
+
 ## 2. Latency budget (glass to glass)
 
 Frame time at 60 fps is 16.67 ms. A slice is 1/8 of a frame (2.08 ms of video). All stages are cut-through

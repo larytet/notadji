@@ -113,12 +113,12 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 
 | Class | Requirements |
 |---|---|
-| C | 22 |
-| E | 122 |
-| P | 34 |
+| C | 23 |
+| E | 124 |
+| P | 36 |
 | R | 8 |
 | S | 16 |
-| total | 202 |
+| total | 207 |
 
 | ID | Class | Basis |
 |---|---|---|
@@ -231,6 +231,8 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | ANT-010 | E | engineering target; proved by verification method T (see 08) |
 | ANT-011 | E | engineering target; proved by verification method D (see 08) |
 | ANT-012 | C | link_budget.py coax_table (Friis); cable loss figures are E |
+| ANT-013 | C | link_budget.py aoa_table: 1.6 deg per 5 deg phase error at half-wavelength spacing, 139 m cross-range at 5 km; accuracy targets E |
+| ANT-014 | E | gain, mass and power of options B to D are estimates from the review notes; range follows from gain (C) |
 | ADA-001 | E | engineering target; proved by verification method T (see 08) |
 | ADA-002 | E | engineering target; proved by verification method T (see 08) |
 | ADA-003 | S | ETSI non-adaptive hopping limit 5 ms on-time / 5 ms gap (search summary of EN 300 328; to be checked) |
@@ -269,6 +271,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | SEC-003 | P | security design rule; review by third party |
 | SEC-004 | P | security design rule; review by third party |
 | SEC-005 | R | 47 CFR 2.944 and U-NII security guidance (search); counsel to confirm the limiter approach |
+| SEC-006 | P | same mechanism as SEC-005 |
 | REG-001 | R | regulatory; counsel to confirm |
 | REG-002 | S | FAA-accepted ASTM F3586-22 overlay on F3411-22a; transports from the FAA notice summary |
 | REG-003 | R | regulatory; counsel to confirm |
@@ -322,6 +325,8 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | ASC-005 | E | ASIC target; area and cost unproven (G-23) |
 | ASC-006 | C | link_budget.py interface_table: 2.95 Gbit/s, 29-118 mW at 5-20 pJ/bit (energy per bit is E) |
 | ASC-007 | C | link_budget.py interface_table: 8 Rx at 40 MHz is 11.8 Gbit/s |
+| ASC-008 | E | area added 1.5-4 mm2 from effort.md [E] |
+| ASC-009 | P | provisions list; respin avoidance |
 | TST-001 | P | test infrastructure |
 | TST-002 | S | OpenIPC latency-probe method; rig accuracy is an engineering target |
 
