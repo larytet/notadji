@@ -22,7 +22,7 @@ BEGIN, END = "<!-- BEGIN REGISTER -->", "<!-- END REGISTER -->"
 
 OVERRIDE = {
     "SYS-003": ("C", "link_budget.py: range classes close with QPSK 3/4 and 6 dB margin; free space only (G-02 open)"),
-    "SYS-005": ("C", "link_budget.py/audit: input power per class; needs PA efficiency of about 27% at 30 dBm [feasibility: unproven PA]"),
+    "SYS-005": ("C", "link_budget.py pa_mode_table (model E): 3.5/4.1/6.0 W; PA efficiency of about 27% at 30 dBm is unproven"),
     "SYS-009": ("C", "audit: channel counts from band widths; adjacent-channel rejection RF-029 unproven"),
     "SYS-001": ("E", "latency budget in 02 sums to 18.0/10.7 ms [C] but every stage value is an estimate; vendor pipelines measure 80-95 ms camera half [S]"),
     "SYS-002": ("E", "first milestone; depends on VCU first-slice latency, which was not found in sources"),
@@ -30,6 +30,9 @@ OVERRIDE = {
     "PHY-003": ("C", "audit: symbol time, ICI -21.8 dB at 3.5 kHz, 32.7 dB at 1 kHz (Jakes approximation)"),
     "PHY-004": ("E", "256QAM needs EVM and Doppler limits that are unproven at 30 dBm"),
     "MAC-001": ("C", "link_budget.py tdd_budget: uplink sized for MAC-007, guard from range"),
+    "PHY-014": ("E", "PAPR reduction of DFT-s-OFDM is typical literature value (about 3-4 dB), to be simulated"),
+    "RF-031": ("C", "link_budget.py pa_mode_table: 64QAM at 30 dBm would be 6.3 W"),
+    "PHY-009": ("E", "back-off per mode from an ideal class-B model; PA study will replace"),
     "MAC-012": ("C", "link_budget.py split_band_uplink_table: uplink margin 11.0-17.0 dB, video rate +8%"),
     "RF-030": ("E", "isolation estimate in 02 section 1.1b; bench-proven later"),
     "MAC-007": ("C", "link_budget.py: uplink budget and uplink slot capacity"),

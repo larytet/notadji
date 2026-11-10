@@ -112,12 +112,12 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 
 | Class | Requirements |
 |---|---|
-| C | 13 |
-| E | 120 |
+| C | 14 |
+| E | 121 |
 | P | 30 |
 | R | 7 |
 | S | 15 |
-| total | 185 |
+| total | 187 |
 
 | ID | Class | Basis |
 |---|---|---|
@@ -125,7 +125,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | SYS-002 | E | first milestone; depends on VCU first-slice latency, which was not found in sources |
 | SYS-003 | C | link_budget.py: range classes close with QPSK 3/4 and 6 dB margin; free space only (G-02 open) |
 | SYS-004 | E | engineering target; proved by verification method T (see 08) |
-| SYS-005 | C | link_budget.py/audit: input power per class; needs PA efficiency of about 27% at 30 dBm [feasibility: unproven PA] |
+| SYS-005 | C | link_budget.py pa_mode_table (model E): 3.5/4.1/6.0 W; PA efficiency of about 27% at 30 dBm is unproven |
 | SYS-006 | E | 25 g air unit unproven; FPGA prototype is not flyable at this mass (SOM and heatsink alone exceed it) [feasibility] |
 | SYS-007 | E | engineering target; proved by verification method T (see 08) |
 | SYS-008 | E | engineering target; proved by verification method D (see 08) |
@@ -165,11 +165,12 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | PHY-006 | E | engineering target; proved by verification method T (see 08) |
 | PHY-007 | E | engineering target; proved by verification method S (see 08) |
 | PHY-008 | E | engineering target; proved by verification method T (see 08) |
-| PHY-009 | E | engineering target; proved by verification method T (see 08) |
+| PHY-009 | E | back-off per mode from an ideal class-B model; PA study will replace |
 | PHY-010 | E | engineering target; proved by verification method T (see 08) |
 | PHY-011 | E | engineering target; proved by verification method T (see 08) |
 | PHY-012 | E | engineering target; proved by verification method T (see 08) |
 | PHY-013 | E | engineering target; proved by verification method I (see 08) |
+| PHY-014 | E | PAPR reduction of DFT-s-OFDM is typical literature value (about 3-4 dB), to be simulated |
 | MAC-001 | C | link_budget.py tdd_budget: uplink sized for MAC-007, guard from range |
 | MAC-002 | E | engineering target; proved by verification method T (see 08) |
 | MAC-003 | E | engineering target; proved by verification method T (see 08) |
@@ -209,6 +210,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | RF-028 | E | engineering target; proved by verification method I (see 08) |
 | RF-029 | E | engineering target; proved by verification method T (see 08) |
 | RF-030 | E | isolation estimate in 02 section 1.1b; bench-proven later |
+| RF-031 | C | link_budget.py pa_mode_table: 64QAM at 30 dBm would be 6.3 W |
 | ANT-001 | S | coupler-based forward/reverse sensing appears in P-1 (patent), so not novel; design-around D-1 |
 | ANT-002 | E | engineering target; proved by verification method T (see 08) |
 | ANT-003 | E | engineering target; proved by verification method T (see 08) |

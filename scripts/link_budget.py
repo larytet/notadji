@@ -154,6 +154,28 @@ def split_band_uplink_table() -> str:
     return "\n".join(rows)
 
 
+ETA_SAT = 0.55  # PA drain/power-added efficiency at saturation (E: GaAs/GaN/SiGe 5.8 GHz class AB, to be replaced by the PA study)
+# Back-off from saturation needed to meet EVM and ACLR with DPD (E: ideal class-B scaling eta = eta_sat * sqrt(P/Psat); real PAs deviate)
+BACKOFF_DB = {"OFDM 64QAM + DPD": 7.0, "OFDM QPSK/16QAM + DPD": 6.0, "DFT-s-OFDM QPSK + DPD": 4.5}
+RADIO_OTHER_W = 1.5  # transceiver + baseband + memory (ASIC target, excluding PA and sensor)
+REGULATOR_EFF = 0.88
+
+
+def pae(backoff_db: float, eta_sat: float = ETA_SAT) -> float:
+    return eta_sat * math.sqrt(10 ** (-backoff_db / 10))
+
+
+def input_power_w(avg_dbm: float, backoff_db: float) -> float:
+    return (10 ** (avg_dbm / 10) / 1000 / pae(backoff_db) + RADIO_OTHER_W) / REGULATOR_EFF
+
+
+def pa_mode_table() -> str:
+    rows = ["| Mode | Back-off dB | PAE | Input W at 25 dBm | at 27 dBm | at 30 dBm |", "|---|---|---|---|---|---|"]
+    for name, bo in BACKOFF_DB.items():
+        rows.append(f"| {name} | {bo:.1f} | {pae(bo):.1%} | {input_power_w(25, bo):.1f} | {input_power_w(27, bo):.1f} | {input_power_w(30, bo):.1f} |")
+    return "\n".join(rows)
+
+
 def tdd_table() -> str:
     """TDD frame budget per range class with the range-adaptive frame length (T-03 option C)."""
     rows = ["| Range km | Frame ms | UL symbols (QPSK 1/2, 1 Mbit/s + 2 preamble) | UL us | Guard us | DL share of frame |", "|---|---|---|---|---|---|"]
@@ -185,3 +207,5 @@ if __name__ == "__main__":
     print(tdd_compare_table())
     print()
     print(split_band_uplink_table())
+    print()
+    print(pa_mode_table())

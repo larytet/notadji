@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 0.7 (T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 0.8 (T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -23,7 +23,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | SYS-002 | The FPGA prototype shall reach G2G of 30 ms or less at 1080p60 (mean) as the first milestone. | M | P1 | T |
 | SYS-003 | The link shall sustain 1080p60 video (at least 10 Mbit/s net) with at least 6 dB free-space margin in these range classes (30 dBm conducted, 2-branch MRC on the ground unit, lowest MCS that meets the rate): **Class S** 5 km, 5.8 GHz, 20 MHz, 5/5 dBi antennas; **Class X** 10 km, 5.8 GHz, 20 MHz, 10 dBi ground antenna; **Class L** 14 km, 2.4 GHz, 20 MHz, 5/5 dBi. Ranges under ETSI EIRP limits are specified separately (Class L is about 2.5 km at 20 dBm EIRP). Real-world margins per scenario are in `02` (G-02). Revised by T-01. | M | P2 | A,T |
 | SYS-004 | The video shall degrade gracefully (lower resolution/quality, never a frozen frame longer than 100 ms) as SNR drops, down to the lowest MCS. | M | | T |
-| SYS-005 | Air unit total DC input power, excluding the camera sensor module: at most 3.5 W at 25 dBm, 4.0 W at 27 dBm and 6.0 W at 30 dBm conducted average output (the 30 dBm case needs PA PAE of about 27% or better). A separate 33 dBm SKU is allowed up to 10 W. [TBV] Revised by T-02. | M | P2 | T |
+| SYS-005 | Air unit total DC input power, excluding the camera sensor module: at most 3.5 W at 25 dBm and 4.1 W at 27 dBm average output in any modulation; at most 6.0 W at 30 dBm in OFDM QPSK/16QAM and in the low-PAPR mode (64QAM and higher are capped at 27 dBm, RF-031). A separate 33 dBm SKU is allowed up to 10 W. Basis: PA model in `02` section 3 [E]. Revised by T-02. | M | P2 | T |
 | SYS-006 | Air unit mass, including the antennas' feed cables and the heatsink, shall not exceed 25 g. | S | P2 | I |
 | SYS-007 | Ground unit shall operate from a 1S-6S battery for at least 3 h at the nominal consumption. | S | | T |
 | SYS-008 | One ground unit shall pair with up to 4 air units and receive one (or two, picture-in-picture, O) at a time. | S | | D |
@@ -78,11 +78,12 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | PHY-006 | Spatial: 2 RX chains at the ground unit with MRC or better. Two TX chains (STBC or spatial multiplexing) as option in P2. | M(RX) / O(TX) | | T |
 | PHY-007 | Pilot design shall track a channel that changes within a frame: midambles/pilots at least every 0.25 ms of airtime at the highest Doppler setting. | M | | S |
 | PHY-008 | Carrier frequency offset tolerance: initial 25 ppm; after acquisition residual below 0.1 ppm equivalent. | M | | T |
-| PHY-009 | Peak-to-average power reduction (clipping with filtering, or tone reservation) so that the PA output meets RF-014 with at most 4 dB back-off for 64QAM. | M | P2 | T |
+| PHY-009 | Peak-to-average power reduction (clipping with filtering or tone reservation) plus DPD so that the PA meets RF-014 and RF-015 with a back-off of at most 7 dB for 64QAM and 6 dB for QPSK/16QAM OFDM (the 4 dB of rev 0.6 was unrealistic). | M | P2 | T |
 | PHY-010 | Frame (burst) preamble acquisition time (detect + AGC settle + sync) shall be 40 microseconds or less. | M | | T |
 | PHY-011 | Packet-error-rate target after FEC: 1e-3 per slice at the lowest MCS at the sensitivity in RF-020. | M | | T |
 | PHY-012 | The PHY shall run at least 4 MCS adaptation steps per second and up to one per frame (see MAC-005). | M | | T |
 | PHY-013 | The numerology shall be programmable (not hard-wired) so that the same engine can run a WiFi-compatible mode (see PRO-001) for the prototype. | M | P1 | I |
+| PHY-014 | Optional low-PAPR mode: DFT-spread OFDM for BPSK, QPSK and 16QAM with a PAPR at least 3 dB below plain OFDM at a CCDF of 1e-3 [E], selectable per link; it is the mitigation if the PA study shows less than 27% PAE at OFDM QPSK/16QAM. | O | P2 | S,T |
 
 ## 6. MAC and framing (MAC)
 
@@ -132,6 +133,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | RF-028 | External PA/FEM control interface: bias, enable, gain-step, temperature, and power detector signals shall be in the chip's I/O (analogue and digital lines) so that PAs from at least 3 vendors can be used. | M | P2 | I |
 | RF-029 | Adjacent-channel rejection (needed by SYS-009): with the wanted signal 3 dB above the QPSK 3/4 sensitivity, an interferer in the adjacent channel shall be tolerated up to +30 dB above the wanted signal and in the alternate channel up to +45 dB; the near-far case (two units 10 m apart) shall be analysed with the TX ACLR of RF-015 (G-27). [TBV] | M | | T |
 | RF-030 | Air unit TX-to-RX isolation for split-band mode: at least 70 dB from the 5.8 GHz transmit chain (30 dBm, with its broadband noise) to the 2.4 GHz uplink receive chain, by antenna separation plus transmit and receive filtering, such that the uplink sensitivity degrades by 1 dB or less. [E, TBV] | M | | T |
+| RF-031 | Average output power cap by modulation: 64QAM and 256QAM at most 27 dBm, other modes up to the class limit (RF-010), enforced by the transmit power control (SYS-005, `02`). | M | | T |
 
 ## 8. Antenna and antenna feedback (ANT)
 
@@ -199,7 +201,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | PWR-001 | Input supply 6.0 V to 30 V (2S to 6S) with reverse polarity, surge (60 V 1 ms) and ripple (up to 2 Vpp at 100 Hz to 100 kHz from the ESCs) tolerance. | M | | T |
 | PWR-002 | The system shall start up (boot to video) in 3 s or less, and recover from a brown-out in 1 s. | M | | T |
 | PWR-003 | SoC/baseband plus transceiver power (excluding PA and sensor): at most 1.5 W typical for the ASIC; at most 9.5 W for the FPGA prototype (a K26-class module is 7.5 W typical [S] plus a 1.5 W transceiver; was 8 W in rev 0.4, corrected after the vendor figure was found). | M | | T |
-| PWR-004 | PA power-added efficiency 30% or better at 27 dBm and at 30 dBm average OFDM output with DPD (Doherty or equivalent), confirmed by the PA study. [TBV] Revised by T-02, T-14. | S | | T |
+| PWR-004 | PA power-added efficiency at average output with DPD: 27.5% or better for OFDM QPSK/16QAM and 32% or better in the low-PAPR mode at 30 dBm; 24.5% or better for OFDM 64QAM at 27 dBm. [E, from the model in `02`; the PA study shall confirm or replace the values.] Revised by T-02, T-14. | S | | T |
 | PWR-005 | Standby (link established, no video) of 1.0 W or less. | S | | T |
 | PWR-006 | Sleep: main device 5 mW or less (RAM retention); Remote ID is served by the separate certified module (REG-002), whose own power is at most 50 mW. | S | P2 | T |
 
@@ -299,3 +301,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 0.5 | G2-2 | Patent search (`11`): REG-006 design-around register added, ADA-003 ETSI note |
 | 0.6 | G2-3 | Verification pass: MAC-001/MAC-007 re-derived (uplink sizing, range-adaptive frame), SYS-005 PAE threshold corrected, REG-002 via F3586-22, PWR-003/PWR-006 corrected, HSI-001..015 added (`13`), T-18/T-19 added |
 | 0.7 | G2-4 | T-03 iteration: split-band uplink baseline (MAC-012, RF-030), MAC-001 becomes the fallback mode, MAC-007 restated per mode, ADA-005/SYS-009/ASC-002 adjusted |
+| 0.8 | G2-5 | T-02/T-14 iteration: SYS-005 and PWR-004 per mode, PHY-009 corrected, PHY-014 (low-PAPR option) and RF-031 added |

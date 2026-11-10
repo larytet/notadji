@@ -93,9 +93,13 @@ for m, e in zip(lb.MCS_TABLE, (-93, -88, -80, -74)):
 import subprocess  # noqa: E402
 
 out = subprocess.check_output([sys.executable, "-I", str(ROOT / "scripts" / "link_budget.py")], text=True)
-down, up, tdd, cmp_, split = out.strip().split("\n\n")
+down, up, tdd, cmp_, split, pa_tbl = out.strip().split("\n\n")
 check("02 contains the downlink table from the script", down.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the uplink table from the script", up.strip() in TEXT["02-link-and-latency-budgets.md"])
+check("02 contains the PA mode table from the script", pa_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
+check("SYS-005 limits hold in the PA model", lb.input_power_w(25, 7.0) <= 3.5 and lb.input_power_w(27, 7.0) <= 4.1 and lb.input_power_w(30, 6.0) <= 6.0 and lb.input_power_w(30, 4.5) <= 6.0)
+check("64QAM at 30 dBm would exceed 6.0 W (justifies RF-031)", lb.input_power_w(30, 7.0) > 6.0)
+check("PWR-004 values consistent with the model", lb.pae(6.0) >= 0.275 and lb.pae(4.5) >= 0.32 and lb.pae(7.0) >= 0.245)
 check("02 contains the split-band table from the script", split.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("split-band uplink margin >= 6 dB for all classes (MAC-007)", all(float(r.split("|")[7]) >= 6 for r in split.strip().split("\n")[2:]))
 check("MAC-007 states the split-band margins 17.0, 11.0 and 12.4", "17.0, 11.0 and 12.4 dB" in SRS)
@@ -154,7 +158,7 @@ for dbm, pae, expect in [(25, .30, 2.9), (27, .30, 3.6), (30, .30, 5.5), (30, .2
     total_in = (pa_w(dbm, pae) + 1.5) / 0.88
     check(f"input power {dbm} dBm @ {pae:.0%}", abs(total_in - expect) < 0.06, f"{total_in:.2f}")
 check("SYS-005 6.0 W at 30 dBm needs PAE of about 27% (26.5%)", (pa_w(30, .27) + 1.5) / .88 <= 6.0 and (pa_w(30, .26) + 1.5) / .88 > 6.0)
-check("spec states about 27%", "about 27% or better" in SRS)
+check("SYS-005 states the per-mode limits", "6.0 W at 30 dBm in OFDM QPSK/16QAM" in SRS and "4.1 W at 27 dBm" in SRS)
 
 # 8b. power table arithmetic in 02 (ASIC and FPGA columns)
 prow = table_rows("02-link-and-latency-budgets.md", "| Block | ASIC target W")

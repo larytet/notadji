@@ -44,6 +44,13 @@ Recommendation: **B**. SYS-005 becomes "at most 3.5 W at 25 dBm, 4.0 W at 27 dBm
 RF-010 keeps 33 dBm as a capability of the transceiver chain, not of the standard product. PWR-004 is restated
 as PAE of 30% or better at 27 and 30 dBm average OFDM output, with a PA study (T-14) to confirm feasibility.
 
+Review (iteration 5): PA efficiency and back-off per mode were modelled (`02` section 3). Alternatives not in the first round: (D) a **low-PAPR
+DFT-spread OFDM mode** for the long-range low-order region (PAE 32.8% at QPSK instead of 27.6%, saving about 0.6 W at 30 dBm), (E) envelope tracking, (F) a GaN PA.
+D saves 10 to 14% of the power budget but adds a DFT precoder at the transmitter and a frequency-domain equaliser plus inverse DFT at the receiver:
+kept as an optional mode (PHY-014) and as the mitigation if the PA study shows less than 27% PAE at OFDM QPSK/16QAM. E and F raise PAE but add a supply
+modulator or cost; evaluated in the PA study (HSI-style gate: PA study before freezing SYS-005). Decision: **keep option B (three power classes)** with a per-modulation
+power cap (RF-031) and the restated SYS-005/PWR-004.
+
 ## T-03 TDD frame structure, guard and sensing (G-08, G-13, G-21)
 
 Propagation: 3.33 us per km one way. The DL to UL guard must cover about 2 x delay plus two turn-arounds (`02` section 4). The uplink slot is
@@ -198,6 +205,12 @@ Recommendation: **A for P1 and the base product, B as the long-range accessory**
 Recommendation: **B in P1/P2** with the C table as the fast fallback while B converges (the calibration data store in
 `03` holds seed coefficients per bin). A is acceptable for 25 dBm class products.
 
+Review (iteration 5, with T-02): the patent register (`11`) found US 12,456,952 (Skyworks, active to about 2042) claiming DPD plus load-impedance determination
+plus bias/supply adjustment achieved synchronously. The recommended B (memory polynomial with observation receiver) stays, with design-around D-1
+(REG-006): bias and supply follow temperature and PA current only; reflection data is used for fold-back, coefficient-set selection and alarms. The
+alternatives that rely on bias adjustment from the load (an "adaptive PA" for antenna mismatch) are dropped for this reason. The back-off figure in PHY-009 was
+corrected (no DPD choice reaches 4 dB back-off for 64QAM OFDM).
+
 ## T-15 Hopping strategy
 
 | Option | Description | Pros | Cons |
@@ -258,7 +271,7 @@ Recommendation: A for modem/MAC/calibration bring-up in parallel with B for the 
 | Study | Recommendation |
 |---|---|
 | T-01 | Range classes S/X/L, per region |
-| T-02 | Three programmable power classes; 33 dBm separate SKU |
+| T-02 | Three programmable power classes with a per-modulation power cap; low-PAPR mode optional; 33 dBm separate SKU |
 | T-03 | Split-band uplink as baseline (D); range-adaptive in-band TDD as fallback (C) |
 | T-04 | 78.125 kHz sub-carrier spacing, FFT 64 to 512 |
 | T-05 | Frequency division with race mode; restate SYS-009 |

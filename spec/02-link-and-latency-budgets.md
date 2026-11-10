@@ -144,6 +144,20 @@ Sensitivity of the result:
 | 30 dBm at 25% PAE | 4.00 | 6.3 (exceeds the 6.0 W of SYS-005) |
 | 33 dBm at 30% PAE | 6.65 | 9.3 (exceeds 6.0 W) |
 
+Power by PA operating mode (iteration 5). Ideal class-B scaling `PAE = PAE_sat x sqrt(P/P_sat)` with PAE_sat = 55%, the back-off needed
+to meet EVM and ACLR with DPD, and the same 1.5 W of other electronics and 88% regulators [E: the model and the back-off values are
+estimates until the PA study replaces them]:
+
+| Mode | Back-off dB | PAE | Input W at 25 dBm | at 27 dBm | at 30 dBm |
+|---|---|---|---|---|---|
+| OFDM 64QAM + DPD | 7.0 | 24.6% | 3.2 | 4.0 | 6.3 |
+| OFDM QPSK/16QAM + DPD | 6.0 | 27.6% | 3.0 | 3.8 | 5.8 |
+| DFT-s-OFDM QPSK + DPD | 4.5 | 32.8% | 2.8 | 3.4 | 5.2 |
+
+The back-off values replace the "4 dB for 64QAM" of the first draft, which was unrealistic for a high-order OFDM signal. At 30 dBm the budget holds
+for OFDM QPSK/16QAM and the low-PAPR mode, not for 64QAM (6.3 W), so 64QAM and higher are capped at 27 dBm average output (RF-031); this costs no range
+because high orders are only used at short range.
+
 Conclusions: SYS-005 (6.0 W) holds at 30 dBm only if the PA reaches about 27% PAE or better at the 30 dBm average
 OFDM operating point; the 30% of PWR-004 is specified at 24 dBm, a different point, and typical class-AB PAs
 with enough back-off for 64QAM reach less (G-06). It cannot hold at 33 dBm. See T-02 in `07`. Public DJI figures are
