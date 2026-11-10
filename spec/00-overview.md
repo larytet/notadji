@@ -1,6 +1,6 @@
 # notadji - Overview and Document Map
 
-Status: DRAFT, spec pass 1
+Status: DRAFT, SRS revision 0.2 (pass 5)
 Owner: system team (arkady)
 Audience: RF, baseband/FPGA, video, firmware, mechanical, regulatory, test
 
@@ -27,6 +27,8 @@ ground unit) built in two phases:
 | `05-reference-survey.md` | What the existing open projects do and what we take from each (pass 2) |
 | `06-review-gaps.md` | Gaps, contradictions and assumptions found on re-read (pass 3) |
 | `07-trade-studies.md` | Two or three options with pros and cons for every open decision (pass 4) |
+| `08-verification-plan.md` | Test groups, equipment, staged execution (pass 5) |
+| `09-traceability-matrix.md` | Generated requirement to test-group matrix (`scripts/trace_matrix.py`) |
 
 ## 3. Conventions
 

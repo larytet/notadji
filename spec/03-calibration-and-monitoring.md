@@ -112,9 +112,9 @@ rolling shutter (assumption A-03).
 
 | Test | Equipment | Pass criterion |
 |---|---|---|
-| EVM/ACLR across temperature | VSA, thermal chamber | RF-014, RF-015 over -10 to +50 C |
+| EVM/ACLR across temperature | VSA, thermal chamber | RF-014, RF-015 over the full-spec range of ENV-001 (-10 to +50 C) |
 | Hop settling | Real-time spectrum analyser, trigger on the burst | RF-006 |
 | VSWR sweep (open, short, 2:1, 3:1, 6:1) | Mismatch tuner or attenuators with open/short | ANT-002, ANT-003 |
 | Calibration under vibration | Shaker | no calibration loss, ENV-002 |
 | Thermal soak without airflow | Chamber | THM-003, THM-004 |
-| Power-up cold start | Chamber at -20 C | DPD converges in 200 ms, EVM met |
+| Power-up cold start (outside the full-spec range, ENV-001) | Chamber at -20 C | Link established, DPD converges in 200 ms, EVM within 3 dB of RF-014 |

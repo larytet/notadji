@@ -12,14 +12,14 @@ from dataclasses import dataclass
 class Mcs:
     name: str
     bits_per_sym: float  # modulation bits * code rate
-    sens_20mhz_dbm: float  # RF-020 table at 20 MHz
+    sens_20mhz_dbm: float  # RF-020 rev 0.2: -101 dBm + NF 4 dB + required SNR + 2 dB implementation loss
 
 
 MCS_TABLE = [
-    Mcs("BPSK 1/2", 0.5, -94.0),
+    Mcs("BPSK 1/2", 0.5, -93.0),
     Mcs("QPSK 3/4", 1.5, -88.0),
-    Mcs("16QAM 3/4", 3.0, -76.0),
-    Mcs("64QAM 3/4", 4.5, -68.0),
+    Mcs("16QAM 3/4", 3.0, -80.0),
+    Mcs("64QAM 3/4", 4.5, -74.0),
 ]
 
 

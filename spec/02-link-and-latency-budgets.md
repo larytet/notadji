@@ -12,30 +12,30 @@ Net rate assumes 242 data sub-carriers per 20 MHz, 13.6 us symbol (12.8 us + 0.8
 
 | Scenario | FSPL dB | Best MCS with >= 6 dB margin | Net rate Mbit/s | Margin at BPSK 1/2 dB |
 |---|---|---|---|---|
-| 5.8 GHz, 10 km, 5/5 dBi, 20 MHz | 127.7 | none (fails SYS-003) | - | 4.3 |
-| 5.8 GHz, 10 km, 5/5 dBi, 2-branch MRC, 20 MHz | 127.7 | BPSK 1/2 | 6.8 | 7.3 |
-| 5.8 GHz, 10 km, 5/10 dBi patch, MRC, 20 MHz | 127.7 | QPSK 3/4 | 20.4 | 12.3 |
-| 5.8 GHz, 10 km, 5/10 dBi patch, MRC, 10 MHz | 127.7 | QPSK 3/4 | 10.2 | 15.3 |
-| 2.4 GHz, 15 km, 5/5 dBi, 20 MHz | 123.6 | BPSK 1/2 | 6.8 | 8.4 |
-| 2.4 GHz, 15 km, 5/5 dBi, MRC, 10 MHz | 123.6 | QPSK 3/4 | 10.2 | 14.4 |
-| 915 MHz, 30 km, 3/8 dBi, MRC, 5 MHz | 121.2 | QPSK 3/4 | 5.1 | 20.8 |
+| 5.8 GHz, 10 km, 5/5 dBi, 20 MHz | 127.7 | none (fails SYS-003) | - | 3.3 |
+| 5.8 GHz, 10 km, 5/5 dBi, 2-branch MRC, 20 MHz | 127.7 | BPSK 1/2 | 6.8 | 6.3 |
+| 5.8 GHz, 10 km, 5/10 dBi patch, MRC, 20 MHz | 127.7 | QPSK 3/4 | 20.4 | 11.3 |
+| 5.8 GHz, 10 km, 5/10 dBi patch, MRC, 10 MHz | 127.7 | QPSK 3/4 | 10.2 | 14.3 |
+| 2.4 GHz, 15 km, 5/5 dBi, 20 MHz | 123.6 | BPSK 1/2 | 6.8 | 7.4 |
+| 2.4 GHz, 15 km, 5/5 dBi, MRC, 10 MHz | 123.6 | QPSK 3/4 | 10.2 | 13.4 |
+| 915 MHz, 30 km, 3/8 dBi, MRC, 5 MHz | 121.2 | 16QAM 3/4 | 10.2 | 19.8 |
 
 ### 1.1 Findings
 
 1. **SYS-003 as written (5 dBi antennas, 10 km at 5.8 GHz) does not close for 1080p60 video.** With plain
    5/5 dBi antennas there is no MCS with 6 dB margin; with MRC the link closes only at BPSK 1/2
-   (about 6.8 Mbit/s), which is too low for 1080p60. Either the ground antenna must be 10 dBi or better
+   (about 6.8 Mbit/s, margin 6.3 dB), which is too low for 1080p60. Either the ground antenna must be 10 dBi or better
    (patch/helical), or the bandwidth must be reduced, or the range requirement must be restated per
    antenna class. This is carried to `06` (G-01) and the options to `07` (T-01).
 2. At 2.4 GHz the free-space loss is 4 dB lower than at 5.8 GHz, so a 15 km range with 5 dBi antennas is
    comparable to 10 km at 5.8 GHz.
 3. Free space is optimistic. Real links need a Fresnel clearance and a ground-reflection allowance; the
    6 dB margin in SYS-003 does not include rain, foliage or body shadowing (see G-02).
-4. The sensitivity table in RF-020 is a target. A sanity check: thermal noise in 20 MHz is -101 dBm;
-   with a 4 dB noise figure and 2 dB required SNR (BPSK 1/2 LDPC, short codeword) the ideal figure is about
-   -95 dBm, and a 2 dB implementation loss gives about -93 dBm. RF-020 asks for -94 dBm, i.e. about 1 dB
-   better than this estimate. The target is tight and needs the short-codeword LDPC to perform near the limit
-   (G-03).
+4. Sensitivity follows one noise model (RF-020 rev 0.2): thermal noise in 20 MHz is -101 dBm, plus a noise
+   figure of 4 dB, plus the required SNR (2 dB for BPSK 1/2, 7 dB QPSK 3/4, 15 dB 16QAM 3/4, 21 dB 64QAM 3/4 with
+   LDPC), plus 2 dB implementation loss: -93, -88, -80 and -74 dBm. Pass 1 had asked for -94 dBm at BPSK 1/2, 1 dB better
+   than this model, and looser values for the higher MCS; this was inconsistent (G-03, resolved in rev 0.2). The
+   target is still tight and needs the short-codeword LDPC to perform near the limit.
 
 ### 1.2 TX power and regulation
 
@@ -76,22 +76,36 @@ Observations:
   frame if the scan-out is not synchronised to the arrival of the slices (VID-015). A 120 Hz or OLED display
   with a programmable scan start is assumed.
 
-## 3. Power budget (air unit, 1080p60, 30 dBm, [TBV])
+## 3. Power budget (air unit, 1080p60, 30 dBm average conducted output, [TBV])
+
+PA DC power = RF power / PAE. PWR-004 asks for 30% PAE with DPD. Regulator and conversion losses assume 88%
+efficiency. SYS-005 excludes the camera sensor module.
 
 | Block | ASIC target W | FPGA prototype W |
 |---|---|---|
-| RF PA at 30 dBm average conducted with 25% efficiency | 4.0 | 4.0 |
+| RF PA at 30 dBm (1.0 W RF) at 30% PAE | 3.3 | 3.3 |
 | Transceiver (2 TX/2 RX/obs) | 0.5 | 1.5 (AD9361-class) |
 | Baseband, FEC, encoder | 0.7 | 5.0 (Zynq UltraScale+ EV with VCU) |
 | Memory (LPDDR4) | 0.3 | 1.0 |
-| Sensor and ISP | 0.8 | 0.8 |
-| Regulators and losses (88%) | 0.8 | 1.5 |
-| **Total** | **7.1** | **13.8** |
+| Subtotal (excluding sensor) | 4.8 | 10.8 |
+| **Total at the input, excluding sensor (/0.88)** | **5.5** | **12.3** |
+| Sensor and ISP (0.8 W, through the same regulators) | +0.9 | +0.9 |
+| Total including sensor | 6.4 | 13.2 |
 
-At 30 dBm the PA dominates. SYS-005 asks for 6.0 W at maximum TX power, which is not met by this budget
-(7.1 W) unless PA efficiency reaches about 40% or the maximum average power is reduced to about 27 dBm
-(G-06). At 25 dBm (the common FPV level) the ASIC total is about 4.2 W. Public DJI figures are not
-available to us; the 5 to 9 W range quoted earlier in the project discussion is our estimate only.
+Sensitivity of the result:
+
+| Case | PA DC W | Input power excluding sensor W |
+|---|---|---|
+| 25 dBm at 30% PAE | 1.05 | 2.9 |
+| 27 dBm at 30% PAE | 1.67 | 3.6 |
+| 30 dBm at 30% PAE | 3.33 | 5.5 |
+| 30 dBm at 25% PAE | 4.00 | 6.3 (exceeds the 6.0 W of SYS-005) |
+| 33 dBm at 30% PAE | 6.65 | 9.3 (exceeds 6.0 W) |
+
+Conclusions: SYS-005 (6.0 W) holds at 30 dBm only if the PA reaches about 28% PAE or better at the 30 dBm average
+OFDM operating point; the 30% of PWR-004 is specified at 24 dBm, a different point, and typical class-AB PAs
+with enough back-off for 64QAM reach less (G-06). It cannot hold at 33 dBm. See T-02 in `07`. Public DJI figures are
+not available to us; the 5 to 9 W range quoted earlier in the project discussion is our estimate only.
 
 ## 4. TDD timing sketch (default numerology)
 

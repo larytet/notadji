@@ -14,7 +14,7 @@ needed before the design can proceed), **Medium** (clarify), **Low** (editorial)
 | ID | Sev. | Finding | Evidence | Resolution |
 |---|---|---|---|---|
 | G-01 | Critical | SYS-003 (10 km at 5.8 GHz, 5 dBi antennas, 6 dB margin, 1080p60) does not close. | `02` section 1: no MCS with 6 dB margin at 5/5 dBi; with 2-branch MRC only BPSK 1/2 (about 6.8 Mbit/s). 1080p60 needs about 10 to 20 Mbit/s. | T-01 |
-| G-06 | Critical | SYS-005 (6.0 W at maximum power), RF-010 (33 dBm) and PWR-004 (30% PA efficiency) cannot all hold. | 33 dBm is 2.0 W RF; at 30% efficiency the PA alone burns 6.7 W. At 30 dBm the budget in `02` is 7.1 W total (and used 25% efficiency, not the 30% of PWR-004, so the budget is inconsistent too). | T-02 |
+| G-06 | High | SYS-005 (6.0 W at maximum power), RF-010 (33 dBm) and PWR-004 (30% PA efficiency) cannot all hold. | 33 dBm is 2.0 W RF; at 30% efficiency the PA alone burns 6.65 W, so 9.3 W at the input (`02` section 3). At 30 dBm the total is 5.5 W only if PAE is 30% at that operating point (6.3 W at 25%). PWR-004 states 30% at 24 dBm, a different operating point, so the margin is thin. (Pass 3 first wrote this as Critical using 25% PAE and including the sensor; corrected in pass 5.) | T-02 |
 | G-20 | Critical | SYS-009 (20 co-located links at 2.4 GHz, 40 at 5.8 GHz) contradicts the bandwidths in PHY-002. | 2.4 GHz band is 83.5 MHz: 4 channels at 20 MHz, 8 at 10 MHz, 16 at 5 MHz. 5.8 GHz (5725-5850) is 125 MHz: 6, 12, 25 channels. Even at 5 MHz neither number is reachable by frequency division alone. | T-05 |
 | G-13 | High | The TDD guard times (2 x 10 us, MAC-001, RF-009, section 4 of `02`) ignore propagation delay. | Round-trip delay is 100 us at 15 km and 200 us at 30 km (3.33 us per km each way). The DL to UL guard must cover about 2 x one-way delay, i.e. 10% to 20% of a 1 ms super-frame, so the 0.9 duty and the net rates in `02` are optimistic at long range. A timing-advance mechanism is also missing. | T-03 |
 | G-08 | High | MAC-007 (uplink telemetry 1 Mbit/s) does not fit the uplink slot at low MCS. | `02` section 4: 5 to 6 symbols per ms; at 20 MHz BPSK 1/2 this is about 0.67 Mbit/s raw, before the per-ms feedback (MAC-004) and RC (MAC-008). The uplink must also close at range at the lowest MCS with the ground unit's (lower) TX power. | T-03 |
@@ -68,3 +68,34 @@ needed before the design can proceed), **Medium** (clarify), **Low** (editorial)
 6. RF-020: formula plus implementation loss budget (G-03).
 7. New requirements: IP/clean-room policy (G-10), codec licensing (G-11), genlock (G-16), BLE PHY (G-19),
    verification plan (G-14), audio and other missing items or explicit exclusions (G-22).
+
+## 5. Resolution status after pass 5 (SRS rev 0.2)
+
+| ID | Status | How |
+|---|---|---|
+| G-01 | Resolved | SYS-003 restated as range classes S/X/L (T-01) |
+| G-02 | Open | Per-scenario real-world margins still to be defined (two-ray, foliage, rain); needs a propagation study |
+| G-03 | Resolved | RF-020 uses one noise model; `scripts/link_budget.py` follows it |
+| G-04 | Partly resolved | ETSI range stated in SYS-003 (about 2.5 km Class L); per-region table still to be written |
+| G-05 | Open | Encoder/decoder latency per frame rate (VID-007/008) not yet scaled |
+| G-06 | Resolved | SYS-005 per power class, PWR-004 at the 27/30 dBm points (T-02); feasibility depends on the PA study |
+| G-07 | Resolved | SEC-005 hardware-locked signed limiter, open stack (T-09) |
+| G-08 | Resolved | MAC-007 restated per MCS (T-03) |
+| G-09 | Resolved | REG-005 licence register and clean-room policy |
+| G-10 | Resolved | REG-005 clean-room policy and freedom-to-operate search |
+| G-11 | Resolved | VID-003 baseline AVC; VID-017 licensing review |
+| G-12 | Resolved | PHY-001 includes FFT 64; constant 78.125 kHz (T-04) |
+| G-13 | Resolved | MAC-001 guard from propagation delay; MAC-011 timing advance (T-03) |
+| G-14 | Resolved | `08-verification-plan.md`, `09-traceability-matrix.md`, TST-001/002 |
+| G-15 | Open | Sensor class and readout time still to be selected |
+| G-16 | Resolved | VID-018 display locked to received timing (T-17) |
+| G-17 | Open | Thermal thresholds wait for the PA selection |
+| G-18 | Resolved | ENV-001 full-spec and operating ranges |
+| G-19 | Resolved | REG-002 certified RID module (T-10) |
+| G-20 | Resolved | SYS-009 by frequency plan (T-05) |
+| G-21 | Resolved | MAC-001 guard doubles as FBE idle period; wording to be checked with counsel (A-06) |
+| G-22 | Partly resolved | SYS-010 scope exclusions, VID-019 audio; reliability and manufacturing requirements still missing |
+| G-23 | Open | Die area and cost still unproven; ASC-004 now per die |
+| G-24 | Open | Rendezvous protocol after link loss still to be specified |
+| G-25 | Resolved | PHY-003 restricts 256QAM to Doppler below 1 kHz |
+| G-26 | Resolved | Cross-reference fixed |

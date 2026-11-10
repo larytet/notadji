@@ -15,7 +15,7 @@ T-16 FEC code, T-17 clock and genlock.
 ## T-01 Range closure at 5.8 GHz (G-01, G-02, G-04)
 
 Range for QPSK 3/4 20 MHz at 6 dB margin [calc]: 5.8 km with 5/5 dBi antennas; 10.3 km with a 10 dBi ground antenna;
-16.4 km with 14 dBi; 8.2 km at 10 MHz with 5/5 dBi; 8.2 km with a 33 dBm PA; 11.6 km if the video drops to BPSK 1/2.
+16.4 km with 14 dBi; 8.2 km at 10 MHz with 5/5 dBi; 8.2 km with a 33 dBm PA; 10.3 km if the video drops to BPSK 1/2.
 At 2.4 GHz with 5/5 dBi: 14.1 km. Under the ETSI limit of about 20 dBm EIRP at 2.4 GHz: about 2.5 km.
 
 | Option | Description | Pros | Cons |
@@ -31,18 +31,18 @@ Recommendation: restate SYS-003 as **range classes** that combine A, B and D. Cl
 
 ## T-02 Power classes (G-06)
 
-PA DC power = RF power / efficiency [calc]: 33 dBm at 40%: 5.0 W; 30 dBm at 40%: 2.5 W; 27 dBm at 40%: 1.25 W;
-27 dBm at 30%: 1.7 W; 25 dBm at 30%: 1.05 W.
+Input power excluding the sensor, ASIC target, PAE 30% unless stated (`02` section 3): 25 dBm 2.9 W; 27 dBm 3.6 W;
+30 dBm 5.5 W (6.3 W at 25% PAE); 33 dBm 9.3 W.
 
 | Option | Description | Pros | Cons |
 |---|---|---|---|
-| A | One class: 30 dBm, 40% PAE target, total at most 7 W | One SKU | Total 7 W exceeds the old SYS-005 (6 W) and the efficiency target needs a Doherty or envelope-tracking PA, which complicates DPD |
-| B | Three programmable classes (25, 27, 30 dBm), total at most 4.5, 5 and 6.5 W; 33 dBm for a separate high-power SKU | Matches regional limits; thermal and battery choices for the user; the FPGA/ASIC is the same | More validation; the PA/FEM selection must cover the range efficiently |
-| C | Fixed 25 dBm, rely on antenna gain | Lowest power and weight | Range classes S/X would need 10 to 14 dBi ground antennas; weak in clutter |
+| A | One class: 30 dBm, with the 6.0 W limit | One SKU; meets 6.0 W only with PAE of about 28% or better at 30 dBm average OFDM | Thin margin, needs a Doherty or envelope-tracking PA, which complicates DPD (T-14); 6.3 W if PAE is 25% |
+| B | Three programmable classes (25, 27, 30 dBm) with input power at most 3.5, 4.0 and 6.0 W; 33 dBm only for a separate high-power SKU (about 10 W) | Matches regional limits; the user trades range for thermal and battery; the same silicon | More validation; the PA/FEM must be efficient across the range |
+| C | Fixed 25 dBm, rely on antenna gain | Lowest power and weight (2.9 W) | Class X range (10 km) would need about a 14 dBi ground antenna; weak in clutter |
 
-Recommendation: **B**. SYS-005 becomes "at most 6.5 W at 30 dBm (PAE 40% or better), 4.5 W at 25 dBm".
+Recommendation: **B**. SYS-005 becomes "at most 3.5 W at 25 dBm, 4.0 W at 27 dBm and 6.0 W at 30 dBm (excluding the sensor)".
 RF-010 keeps 33 dBm as a capability of the transceiver chain, not of the standard product. PWR-004 is restated
-at the same power points.
+as PAE of 30% or better at 27 and 30 dBm average OFDM output, with a PA study (T-14) to confirm feasibility.
 
 ## T-03 TDD frame structure, guard and sensing (G-08, G-13, G-21)
 
