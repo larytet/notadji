@@ -209,6 +209,28 @@ def ldpc_estimate() -> str:
     return "\n".join(rows)
 
 
+NEIGHBOUR_EIRP_DBM = 35.0  # 30 dBm conducted + 5 dBi (Class S/X air unit)
+NOISE_FLOOR_DBM = -97.0  # -101 dBm in 20 MHz + 4 dB noise figure
+EDGE_I_MAX_DBM = NOISE_FLOOR_DBM - 6.0  # interference 6 dB below noise = about 1 dB desense for a victim at the edge of its range
+SHORT_RANGE_SIGNAL_DBM = -62.0  # victim 500 m from its own pilot at 5.8 GHz, 34 dBm EIRP, 5 dBi receive
+SHORT_RANGE_SIR_DB = 13.0  # QPSK 3/4 needs 7 dB SNR plus 6 dB
+
+
+def separation_m(leak_dbc: float, i_max_dbm: float, f_mhz: float = 5800.0) -> float:
+    """Distance at which a neighbour's leakage (EIRP minus leak_dbc) falls to i_max_dbm at the victim receiver (free space, 0 dBi receive)."""
+    path_loss_needed = NEIGHBOUR_EIRP_DBM - leak_dbc - i_max_dbm
+    return 1000 * 10 ** ((path_loss_needed - 32.44 - 20 * math.log10(f_mhz)) / 20)
+
+
+def near_far_table() -> str:
+    rows = ["| Neighbour ACLR dBc (in the victim channel) | Min separation, victim at edge of range (1 dB desense) m | Min separation, victim within 500 m (SIR 13 dB) m |", "|---|---|---|"]
+    for aclr in (45, 50, 55, 60, 65):
+        edge = separation_m(aclr, EDGE_I_MAX_DBM)
+        short = separation_m(aclr, SHORT_RANGE_SIGNAL_DBM - SHORT_RANGE_SIR_DB)
+        rows.append(f"| {aclr} | {edge:.0f} | {short:.0f} |")
+    return "\n".join(rows)
+
+
 def tdd_table() -> str:
     """TDD frame budget per range class with the range-adaptive frame length (T-03 option C)."""
     rows = ["| Range km | Frame ms | UL symbols (QPSK 1/2, 1 Mbit/s + 2 preamble) | UL us | Guard us | DL share of frame |", "|---|---|---|---|---|---|"]
@@ -246,3 +268,5 @@ if __name__ == "__main__":
     print(numerology_table())
     print()
     print(ldpc_estimate())
+    print()
+    print(near_far_table())

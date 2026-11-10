@@ -119,6 +119,24 @@ Recommendation: restate SYS-009 as: 6 simultaneous links at 20 MHz and 12 at 10 
 in a race mode (D); 4/8 in 2.4 GHz; beyond this, graceful interference handling by ADA-001 and power control (C).
 Option B is a P2+ feature for event organisers.
 
+Review (iteration 7): the near-far case was analysed (`scripts/link_budget.py`; free space, 35 dBm EIRP neighbour, victim noise floor -97 dBm, 1 dB desense means leakage 6 dB below noise):
+
+| Neighbour ACLR dBc (in the victim channel) | Min separation, victim at edge of range (1 dB desense) m | Min separation, victim within 500 m (SIR 13 dB) m |
+|---|---|---|
+| 45 | 184 | 7 |
+| 50 | 103 | 4 |
+| 55 | 58 | 2 |
+| 60 | 33 | 1 |
+| 65 | 18 | 1 |
+
+Findings: the leakage of a neighbouring transmitter into the victim's channel cannot be filtered out by the victim, so it sets a minimum separation: at -45 dBc ACLR a neighbour in the *adjacent*
+channel must be 184 m away for a victim at the edge of its range, but only 7 m away for a victim within 500 m of its pilot (the racing case). The channel counts of option A therefore hold
+for racing; for long-range operation only alternate channels can be used (3, 6 and 13 links at 20, 10 and 5 MHz in 5.8 GHz; 2, 4 and 8 in 2.4 GHz) unless neighbours are separated by about 200 m. Improving ACLR
+helps slowly (58 m at -55 dBc, 18 m at -65 dBc) and costs PA linearity. Alternatives added: (F) neighbour-aware power control from the spectrum scan (ADA-001): a nearby
+strong signal makes the unit prefer alternate channels or reduce power, no hardware cost, helps but cannot remove the leakage; (G) GNSS-synchronised time sharing of a channel by several
+air units: removes simultaneous leakage but cuts rate and raises latency by the number of units, only for events; (H) directional ground antennas (spatial separation), useful in addition. Decision:
+**D (race mode with 5 MHz channels) for events plus alternate-channel planning (A') for long range, F as an optional feature (ADA-010)**; SYS-009 and RF-029 restated.
+
 ## T-06 Video codec (G-11)
 
 | Option | Description | Pros | Cons |
@@ -305,7 +323,7 @@ Recommendation: A for modem/MAC/calibration bring-up in parallel with B for the 
 | T-02 | Three programmable power classes with a per-modulation power cap; low-PAPR mode optional; 33 dBm separate SKU |
 | T-03 | Split-band uplink as baseline (D); range-adaptive in-band TDD as fallback (C) |
 | T-04 | 78.125 kHz sub-carrier spacing, FFT 64 to 512 |
-| T-05 | Frequency division with race mode; restate SYS-009 |
+| T-05 | Frequency division: full counts in race mode, alternate channels for long range; neighbour-aware selection |
 | T-06 | AVC baseline plus HEVC quality mode; start licensing review |
 | T-07 | Slice UEP and intra-refresh; two-layer option; JSCC research |
 | T-08 | Two dice for the first product |

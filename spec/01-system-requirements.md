@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 0.9 (T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 1.0 (T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -27,7 +27,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | SYS-006 | Air unit mass, including the antennas' feed cables and the heatsink, shall not exceed 25 g. | S | P2 | I |
 | SYS-007 | Ground unit shall operate from a 1S-6S battery for at least 3 h at the nominal consumption. | S | | T |
 | SYS-008 | One ground unit shall pair with up to 4 air units and receive one (or two, picture-in-picture, O) at a time. | S | | D |
-| SYS-009 | Co-located operation by frequency plan: at least 6 simultaneous links at 20 MHz and 12 at 10 MHz in 5.8 GHz; 4 at 20 MHz and 8 at 10 MHz in 2.4 GHz; a race mode with 5 MHz channels giving 25 links in 5.8 GHz and 16 in 2.4 GHz at reduced rate and range. Beyond these numbers the links shall degrade gracefully through ADA-001 and power control. In split-band mode the 5 MHz uplink channels limit the count to 16 links in 2.4 GHz. Revised by T-05. | M | | T |
+| SYS-009 | Co-located operation by frequency plan. Race mode (all links within 500 m of their pilots, air units at least 7 m apart, adjacent channels allowed): at least 6 simultaneous links at 20 MHz and 12 at 10 MHz in 5.8 GHz; 4 at 20 MHz and 8 at 10 MHz in 2.4 GHz; with 5 MHz channels 25 links in 5.8 GHz and 16 in 2.4 GHz at reduced rate and range. Long-range operation (links beyond 500 m): alternate channels only (3, 6 and 13 links at 20, 10 and 5 MHz in 5.8 GHz; 2, 4 and 8 in 2.4 GHz) unless neighbouring air units are at least 184 m apart (ACLR -45 dBc, `07` T-05). Beyond these numbers the links shall degrade gracefully through ADA-001 and power control. In split-band mode the 5 MHz uplink channels limit the count to 16 links in 2.4 GHz. Revised by T-05. | M | | T |
 | SYS-010 | Out of scope for version 1: goggles optics and head tracking (the ground unit outputs HDMI/DP/DSI), multi-camera switching. Audio is optional (VID-019). See assumption A-01. | M | | I |
 
 ## 3. Video (VID)
@@ -132,7 +132,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | RF-026 | Co-existence with GNSS: no more than 3 dB desensitisation of a GNSS receiver (L1 1575 MHz and L2 1227 MHz) at 10 cm distance, with the link transmitting at maximum power. | M | | T |
 | RF-027 | Switchable antenna ports: at least 2 on the ground unit (diversity), 2 on the air unit (diversity or 2 TX streams). | M | | I |
 | RF-028 | External PA/FEM control interface: bias, enable, gain-step, temperature, and power detector signals shall be in the chip's I/O (analogue and digital lines) so that PAs from at least 3 vendors can be used. | M | P2 | I |
-| RF-029 | Adjacent-channel rejection (needed by SYS-009): with the wanted signal 3 dB above the QPSK 3/4 sensitivity, an interferer in the adjacent channel shall be tolerated up to +30 dB above the wanted signal and in the alternate channel up to +45 dB; the near-far case (two units 10 m apart) shall be analysed with the TX ACLR of RF-015 (G-27). [TBV] | M | | T |
+| RF-029 | Interference tolerance (needed by SYS-009): with the wanted signal 3 dB above the QPSK 3/4 sensitivity, the receiver shall tolerate an adjacent-channel interferer of -30 dBm and an alternate-channel interferer of -25 dBm with 1 dB or less desensitisation (a 35 dBm EIRP neighbour at 10 m gives about -33 dBm); the transmit leakage of RF-015 is the separate limit that sets the separation of `07` T-05 (G-27). [E, TBV] | M | | T |
 | RF-030 | Air unit TX-to-RX isolation for split-band mode: at least 70 dB from the 5.8 GHz transmit chain (30 dBm, with its broadband noise) to the 2.4 GHz uplink receive chain, by antenna separation plus transmit and receive filtering, such that the uplink sensitivity degrades by 1 dB or less. [E, TBV] | M | | T |
 | RF-031 | Average output power cap by modulation: 64QAM and 256QAM at most 27 dBm, other modes up to the class limit (RF-010), enforced by the transmit power control (SYS-005, `02`). | M | | T |
 
@@ -168,6 +168,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | ADA-007 | Spectrum analyser mode on the ground unit: occupancy per channel shown to the pilot (pre-flight and in-flight). | S | | D |
 | ADA-008 | DFS: radar detection in the bands where required (5250-5350 and 5470-5725 MHz), with channel move time of 10 s and channel closing transmission time of 260 ms. | S | P2 | T |
 | ADA-009 | Listen-before-talk, where regulation requires (e.g. EN 300 328 adaptivity), shall be implemented without exceeding the LAT-003 budget by using the TDD slot structure for sensing. | M | | T |
+| ADA-010 | Neighbour awareness: from the spectrum scan (ADA-001) the ground unit shall detect strong adjacent-channel signals (above -60 dBm) and prefer an alternate channel or lower power, and shall report the interference to the pilot. | S | | T |
 
 ## 10. Calibration (CAL) - details in document 03
 
@@ -304,3 +305,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 0.7 | G2-4 | T-03 iteration: split-band uplink baseline (MAC-012, RF-030), MAC-001 becomes the fallback mode, MAC-007 restated per mode, ADA-005/SYS-009/ASC-002 adjusted |
 | 0.8 | G2-5 | T-02/T-14 iteration: SYS-005 and PWR-004 per mode, PHY-009 corrected, PHY-014 (low-PAPR option) and RF-031 added |
 | 0.9 | G2-6 | T-04/T-16 iteration: numerology and decoder sizing quantified; PHY-005 per-mode codeword length, PHY-015 added, PHY-003 prefix note |
+| 1.0 | G2-7 | T-05 iteration: near-far analysis; SYS-009 split into race and long-range counts, RF-029 restated, ADA-010 added |

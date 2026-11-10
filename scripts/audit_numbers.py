@@ -93,7 +93,7 @@ for m, e in zip(lb.MCS_TABLE, (-93, -88, -80, -74)):
 import subprocess  # noqa: E402
 
 out = subprocess.check_output([sys.executable, "-I", str(ROOT / "scripts" / "link_budget.py")], text=True)
-down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl = out.strip().split("\n\n")
+down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl = out.strip().split("\n\n")
 check("02 contains the downlink table from the script", down.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the uplink table from the script", up.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the PA mode table from the script", pa_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
@@ -104,6 +104,10 @@ check("07 contains the numerology table from the script", numer_tbl.strip() in T
 check("07 contains the LDPC decoder table from the script", ldpc_tbl.strip() in TEXT["07-trade-studies.md"])
 check("PHY-003 Doppler limits have margin (3.5 kHz for 64QAM, 1.0 kHz for 256QAM)", math.sqrt(3 * 10 ** -2.1) * SCS / math.pi >= 3500 and math.sqrt(3 * 10 ** -2.8) * SCS / math.pi >= 1000)
 check("PHY-015 states 3 instances for 155 Mbit/s", "155 Mbit/s" in SRS and math.ceil(lb.DATA_TONES[40.0] * 4.5 / lb.SYMBOL_US / 72) == 3)
+check("07 contains the near-far table from the script", nf_tbl.strip() in TEXT["07-trade-studies.md"])
+check("SYS-009 separation figures follow the script (184 m edge, 7 m short range)", round(lb.separation_m(45, lb.EDGE_I_MAX_DBM)) == 184 and round(lb.separation_m(45, lb.SHORT_RANGE_SIGNAL_DBM - lb.SHORT_RANGE_SIR_DB)) == 7 and "184 m apart" in SRS and "at least 7 m apart" in SRS)
+check("SYS-009 alternate-channel counts", all(f"{a}, {b} and {c}" in SRS for a, b, c in ((3, 6, 13), (2, 4, 8))) and [-(-n // 2) for n in (6, 12, 25)] == [3, 6, 13] and [-(-n // 2) for n in (4, 8, 16)] == [2, 4, 8])
+check("RF-029 near-far level: 35 dBm EIRP at 10 m is about -33 dBm", abs((35 - (32.44 + 20 * math.log10(0.01) + 20 * math.log10(5800))) - (-32.7)) < 0.2)
 check("02 contains the split-band table from the script", split.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("split-band uplink margin >= 6 dB for all classes (MAC-007)", all(float(r.split("|")[7]) >= 6 for r in split.strip().split("\n")[2:]))
 check("MAC-007 states the split-band margins 17.0, 11.0 and 12.4", "17.0, 11.0 and 12.4 dB" in SRS)

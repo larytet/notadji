@@ -92,7 +92,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | ASIC CPU subsystem 100 mW | Feasible if the application core is gated | A53 anchor 0.5-0.9 W; real-time cores 5-20 mW [E] | Power estimate |
 | Control-plane load | Feasible | 34 Mcycles/s with hardware assist, 11% of a 300 MHz core [C, cycles E] | WCET measurement |
 | Boot to video in 3 s | Feasible without Linux in the path | Real-time firmware boot is fast [E] | Measurement |
-| Co-located links (6/12/25 and 4/8/16) | At risk | Needs adjacent-channel rejection that RF-029 asks for; near-far case not analysed | Lab, analysis |
+| Co-located links | **Changed**: racing counts (6/12/25 and 4/8/16) hold; long range uses alternate channels (3/6/13 and 2/4/8) | Near-far analysis: adjacent-channel neighbour needs 184 m separation at ACLR -45 dBc for a victim at range edge, 7 m for a victim within 500 m | Lab near-far test, ACLR measurement |
 | Doppler at 650 km/h | Feasible for QPSK to 64QAM; 256QAM only below 186 km/h closing speed at 5.8 GHz | ICI computed | Channel emulator |
 | Calibration/DPD without a patent conflict | At risk | P-1 active to 2042; design-around D-1 | Counsel |
 | Remote ID | Feasible by module | FAA means of compliance | Certification |
@@ -114,10 +114,10 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 |---|---|
 | C | 14 |
 | E | 122 |
-| P | 30 |
+| P | 31 |
 | R | 7 |
 | S | 15 |
-| total | 188 |
+| total | 189 |
 
 | ID | Class | Basis |
 |---|---|---|
@@ -129,7 +129,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | SYS-006 | E | 25 g air unit unproven; FPGA prototype is not flyable at this mass (SOM and heatsink alone exceed it) [feasibility] |
 | SYS-007 | E | engineering target; proved by verification method T (see 08) |
 | SYS-008 | E | engineering target; proved by verification method D (see 08) |
-| SYS-009 | C | audit: channel counts from band widths; adjacent-channel rejection RF-029 unproven |
+| SYS-009 | C | audit: channel counts from band widths; link_budget.py near_far_table: 184 m / 7 m; RF-029 and ACLR unproven |
 | SYS-010 | E | engineering target; proved by verification method I (see 08) |
 | VID-001 | E | engineering target; proved by verification method T (see 08) |
 | VID-002 | E | engineering target; proved by verification method I (see 08) |
@@ -209,7 +209,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | RF-026 | E | engineering target; proved by verification method T (see 08) |
 | RF-027 | E | engineering target; proved by verification method I (see 08) |
 | RF-028 | E | engineering target; proved by verification method I (see 08) |
-| RF-029 | E | engineering target; proved by verification method T (see 08) |
+| RF-029 | E | near-far levels from the table in 07 T-05; receiver tolerance unproven |
 | RF-030 | E | isolation estimate in 02 section 1.1b; bench-proven later |
 | RF-031 | C | link_budget.py pa_mode_table: 64QAM at 30 dBm would be 6.3 W |
 | ANT-001 | S | coupler-based forward/reverse sensing appears in P-1 (patent), so not novel; design-around D-1 |
@@ -232,6 +232,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | ADA-007 | E | engineering target; proved by verification method D (see 08) |
 | ADA-008 | E | engineering target; proved by verification method T (see 08) |
 | ADA-009 | R | EN 300 328 adaptivity; frame-based idle period figures found in TI notes, band attribution unverified |
+| ADA-010 | P | scan-based behaviour |
 | CAL-001 | E | engineering target; proved by verification method T (see 08) |
 | CAL-002 | E | engineering target; proved by verification method T (see 08) |
 | CAL-003 | E | engineering target; proved by verification method T (see 08) |

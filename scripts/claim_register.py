@@ -23,7 +23,9 @@ BEGIN, END = "<!-- BEGIN REGISTER -->", "<!-- END REGISTER -->"
 OVERRIDE = {
     "SYS-003": ("C", "link_budget.py: range classes close with QPSK 3/4 and 6 dB margin; free space only (G-02 open)"),
     "SYS-005": ("C", "link_budget.py pa_mode_table (model E): 3.5/4.1/6.0 W; PA efficiency of about 27% at 30 dBm is unproven"),
-    "SYS-009": ("C", "audit: channel counts from band widths; adjacent-channel rejection RF-029 unproven"),
+    "SYS-009": ("C", "audit: channel counts from band widths; link_budget.py near_far_table: 184 m / 7 m; RF-029 and ACLR unproven"),
+    "RF-029": ("E", "near-far levels from the table in 07 T-05; receiver tolerance unproven"),
+    "ADA-010": ("P", "scan-based behaviour"),
     "SYS-001": ("E", "latency budget in 02 sums to 18.0/10.7 ms [C] but every stage value is an estimate; vendor pipelines measure 80-95 ms camera half [S]"),
     "SYS-002": ("E", "first milestone; depends on VCU first-slice latency, which was not found in sources"),
     "PHY-001": ("C", "audit: FFT size x 78.125 kHz = bandwidth for 5/10/20/40/80 MHz"),
