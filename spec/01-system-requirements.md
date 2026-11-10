@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 0.2 (pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 0.3 (pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -128,6 +128,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | RF-026 | Co-existence with GNSS: no more than 3 dB desensitisation of a GNSS receiver (L1 1575 MHz and L2 1227 MHz) at 10 cm distance, with the link transmitting at maximum power. | M | | T |
 | RF-027 | Switchable antenna ports: at least 2 on the ground unit (diversity), 2 on the air unit (diversity or 2 TX streams). | M | | I |
 | RF-028 | External PA/FEM control interface: bias, enable, gain-step, temperature, and power detector signals shall be in the chip's I/O (analogue and digital lines) so that PAs from at least 3 vendors can be used. | M | P2 | I |
+| RF-029 | Adjacent-channel rejection (needed by SYS-009): with the wanted signal 3 dB above the QPSK 3/4 sensitivity, an interferer in the adjacent channel shall be tolerated up to +30 dB above the wanted signal and in the alternate channel up to +45 dB; the near-far case (two units 10 m apart) shall be analysed with the TX ACLR of RF-015 (G-27). [TBV] | M | | T |
 
 ## 8. Antenna and antenna feedback (ANT)
 
@@ -268,4 +269,5 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 |---|---|---|
 | 0.1 | 1 | Baseline: 156 requirements |
 | 0.2 | 5 | Applies `06` and `07`: SYS-003, SYS-005, SYS-009, VID-003, PHY-001, PHY-003, MAC-001, MAC-007, RF-010, RF-020, PWR-004, ENV-001, SEC-005, REG-002, ASC-001, ASC-002, ASC-004 rewritten; added SYS-010, VID-017..019, MAC-011, REG-005, TST-001..002 |
+| 0.3 | 6 | RF-029 adjacent-channel rejection added; link-budget rate model aligned with PHY-001 tone counts and MAC-001 guard |
 

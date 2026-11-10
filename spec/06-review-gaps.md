@@ -43,6 +43,8 @@ needed before the design can proceed), **Medium** (clarify), **Low** (editorial)
 | G-22 | Medium | Missing topics: audio; multiple cameras/switching; goggles/optics scope; reliability (MTBF, lifetime, field return rate); manufacturing and calibration time per unit; logging privacy; accessibility of the pilot display for link quality. | Add requirements or an explicit "out of scope" statement (A-01). |
 | G-23 | Medium | ASC-002/ASC-004/ASC-005: integrating a 2x2 RF transceiver, 4K encoder and decoder, ISP, CPU and DDR PHY in 40 mm2 at 22/28 nm and USD 12 is optimistic [TBV]; NRE and volume assumptions are missing. | Area and cost estimate with block-level numbers (T-08). |
 | G-24 | Medium | ADA-004 (band hop re-establishment in 300 ms) needs a rendezvous protocol after link loss: both ends must predict each other's hop schedule with clock drift. | Specify the rendezvous scheme and the out-of-band beacon (ADA-005) cadence. |
+| G-27 | Medium | SYS-009 packs 6 links of 20 MHz into the 125 MHz of the 5.8 GHz band (120 MHz) but no adjacent-channel rejection or near-far requirement existed (found in pass 6). | Added RF-029 in rev 0.3; the near-far analysis (two units 10 m apart, ACLR -45 dBc) is still to be done. |
+| G-28 | Medium | The link-budget rate model used 242 data tones and a fixed 0.9 duty, ignoring PHY-001 tone counts and the range-dependent guard of MAC-001; net rates were 5 to 10% optimistic and 10 MHz mode (8 Mbit/s) falls below the 10 Mbit/s of SYS-003 (found in pass 6). | Script and `02` corrected in rev 0.3; 10 MHz mode is a fallback/race mode (T-01). |
 | G-26 | Low | MAC-002 had a wrong cross-reference (FHSS-ADA-001). Fixed in `01`. | done |
 
 ## 3. Assumptions made in this specification
@@ -99,3 +101,5 @@ needed before the design can proceed), **Medium** (clarify), **Low** (editorial)
 | G-24 | Open | Rendezvous protocol after link loss still to be specified |
 | G-25 | Resolved | PHY-003 restricts 256QAM to Doppler below 1 kHz |
 | G-26 | Resolved | Cross-reference fixed |
+| G-27 | Partly resolved | RF-029 added; near-field analysis open |
+| G-28 | Resolved | Rate model corrected (rev 0.3) |

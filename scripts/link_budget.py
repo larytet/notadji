@@ -44,11 +44,23 @@ def sens_dbm(mcs: Mcs, bw_mhz: float) -> float:
     return mcs.sens_20mhz_dbm + 10 * math.log10(bw_mhz / 20.0)
 
 
-def phy_rate_mbps(mcs: Mcs, bw_mhz: float, duty: float = 0.9, overhead: float = 0.85) -> float:
-    """Approximate net rate: 242 data sub-carriers per 20 MHz, 13.6 us symbol (12.8 + 0.8 GI)."""
-    sc = 242 * bw_mhz / 20.0
-    sym_us = 13.6
-    return sc * mcs.bits_per_sym / sym_us * duty * overhead
+# Data tones per channel bandwidth at 78.125 kHz spacing (PHY-001): FFT 64 (5 MHz), 128 (10 MHz), 256 (20 MHz), 512 (40 MHz).
+DATA_TONES = {5.0: 48, 10.0: 108, 20.0: 234, 40.0: 468}
+SYMBOL_US = 13.6  # 12.8 us + 0.8 us guard interval (CP 1/16)
+UL_SHARE = 0.08  # uplink slot share of the 1 ms super-frame (MAC-001)
+TURNAROUND_US = 10.0
+SUPERFRAME_US = 1000.0
+
+
+def dl_duty(dist_km: float) -> float:
+    """Downlink share of the super-frame: 1 - uplink - guard, guard = 2 x one-way delay + 2 x turn-around (MAC-001)."""
+    guard_us = 2 * dist_km * 3.33 + 2 * TURNAROUND_US
+    return max(0.0, 1.0 - UL_SHARE - guard_us / SUPERFRAME_US)
+
+
+def phy_rate_mbps(mcs: Mcs, bw_mhz: float, dist_km: float, overhead: float = 0.85) -> float:
+    """Approximate net downlink rate with the range-dependent TDD guard."""
+    return DATA_TONES[bw_mhz] * mcs.bits_per_sym / SYMBOL_US * dl_duty(dist_km) * overhead
 
 
 def margin_db(s: Scenario, mcs: Mcs) -> float:
@@ -75,7 +87,7 @@ def main() -> None:
         for m in MCS_TABLE:
             if margin_db(s, m) >= 6.0:
                 best = m
-        rate = f"{phy_rate_mbps(best, s.bw_mhz):.1f}" if best else "-"
+        rate = f"{phy_rate_mbps(best, s.bw_mhz, s.dist_km):.1f}" if best else "-"
         label = best.name if best else "none (fails SYS-003)"
         print(f"| {s.name} | {fspl_db(s.freq_mhz, s.dist_km):.1f} | {label} | {rate} | {margin_db(s, MCS_TABLE[0]):.1f} |")
 

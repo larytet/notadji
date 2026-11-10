@@ -21,7 +21,7 @@ At 2.4 GHz with 5/5 dBi: 14.1 km. Under the ETSI limit of about 20 dBm EIRP at 2
 | Option | Description | Pros | Cons |
 |---|---|---|---|
 | A | Require a 10 dBi or better ground antenna for the 10 km class | +5 dB at no power cost; works with any bandwidth; cheap (patch or helical) | Beamwidth about 60 degrees; needs pointing, a tracker or a switched-beam array (ANT-008); not goggle-mounted |
-| B | Reduce the channel bandwidth to 10 MHz for long range | +3 dB; halves the number of channels needed (T-05); fits narrower regional bands | Halves the rate (10 Mbit/s); quality loss at 1080p60 |
+| B | Reduce the channel bandwidth to 10 MHz for long range | +3 dB; halves the number of channels needed (T-05); fits narrower regional bands | Net rate about 8 Mbit/s at 10 km (`02`), below the 10 Mbit/s of SYS-003, so it is a fallback or race mode, not a range class; quality loss at 1080p60 |
 | C | Raise the PA to 33 dBm | +3 dB with a drop-in change | PA power 5 W at 40% efficiency (T-02); thermal; EIRP limits make it useless in ETSI regions |
 | D | Use 2.4 GHz (or 900 MHz) for long range | +4 dB (2.4 GHz), more with 900 MHz; better foliage penetration | Congested band; fewer channels; 900 MHz is a different RF design (RF-002); 2.4 GHz range under ETSI is 2.5 km |
 
