@@ -32,6 +32,8 @@ OVERRIDE = {
     "PHY-003": ("C", "audit: symbol time, ICI -21.8 dB at 3.5 kHz, 32.7 dB at 1 kHz (Jakes approximation)"),
     "PHY-004": ("E", "256QAM needs EVM and Doppler limits that are unproven at 30 dBm"),
     "MAC-001": ("C", "link_budget.py tdd_budget: uplink sized for MAC-007, guard from range"),
+    "VID-021": ("C", "link_budget.py intra_refresh_table: 0.3% average at the target loss rate (cost ratio 4 is E)"),
+    "PHY-011": ("C", "link_budget.py slice_protection_table: codeword error rate 1.2e-5"),
     "PHY-015": ("E", "link_budget.py ldpc_estimate (assumed base matrix and iterations)"),
     "PHY-005": ("E", "codeword lengths from 802.11 LDPC family; coding gain difference from literature"),
     "PHY-014": ("E", "PAPR reduction of DFT-s-OFDM is typical literature value (about 3-4 dB), to be simulated"),

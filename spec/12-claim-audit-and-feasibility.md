@@ -112,12 +112,12 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 
 | Class | Requirements |
 |---|---|
-| C | 14 |
-| E | 122 |
+| C | 16 |
+| E | 121 |
 | P | 31 |
 | R | 7 |
 | S | 15 |
-| total | 189 |
+| total | 190 |
 
 | ID | Class | Basis |
 |---|---|---|
@@ -151,6 +151,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | VID-018 | E | engineering target; proved by verification method T (see 08) |
 | VID-019 | E | engineering target; proved by verification method T (see 08) |
 | VID-020 | S | waybeam: 120 fps VENC ceiling with silent reset to 30 fps; SDK calls that succeed but do not apply |
+| VID-021 | C | link_budget.py intra_refresh_table: 0.3% average at the target loss rate (cost ratio 4 is E) |
 | LAT-001 | S | OpenIPC latency-probe method (register step, one clock) |
 | LAT-002 | E | engineering target; proved by verification method T (see 08) |
 | LAT-003 | E | engineering target; proved by verification method T (see 08) |
@@ -167,7 +168,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | PHY-008 | E | engineering target; proved by verification method T (see 08) |
 | PHY-009 | E | back-off per mode from an ideal class-B model; PA study will replace |
 | PHY-010 | E | engineering target; proved by verification method T (see 08) |
-| PHY-011 | E | engineering target; proved by verification method T (see 08) |
+| PHY-011 | C | link_budget.py slice_protection_table: codeword error rate 1.2e-5 |
 | PHY-012 | E | engineering target; proved by verification method T (see 08) |
 | PHY-013 | E | engineering target; proved by verification method I (see 08) |
 | PHY-014 | E | PAPR reduction of DFT-s-OFDM is typical literature value (about 3-4 dB), to be simulated |

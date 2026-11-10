@@ -231,6 +231,28 @@ def near_far_table() -> str:
     return "\n".join(rows)
 
 
+def slice_protection_table() -> str:
+    """What a slice-level packet error rate of 1e-3 (PHY-011) requires of the codeword error rate (T-07)."""
+    rows = ["| Video | Slices per frame | Slice bits | Codewords per slice (648-bit, R 3/4, K 486) | Codeword error rate for slice PER 1e-3 |", "|---|---|---|---|---|"]
+    for name, mbps, fps in (("1080p60, 20 Mbit/s", 20.0, 60), ("1080p120, 20 Mbit/s", 20.0, 120), ("1080p60, 10 Mbit/s", 10.0, 60)):
+        slice_bits = mbps * 1e6 / fps / 8
+        cw = math.ceil(slice_bits / 486)
+        p_cw = 1 - (1 - 1e-3) ** (1 / cw)
+        rows.append(f"| {name} | 8 | {slice_bits:,.0f} | {cw} | {p_cw:.1e} |")
+    return "\n".join(rows)
+
+
+INTRA_TO_INTER_BITS = 4.0  # intra-coded area costs about 4x the bits of inter-coded area (E, content dependent)
+
+
+def intra_refresh_table() -> str:
+    """Bit-rate overhead of a rolling intra-refresh wave versus its period (T-07), and the reactive alternative."""
+    rows = ["| Refresh period (frames) | Time at 60 fps ms | Overhead (1/N x (r - 1), r = 4) |", "|---|---|---|"]
+    for n in (8, 15, 30, 60):
+        rows.append(f"| {n} | {n / 60 * 1000:.0f} | {(INTRA_TO_INTER_BITS - 1) / n:.0%} |")
+    return "\n".join(rows)
+
+
 def tdd_table() -> str:
     """TDD frame budget per range class with the range-adaptive frame length (T-03 option C)."""
     rows = ["| Range km | Frame ms | UL symbols (QPSK 1/2, 1 Mbit/s + 2 preamble) | UL us | Guard us | DL share of frame |", "|---|---|---|---|---|---|"]
@@ -270,3 +292,7 @@ if __name__ == "__main__":
     print(ldpc_estimate())
     print()
     print(near_far_table())
+    print()
+    print(slice_protection_table())
+    print()
+    print(intra_refresh_table())

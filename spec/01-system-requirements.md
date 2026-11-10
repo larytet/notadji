@@ -1,6 +1,6 @@
 # 01 - System Requirements Specification (SRS)
 
-Status: DRAFT, revision 1.0 (T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
+Status: DRAFT, revision 1.1 (T-06/T-07 iteration; revision 1.0 was the T-05 iteration; revision 0.9 was the T-04/T-16 iteration; revision 0.8 was the T-02/T-14 iteration; revision 0.7 was the T-03 iteration; revision 0.6 was the verification pass; revision 0.5 was iteration 2 of the second goal; revision 0.3 was pass 6; revision 0.2 was pass 5; applies the trade-study results of `07` to the pass-1 text). See `00-overview.md` for conventions (Priority M/S/O, Phase P1/P2, Verification T/A/I/D/S).
 
 ## 1. System scope
 
@@ -38,12 +38,12 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | VID-002 | Sensor interface: MIPI CSI-2, 4 lanes, D-PHY 2.5 Gbit/s per lane minimum. | M | | I |
 | VID-003 | Codecs: AVC (H.264) high profile as the baseline in P1 and P2; HEVC (H.265) main profile as the quality mode in P2. The encoder architecture shall be codec-agnostic at slice level. Revised by T-06. | M | | T |
 | VID-004 | The encoder shall be slice-based with at least 8 slices per frame, each slice independently decodable and independently protected. | M | | T |
-| VID-005 | No I-frames in steady state. The encoder shall use rolling intra-refresh (column or row wave) with a refresh period of 30 frames or less. | M | | T |
+| VID-005 | No I-frames in steady state. A rolling intra-refresh wave with a period of 60 frames or less acts as the safety net (about 5% bit-rate overhead [E]); recovery from detected losses uses reactive slice refresh (VID-021). Revised by T-07. | M | | T |
 | VID-006 | Rate control: per-slice constant bit budget with a rate buffer of at most 1 slice, retargeted every slice from the MCS in force; hard bound: no slice shall exceed 105% of its budget, verified on the encoded bitstream and not from encoder readback (source review S-4). | M | | T |
 | VID-007 | Encoder pipeline latency (first pixel in to first slice bits out) of 2.0 ms or less at 1080p60. | M | P2 | T |
 | VID-008 | Decoder pipeline latency (first slice bits in to first line out) of 2.0 ms or less at 1080p60. | M | P2 | T |
 | VID-009 | Video bit rate range: 1 to 80 Mbit/s, adjustable per frame. | M | | T |
-| VID-010 | Loss concealment: a lost slice shall be concealed from the previous frame (motion-compensated, O) and recovered by intra-refresh within 30 frames. | M | | T |
+| VID-010 | Loss concealment: a lost slice shall be concealed from the previous frame (motion-compensated, O) and recovered by reactive slice refresh in the next frame (VID-021) or at the latest by the rolling wave within 60 frames. | M | | T |
 | VID-011 | Unequal error protection: slice header and parameter data shall have at least 6 dB more protection than residual data. | S | | T |
 | VID-012 | 10-bit input and HDR10/HLG pass-through. | O | P2 | T |
 | VID-013 | Optional on-air stabilisation using gyro data (electronic image stabilisation) with an added latency of at most 1 frame. The mode shall be switchable so a zero-added-latency path exists. | O | | T |
@@ -54,6 +54,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | VID-018 | Display synchronisation: the ground unit shall lock the display scan-out to the received frame timing (display pixel clock steered, residual drift 1 ppm equivalent or better) so that latency varies by no more than 1 ms over a 10 minute flight and no visible glitch is produced. Revised by T-17. | M | | T |
 | VID-019 | Optional audio: 48 kHz, 32 to 128 kbit/s, end-to-end latency 20 ms or less, lip-sync within 40 ms of the video. | O | P2 | T |
 | VID-020 | No hidden encoder limits: every rate, intra-refresh and reference-structure parameter takes effect within one slice time without restarting the pipeline; unsupported values are rejected with an error and never silently replaced; input frame-rate ceilings of at least 120 fps at 1080p and 240 fps at 720p (source review S-4 to S-7). | M | | T |
+| VID-021 | Reactive slice refresh: a slice reported lost in the acknowledgement bitmap (MAC-004) shall be re-coded in intra mode in the next frame, provided the acknowledgement reaches the encoder within one frame time; average overhead at the target loss rate about 0.3% [E]. | M | | T |
 
 ## 4. Latency and jitter (LAT)
 
@@ -80,7 +81,7 @@ telemetry and optional control frames. The air unit and the ground unit use the 
 | PHY-008 | Carrier frequency offset tolerance: initial 25 ppm; after acquisition residual below 0.1 ppm equivalent. | M | | T |
 | PHY-009 | Peak-to-average power reduction (clipping with filtering or tone reservation) plus DPD so that the PA meets RF-014 and RF-015 with a back-off of at most 7 dB for 64QAM and 6 dB for QPSK/16QAM OFDM (the 4 dB of rev 0.6 was unrealistic). | M | P2 | T |
 | PHY-010 | Frame (burst) preamble acquisition time (detect + AGC settle + sync) shall be 40 microseconds or less. | M | | T |
-| PHY-011 | Packet-error-rate target after FEC: 1e-3 per slice at the lowest MCS at the sensitivity in RF-020. | M | | T |
+| PHY-011 | Packet-error-rate target after FEC: 1e-3 per slice at the lowest MCS at the sensitivity in RF-020, equivalent to a codeword error rate of about 1.2e-5 for 86 codewords per slice at 1080p60 and 20 Mbit/s (`07` T-07). | M | | T |
 | PHY-012 | The PHY shall run at least 4 MCS adaptation steps per second and up to one per frame (see MAC-005). | M | | T |
 | PHY-013 | The numerology shall be programmable (not hard-wired) so that the same engine can run a WiFi-compatible mode (see PRO-001) for the prototype. | M | P1 | I |
 | PHY-014 | Optional low-PAPR mode: DFT-spread OFDM for BPSK, QPSK and 16QAM with a PAPR at least 3 dB below plain OFDM at a CCDF of 1e-3 [E], selectable per link; it is the mitigation if the PA study shows less than 27% PAE at OFDM QPSK/16QAM. | O | P2 | S,T |
@@ -306,3 +307,4 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | 0.8 | G2-5 | T-02/T-14 iteration: SYS-005 and PWR-004 per mode, PHY-009 corrected, PHY-014 (low-PAPR option) and RF-031 added |
 | 0.9 | G2-6 | T-04/T-16 iteration: numerology and decoder sizing quantified; PHY-005 per-mode codeword length, PHY-015 added, PHY-003 prefix note |
 | 1.0 | G2-7 | T-05 iteration: near-far analysis; SYS-009 split into race and long-range counts, RF-029 restated, ADA-010 added |
+| 1.1 | G2-8 | T-06/T-07 iteration: slice PER to codeword error rate, intra-refresh cost, VID-005/010 revised, VID-021 reactive slice refresh added, PHY-011 clarified |

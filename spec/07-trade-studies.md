@@ -161,6 +161,34 @@ Recommendation: **A as the baseline** (SYS-004 and VID-010 through intra-refresh
 two-layer option** for P2 by using separate slice groups at different MCS (UEP at the PHY level), and **B as a
 research track on the FPGA** (it uses only the OFDM modem and a transform, so the cost of trying is low).
 
+Review (iteration 8, T-06 and T-07 together, numbers from `scripts/link_budget.py`):
+
+| Video | Slices per frame | Slice bits | Codewords per slice (648-bit, R 3/4, K 486) | Codeword error rate for slice PER 1e-3 |
+|---|---|---|---|---|
+| 1080p60, 20 Mbit/s | 8 | 41,667 | 86 | 1.2e-05 |
+| 1080p120, 20 Mbit/s | 8 | 20,833 | 43 | 2.3e-05 |
+| 1080p60, 10 Mbit/s | 8 | 20,833 | 43 | 2.3e-05 |
+
+A slice-level packet error rate of 1e-3 (PHY-011) therefore needs a codeword error rate of about 1.2e-5 at 1080p60 and 20 Mbit/s: the receiver sensitivity (RF-020) and the SNR values in it are
+defined at that operating point, not at the 1e-2 or 1e-3 codeword point usually quoted [E: the SNR values are to be re-derived by simulation; for steep LDPC waterfalls the difference is small but real].
+
+The cost of the recovery method was computed (intra-coded area assumed to cost 4x the bits of inter-coded area, [E], content dependent):
+
+| Refresh period (frames) | Time at 60 fps ms | Overhead (1/N x (r - 1), r = 4) |
+|---|---|---|
+| 8 | 133 | 38% |
+| 15 | 250 | 20% |
+| 30 | 500 | 10% |
+| 60 | 1000 | 5% |
+
+A short fixed refresh wave is expensive (38% at 8 frames) and a long one recovers slowly (1 s at 60 frames). Alternative added: (D) **reactive slice refresh**: a slice reported lost in the
+acknowledgement bitmap is re-coded in intra mode in the next frame. At the target loss rate (1e-3 per slice, 8 slices, 60 fps: 0.48 losses per second) one lost slice costs (4 - 1)/8 = 37.5% of one
+frame, which averages about 0.3% of the bit rate, against 10% for a 30-frame wave. It needs the acknowledgement to reach the encoder within one frame time, which both the split-band uplink (0.25 ms) and the
+in-band TDD frame (1 to 4 ms) provide. The periodic wave is kept only as a safety net (period up to 60 frames, 5%) for start-up and undetected drift. Other alternatives: (E) scalable two-layer coding
+(unchanged: costs 10 to 20% bit rate, kept as a P2 option), (F) packet-level erasure coding across slices (adds block latency, cruise mode only). On the codec: HEVC gives lower bit rates at the
+same quality (about 30 to 50% [E, literature]) which matters when the net link rate is 18 to 21 Mbit/s (`02`); AVC remains the baseline for risk and licensing reasons (VID-017). Decision: **T-06 unchanged
+(AVC baseline, HEVC quality mode); T-07 option A plus reactive refresh (D)**, new VID-021.
+
 ## T-08 ASIC partitioning, process, integration (G-23)
 
 | Option | Description | Pros | Cons |
@@ -325,7 +353,7 @@ Recommendation: A for modem/MAC/calibration bring-up in parallel with B for the 
 | T-04 | 78.125 kHz sub-carrier spacing, FFT 64 to 512 |
 | T-05 | Frequency division: full counts in race mode, alternate channels for long range; neighbour-aware selection |
 | T-06 | AVC baseline plus HEVC quality mode; start licensing review |
-| T-07 | Slice UEP and intra-refresh; two-layer option; JSCC research |
+| T-07 | Slice UEP, reactive slice refresh plus a long safety-net wave; two-layer option; JSCC research |
 | T-08 | Two dice for the first product |
 | T-09 | Open stack with a signed RF limiter |
 | T-10 | Certified BLE/RID module |

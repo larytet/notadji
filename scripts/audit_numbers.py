@@ -93,7 +93,7 @@ for m, e in zip(lb.MCS_TABLE, (-93, -88, -80, -74)):
 import subprocess  # noqa: E402
 
 out = subprocess.check_output([sys.executable, "-I", str(ROOT / "scripts" / "link_budget.py")], text=True)
-down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl = out.strip().split("\n\n")
+down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl = out.strip().split("\n\n")
 check("02 contains the downlink table from the script", down.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the uplink table from the script", up.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the PA mode table from the script", pa_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
@@ -108,6 +108,11 @@ check("07 contains the near-far table from the script", nf_tbl.strip() in TEXT["
 check("SYS-009 separation figures follow the script (184 m edge, 7 m short range)", round(lb.separation_m(45, lb.EDGE_I_MAX_DBM)) == 184 and round(lb.separation_m(45, lb.SHORT_RANGE_SIGNAL_DBM - lb.SHORT_RANGE_SIR_DB)) == 7 and "184 m apart" in SRS and "at least 7 m apart" in SRS)
 check("SYS-009 alternate-channel counts", all(f"{a}, {b} and {c}" in SRS for a, b, c in ((3, 6, 13), (2, 4, 8))) and [-(-n // 2) for n in (6, 12, 25)] == [3, 6, 13] and [-(-n // 2) for n in (4, 8, 16)] == [2, 4, 8])
 check("RF-029 near-far level: 35 dBm EIRP at 10 m is about -33 dBm", abs((35 - (32.44 + 20 * math.log10(0.01) + 20 * math.log10(5800))) - (-32.7)) < 0.2)
+check("07 contains the slice protection and intra-refresh tables", slice_tbl.strip() in TEXT["07-trade-studies.md"] and intra_tbl.strip() in TEXT["07-trade-studies.md"])
+_sb = 20e6 / 60 / 8
+check("PHY-011 states 86 codewords and 1.2e-5", math.ceil(_sb / 486) == 86 and abs((1 - (1 - 1e-3) ** (1 / 86)) - 1.2e-5) < 0.05e-5 and "86 codewords" in SRS and "1.2e-5" in SRS)
+check("VID-021 average overhead about 0.3%", abs(0.48 * 0.375 / 60 * 100 - 0.3) < 0.01 and "about 0.3%" in SRS)
+check("VID-005 wave overhead 5% at 60 frames", abs((lb.INTRA_TO_INTER_BITS - 1) / 60 - 0.05) < 1e-9 and "period of 60 frames or less" in SRS)
 check("02 contains the split-band table from the script", split.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("split-band uplink margin >= 6 dB for all classes (MAC-007)", all(float(r.split("|")[7]) >= 6 for r in split.strip().split("\n")[2:]))
 check("MAC-007 states the split-band margins 17.0, 11.0 and 12.4", "17.0, 11.0 and 12.4 dB" in SRS)
