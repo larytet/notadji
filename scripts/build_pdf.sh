@@ -15,12 +15,13 @@ for f in spec/[0-9]*.md; do
   cat "$f" >> "$out"
   printf '\n\n\\newpage\n\n' >> "$out"
 done
+python3 -I scripts/fit_tables.py "$out"
 echo "wrote $out"
 if command -v pandoc >/dev/null; then
   engine=""
   for e in xelatex pdflatex lualatex; do command -v "$e" >/dev/null && engine="$e" && break; done
   if [ -n "$engine" ]; then
-    pandoc "$out" --resource-path=build -o build/notadji-spec.pdf --pdf-engine="$engine" -V geometry:margin=2cm -V fontsize=9pt \
+    pandoc "$out" --resource-path=build -o build/notadji-spec.pdf --pdf-engine="$engine" -V geometry:margin=1.6cm -V fontsize=9pt \
       --toc --toc-depth=2 -V colorlinks=true && echo "wrote build/notadji-spec.pdf"
   else
     echo "pandoc found but no LaTeX engine; try: pandoc $out -o build/notadji-spec.html && print to PDF from a browser"
