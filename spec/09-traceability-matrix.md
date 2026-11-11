@@ -20,7 +20,7 @@ Requirements: 212
 | VID-001 | AU | Input formats: 1080p at 30, 50, 60, 90, 100, 120 fps; 720p up to 240 fps; 4K at 30 and 60  | M | P2 | T | TG-VID video pipeline |
 | VID-002 | AU | Sensor interface: MIPI CSI-2, 4 lanes, D-PHY 2.5 Gbit/s per lane minimum. | M | P1,P2 | I | TG-VID video pipeline |
 | VID-003 | both | Codecs: AVC (H.264) high profile as the baseline in P1 and P2; HEVC (H.265) main profile a | M | P1,P2 | T | TG-VID video pipeline |
-| VID-004 | both | The encoder shall be slice-based with at least 8 slices per frame, each slice independentl | M | P1,P2 | T | TG-VID video pipeline |
+| VID-004 | both | The encoder shall be slice-based with at least 8 slices per 1080p frame (configurable from | M | P1,P2 | T | TG-VID video pipeline |
 | VID-005 | AU | No I-frames in steady state | M | P1,P2 | T | TG-VID video pipeline |
 | VID-006 | AU | Rate control: per-slice constant bit budget with a rate buffer of at most 1 slice, retarge | M | P1,P2 | T | TG-VID video pipeline |
 | VID-007 | AU | Encoder pipeline latency (first pixel in to first slice bits out) of 2.0 ms or less at 108 | M | P2 | T | TG-VID video pipeline |

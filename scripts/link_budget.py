@@ -416,6 +416,50 @@ def race_channel_table() -> str:
     rows.append(f"| Gaze message in the uplink: 8 bytes at 120 Hz | {gaze_kbps:.1f} kbit/s of a 1000 kbit/s uplink ({gaze_kbps / 1000:.1%}) |")
     return "\n".join(rows)
 
+# ---- slice count (VID-004), see spec/15 section 2 ----------------------------------------------------------------
+SLICE_FRAME_MBIT = 20.0 / 60  # one 1080p60 frame at 20 Mbit/s (the PHY-011 operating point)
+SLICE_PROPORTIONAL_MS_AT_8 = 6.0  # part of the 02 latency budget that scales with the slice time at N = 8: sensor 1.0, ISP 1.0, half of the encoder 1.0, air 2.0, half of the decoder 1.0 (E)
+SLICE_HEADER_BITS = 208  # NAL and slice header 8 B + authentication tag 16 B + length/sync 2 B = 26 B (SEC-002, E)
+SLICE_BOUNDARY_PENALTY = 0.0015  # bit-rate loss per slice boundary: broken intra and entropy-context prediction, share of frame bits (E, to be replaced by the open-encoder experiment, notes entry 16)
+SLICE_CW_INFO_BITS = 486  # 648-bit codeword at rate 3/4, slice-aligned packing wastes half a codeword on average (PHY-005)
+SLICE_CWER = 1.2e-5  # PHY-011 codeword error rate
+SLICE_REFRESH_COST = 3.0  # intra area costs 4x inter area (INTRA_TO_INTER_BITS), so the extra cost is 3x
+SLICE_COUNTS = (1, 2, 4, 8, 16, 34)
+SENSOR_READOUT_MS = {60: 8.0, 120: 4.0}  # IF-002
+ENCODER_CORE_MS = {60: 1.0, 120: 0.7}  # what the VID-007 budgets leave after the slice fill time at N = 8
+
+
+def slice_overhead(n: int) -> dict:
+    frame_bits = SLICE_FRAME_MBIT * 1e6
+    header = n * SLICE_HEADER_BITS / frame_bits
+    boundary = SLICE_BOUNDARY_PENALTY * (n - 1)
+    padding = n * (SLICE_CW_INFO_BITS / 2) / frame_bits
+    cw_total = frame_bits / SLICE_CW_INFO_BITS
+    refresh = SLICE_CWER * cw_total * SLICE_REFRESH_COST / n
+    return {"header": header, "boundary": boundary, "padding": padding, "refresh": refresh, "total": header + boundary + padding + refresh}
+
+
+def slice_count_table() -> str:
+    """Latency, bit-rate cost and loss granularity against the slice count (VID-004); 1080p60, 20 Mbit/s, 648-bit codewords."""
+    rows = ["| Slices N | MB rows per slice (68 rows) | Picture share lost per slice | Latency against N = 8, ms | Header + tag | Boundary | Padding | Reactive refresh | Total bit-rate cost |", "|---|---|---|---|---|---|---|---|---|"]
+    for n in SLICE_COUNTS:
+        o = slice_overhead(n)
+        d_lat = SLICE_PROPORTIONAL_MS_AT_8 * 8 * (1.0 / n - 1.0 / 8)
+        rows.append(f"| {n} | {68 / n:.1f} | {1 / n:.1%} | {d_lat:+.1f} | {o['header']:.2%} | {o['boundary']:.2%} | {o['padding']:.2%} | {o['refresh']:.2%} | {o['total']:.1%} |")
+    return "\n".join(rows)
+
+
+def slice_first_out_table() -> str:
+    """First slice out of the encoder: slice fill time plus the encoder core against the VID-007 budget (VID-004 lower bound on N)."""
+    rows = ["| Slices N | 1080p60: fill + core ms (budget 2.0) | 1080p120: fill + core ms (budget 1.2) |", "|---|---|---|"]
+    for n in (2, 4, 6, 8, 16):
+        cells = []
+        for fps, budget in ((60, 2.0), (120, 1.2)):
+            t = SENSOR_READOUT_MS[fps] / n + ENCODER_CORE_MS[fps]
+            cells.append(f"{t:.2f} {'meets' if t <= budget + 1e-9 else 'fails'}")
+        rows.append(f"| {n} | {cells[0]} | {cells[1]} |")
+    return "\n".join(rows)
+
 
 def tdd_table() -> str:
     """TDD frame budget per range class with the range-adaptive frame length (T-03 option C)."""
@@ -486,3 +530,7 @@ if __name__ == "__main__":
     print(foveation_table())
     print()
     print(race_channel_table())
+    print()
+    print(slice_count_table())
+    print()
+    print(slice_first_out_table())

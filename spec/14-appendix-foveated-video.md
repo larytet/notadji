@@ -8,12 +8,12 @@ Trade study: `07` T-20. Requirements: VID-023, VID-024, VID-025, MAC-013, TST-00
 Deliver high quality only where the pilot looks and exploit natural tunnel vision to save bandwidth. The main driver is the **race mode** (`07` T-05 option D, SYS-009): with 5 MHz channels the net video rate is small, so bits must go where the
 pilot's eyes are. In the split-band mode of the baseline architecture a 5 MHz channel carries (`scripts/link_budget.py`, [C]):
 
-""" + "| MCS | Net video rate at 5 MHz, Mbit/s |
+| MCS | Net video rate at 5 MHz, Mbit/s |
 |---|---|
 | BPSK 1/2 | 1.4 |
 | QPSK 3/4 | 4.3 |
 | 16QAM 3/4 | 8.5 |
-| Gaze message in the uplink: 8 bytes at 120 Hz | 7.7 kbit/s of a 1000 kbit/s uplink (0.8%) |" + """
+| Gaze message in the uplink: 8 bytes at 120 Hz | 7.7 kbit/s of a 1000 kbit/s uplink (0.8%) |
 
 At 4.3 Mbit/s (QPSK 3/4) the difference between a usable and a blurry picture is how the bits are spent; at race-track ranges bitrate, not range, is the constraint. Racing pilots look mostly at the line ahead and the next gate and
 high speed suppresses fast peripheral detail, so a fixed or slowly moving high-quality region (head or camera direction) captures much of the benefit without gaze tracking. Freestyle flying could also gain more link types.
@@ -25,11 +25,11 @@ high speed suppresses fast peripheral detail, so a fixed or slowly moving high-q
 
 Region at the base QP, the rest at a higher QP, with the rule of thumb that +6 QP halves the bits of an area (`ratio = f + (1 - f) 2^(-dQP/6)`):
 
-""" + "| High-quality region (share of the picture) | Periphery +3 QP | +6 QP | +9 QP |
+| High-quality region (share of the picture) | Periphery +3 QP | +6 QP | +9 QP |
 |---|---|---|---|
 | 25% | 78% (saves 22%) | 62% (saves 38%) | 52% (saves 48%) |
 | 40% | 82% (saves 18%) | 70% (saves 30%) | 61% (saves 39%) |
-| 60% | 88% (saves 12%) | 80% (saves 20%) | 74% (saves 26%) |" + """
+| 60% | 88% (saves 12%) | 80% (saves 20%) | 74% (saves 26%) |
 
 A wide region (60% of the picture) with +6 QP outside saves about 20%; a narrow strong mode (25%, +9 QP) about 48% but is only safe if the region is right. Whole-frame PSNR or VMAF will rate foveation as worse, so quality is judged by a region-weighted metric plus pilot tests (section 5).
 

@@ -93,7 +93,7 @@ for m, e in zip(lb.MCS_TABLE, (-93, -88, -80, -74)):
 import subprocess  # noqa: E402
 
 out = subprocess.check_output([sys.executable, "-I", str(ROOT / "scripts" / "link_budget.py")], text=True)
-down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl, iface_tbl, rng_tbl, reg_tbl, lev_tbl, coax_tbl, brk_tbl, aoa_tbl, bf_tbl, fov_tbl, race_tbl = out.strip().split("\n\n")
+down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl, iface_tbl, rng_tbl, reg_tbl, lev_tbl, coax_tbl, brk_tbl, aoa_tbl, bf_tbl, fov_tbl, race_tbl, sc_tbl, sfo_tbl = out.strip().split("\n\n")
 check("02 contains the downlink table from the script", down.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the uplink table from the script", up.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the PA mode table from the script", pa_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
@@ -258,6 +258,21 @@ check("no dangling requirement references", not dangling, str(sorted(dangling)))
 rev = re.search(r"revision (\d+\.\d+)", SRS).group(1)
 check("revision history lists the current revision", f"| {rev} |" in SRS, rev)
 check("trace matrix is current", f"Requirements: {len(ids)}" in TEXT["09-traceability-matrix.md"])
+
+# ---- 11. requirement rationale (doc 15) ------------------------------------------------------------------------
+R15 = TEXT["15-requirement-rationale.md"]
+r15_rows = {m.group(1): m.group(0) for m in re.finditer(r"^\| ([A-Z]{2,4}-\d{3}) \|.*$", R15.split("## 3. Rationale table")[1], flags=re.M)}
+check("15 explains every requirement", set(ids) <= set(r15_rows), str(sorted(set(ids) - set(r15_rows))))
+check("15 rows have basis, alternative and proof (4 cells)", all(len(r.strip().strip("|").split("|")) == 4 and all(c.strip() for c in r.strip().strip("|").split("|")) for r in r15_rows.values()))
+check("15 contains the slice tables from the script", lb.slice_count_table().strip() in R15 and lb.slice_first_out_table().strip() in R15)
+check("15 contains the intra-refresh table from the script", lb.intra_refresh_table().strip() in R15)
+check("slice count: N = 8 is the smallest integer meeting VID-007 at 1080p60 and 1080p120",
+      all(lb.SENSOR_READOUT_MS[f] / 8 + lb.ENCODER_CORE_MS[f] <= b + 1e-9 and lb.SENSOR_READOUT_MS[f] / 7 + lb.ENCODER_CORE_MS[f] > b for f, b in ((60, 2.0), (120, 1.2))))
+check("slice count: N = 1 costs 42 ms against N = 8, N = 4 costs 6 ms", abs(lb.SLICE_PROPORTIONAL_MS_AT_8 * 8 * (1 - 1 / 8) - 42.0) < 1e-9 and abs(48 * (1 / 4 - 1 / 8) - 6.0) < 1e-9)
+check("slice count: reactive refresh at N = 8 is about 0.3% (VID-021)", abs(lb.slice_overhead(8)["refresh"] - 0.003) < 0.0002)
+check("VID-002: 4K60 12 bit 5.97 Gbit/s, 7.46 with 25%, 3 lanes of 2.5", abs(3840 * 2160 * 60 * 12 / 1e9 - 5.97) < 0.005 and abs(3840 * 2160 * 60 * 12 * 1.25 / 1e9 - 7.46) < 0.005 and math.ceil(7.46 / 2.5) == 3)
+check("VID-005: wave band 1920/60 = 32 px, overhead (4-1)/60 = 5%", 1920 / 60 == 32 and abs((4 - 1) / 60 - 0.05) < 1e-12)
+check("no stray string-concatenation artefacts in the spec", all('""" + "' not in t and '" + """' not in t for t in TEXT.values()))
 
 import importlib.util  # noqa: E402
 _spec = importlib.util.spec_from_file_location("claim_register", ROOT / "scripts" / "claim_register.py")
