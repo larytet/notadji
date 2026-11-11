@@ -93,7 +93,7 @@ for m, e in zip(lb.MCS_TABLE, (-93, -88, -80, -74)):
 import subprocess  # noqa: E402
 
 out = subprocess.check_output([sys.executable, "-I", str(ROOT / "scripts" / "link_budget.py")], text=True)
-down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl, iface_tbl, rng_tbl, reg_tbl, lev_tbl, coax_tbl, brk_tbl, aoa_tbl, bf_tbl, fov_tbl, race_tbl, sc_tbl, sfo_tbl = out.strip().split("\n\n")
+down, up, tdd, cmp_, split, pa_tbl, numer_tbl, ldpc_tbl, nf_tbl, slice_tbl, intra_tbl, sector_tbl, gl_tbl, hop_tbl, iface_tbl, rng_tbl, reg_tbl, lev_tbl, coax_tbl, brk_tbl, aoa_tbl, bf_tbl, fov_tbl, race_tbl, sc_tbl, sfo_tbl, lad_tbl, trn_tbl, mass_tbl, bat_tbl, hold_tbl = out.strip().split("\n\n")
 check("02 contains the downlink table from the script", down.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the uplink table from the script", up.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("02 contains the PA mode table from the script", pa_tbl.strip() in TEXT["02-link-and-latency-budgets.md"])
@@ -163,7 +163,7 @@ check("00 says closely matches and drops the plain dash bullet", "closely matche
 check("07 index lists every trade study T-01..T-23", all(f"T-{n:02d}" in TEXT["07-trade-studies.md"].split("Index:")[1].split("---")[0] for n in range(1, 24)))
 _dots = sorted((SPEC / "diagrams").glob("*.dot"))
 check("every diagram source has a rendered PNG and SVG, and is referenced by a document", all((d.with_suffix(".png")).exists() and d.with_suffix(".svg").exists() and f"diagrams/{d.stem}.png" in "".join(TEXT.values()) for d in _dots) and len(_dots) >= 4)
-check("no ASCII diagrams (fenced blocks) remain in the spec documents", all("```" not in t for n, t in TEXT.items() if n not in ("notes.md", "effort.md")), "convert to spec/diagrams/*.dot")
+check("no ASCII diagrams (fenced blocks) remain in the spec documents", all("```" not in t for n, t in TEXT.items() if n not in ("notes.md",)), "convert to spec/diagrams/*.dot")
 check("02 contains the split-band table from the script", split.strip() in TEXT["02-link-and-latency-budgets.md"])
 check("split-band uplink margin >= 6 dB for all classes (MAC-007)", all(float(r.split("|")[7]) >= 6 for r in split.strip().split("\n")[2:]))
 check("MAC-007 states the split-band margins 17.0, 11.0 and 12.4", "17.0, 11.0 and 12.4 dB" in SRS)
@@ -273,6 +273,17 @@ check("slice count: reactive refresh at N = 8 is about 0.3% (VID-021)", abs(lb.s
 check("VID-002: 4K60 12 bit 5.97 Gbit/s, 7.46 with 25%, 3 lanes of 2.5", abs(3840 * 2160 * 60 * 12 / 1e9 - 5.97) < 0.005 and abs(3840 * 2160 * 60 * 12 * 1.25 / 1e9 - 7.46) < 0.005 and math.ceil(7.46 / 2.5) == 3)
 check("VID-005: wave band 1920/60 = 32 px, overhead (4-1)/60 = 5%", 1920 / 60 == 32 and abs((4 - 1) / 60 - 0.05) < 1e-12)
 check("no stray string-concatenation artefacts in the spec", all('""" + "' not in t and '" + """' not in t for t in TEXT.values()))
+
+# ---- 12. notes entries 15, 17, 18 ------------------------------------------------------------------------------
+check("15 contains the ladder, transition, mass, battery and hold-up tables", all(x().strip() in R15 for x in (lb.ladder_table, lb.transition_table, lb.mass_class_table, lb.battery_table, lb.holdup_table)))
+check("ladder: L1 video rate meets the 10 Mbit/s of SYS-003, L2 rate is 4.9 Mbit/s", "| L1 |" in lb.ladder_table() and "11.9 |" in lb.ladder_table() and "4.9 |" in lb.ladder_table())
+check("budgeted IDR meets 100 ms, normal IDRs do not", 1280 * 720 * 0.15 / 4.9e6 < 0.1 and 5 * 4.9e6 / 30 / 4.9e6 > 0.1)
+check("SYS-004/006/007 text states the ladder, per-class mass and 1 h", all(k in SRS for k in ("quality ladder", "30 g in the 30 dBm class", "at least 1 h at the nominal consumption")))
+check("1S pack gives 7.8 W for 1 h cold; 2S gives 15.5 W (PWR-010 limits 8 and 15)", abs(3 * 3.7 * 0.7 - 7.77) < 0.01 and 7.77 * 1.03 >= 8 - 0.3 and 2 * 3 * 3.7 * 0.7 >= 15)
+check("hold-up: 5 ms at 11 W on a 12 V bus is 1.4 mF; at a 1S input 12.7 mF", abs(2 * 11 * 0.005 / (144 - 64) * 1000 - 1.375) < 0.01 and abs(2 * 11 * 0.005 / (4.2 ** 2 - 9) * 1000 - 12.7) < 0.05)
+check("1S input current at 11 W, 90% efficiency, 3.0 V is 4.1 A", abs(11 / 0.9 / 3.0 - 4.07) < 0.01)
+check("mass limits: 25 g at 27 dBm is inside the estimated range, 33 dBm needs more than 25 g", "| 27 dBm |" in lb.mass_class_table() and "| 33 dBm | 9.9 | 2.0 | 7.9 | 18.0 to 27.0 | 12 to 16 | 30 to 43 | 40 |" in lb.mass_class_table())
+check("effort estimate is part of the specification (16)", "16-silicon-size-and-effort.md" in TEXT and "effort.md" not in TEXT)
 
 import importlib.util  # noqa: E402
 _spec = importlib.util.spec_from_file_location("claim_register", ROOT / "scripts" / "claim_register.py")

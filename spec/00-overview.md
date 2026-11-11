@@ -41,6 +41,7 @@ ground unit) built in two phases:
 | `12-claim-audit-and-feasibility.md` | Claim audit, errors corrected, external facts, feasibility register, per-requirement evidence class (verification pass) |
 | `14-appendix-foveated-video.md` | Optional foveated-video feature for race mode (notes entry 3, T-20) |
 | `15-requirement-rationale.md` | Why each requirement has its value: worked derivations (slices, intra refresh, sensor interface) and one rationale row per requirement (notes entry 19) |
+| `16-silicon-size-and-effort.md` | Silicon area (digital SoC, RF die, single die and separate air and ground chips), gate counts and engineering effort estimate [E] behind ASC-004, ASC-008 and T-22 |
 | `13-hardware-software-integration.md` | Execution domains, CPU workload, two-phase platform plan (evaluation boards, then custom board), processor options and power |
 | `11-patent-search.md` | Preliminary patent landscape, design-around constraints, brief for the patent attorney (iteration 2) |
 

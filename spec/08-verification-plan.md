@@ -16,11 +16,11 @@ D demonstration, S simulation.
 | TG-ADA spectrum and hopping | ADA-* | Interference generator (WiFi, ELRS, wideband), radar signal generator for DFS (where fitted), spectrum scan accuracy | Lab |
 | TG-CAL calibration | CAL-* | Chamber sweeps with EVM/ACLR logs; cold start; DPD convergence timing; calibration status telemetry | RF lab, chamber |
 | TG-THM thermal | THM-* | Chamber, thermocouples, IR camera, hover-without-airflow soak, hardware trip injection | Thermal lab |
-| TG-PWR power | PWR-*, SYS-005 | Power analyser at the input (1 kHz or faster), ESC ripple injector, surge generator | Lab |
+| TG-PWR power | PWR-*, SYS-005, SYS-007 (pack swap while streaming in both orders, minimum rail voltage logged) | Power analyser at the input (1 kHz or faster), ESC ripple injector, surge generator | Lab |
 | TG-SEC security | SEC-* | Protocol review, replay/forgery tests, fuzzing, secure-boot attack tests, signed-table tamper tests | Lab, third-party review |
 | TG-REG regulatory | REG-* | Accredited test house (FCC, ETSI, ISED), Remote ID conformance test, export review, EN 18031 assessment | External |
 | TG-ENV environmental | ENV-* | Random-vibration shaker with a live link, shock table, ESD gun, humidity chamber, EMI scan with receiver desense (ENV-007) | Environmental lab |
-| TG-VID video pipeline | VID-* (foveation modes need a region-weighted quality metric and a pilot test per mode, TST-003; whole-frame PSNR/VMAF rate foveation as worse) | Reference video set (high-motion, low-light, fine detail), objective metrics (PSNR, VMAF), loss injection, genlock drift test over 10 minutes | Lab |
+| TG-VID video pipeline | VID-*, SYS-004 (SNR sweep with a channel emulator, freeze measured at the display with a photodiode, rung-change test at every boundary, VID-026) (foveation modes need a region-weighted quality metric and a pilot test per mode, TST-003; whole-frame PSNR/VMAF rate foveation as worse) | Reference video set (high-motion, low-light, fine detail), objective metrics (PSNR, VMAF), loss injection, genlock drift test over 10 minutes | Lab |
 | TG-HSI hardware-software integration | HSI-* | Trace-port timestamps, WCET measurement on the target core, fault injection (stalled core, corrupted table), load test at the 1080p120 workload, boot-time measurement, power measurement per state, DPD numerical validation by simulation | Lab |
 | TG-SW / TG-IF | SW-*, IF-* | Integration tests against flight controller (MSP, MAVLink) and displays; update/rollback tests | Lab |
 | TG-SYS system and range | SYS-003, SYS-008, SYS-009 | Range flights per class (S, X, L) in open field, urban and forest; multi-link tests on a site with a defined channel plan | Field |

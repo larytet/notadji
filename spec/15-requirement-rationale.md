@@ -98,6 +98,77 @@ Requirement: MIPI CSI-2, 4 lanes, D-PHY 2.5 Gbit/s per lane minimum.
 
 **Options.** (A) 4 lanes fixed (chosen for the first product): justified by 4K60 plus margin, not by the 1080p latency target. (B) Lane count configurable as 1, 2 or 4: simple products save D-PHY area and pins (no area figure yet, to be taken from the IP vendor). (C) 2 lanes: enough for 1080p up to 120 fps, rejected because VID-001 lists 4K60. Verification is inspection against the sensor datasheet (I).
 
+### 2.4 SYS-004 graceful degradation (notes entry 15)
+
+The old text ("degrade gracefully, never a frozen frame longer than 100 ms, down to the lowest MCS") could not be tested: no metric for "graceful", no definition of "frozen", undefined behaviour below the lowest MCS, and a resolution change that is not possible without a stall.
+
+**What is feasible.** Lowering quality as the SNR falls (MCS changes at most once per frame, PHY-012 and MAC-005; the per-slice budget follows the MCS, VID-006); no freeze from isolated losses (100 ms is six frames at 60 fps; a lost slice is concealed from the previous frame, VID-010, the acknowledgement reaches the encoder in about 1 ms, MAC-004, reactive refresh follows in the next frame, VID-021, recovery about 35 ms [E]). **What is hard:** the degradation is stepwise, because OFDM with LDPC has a waterfall of 1 to 2 dB and the MCS steps are several dB apart; Doppler up to 3.5 kHz is faster than the adaptation, so some slices are lost between steps; and a resolution change needs new parameter sets.
+
+**The ladder.** The rung is set by the MCS the link can hold (20 MHz, split-band downlink share 0.95, 2 Mbit/s telemetry kept, `scripts/link_budget.py`):
+
+| Rung | Picture | MCS | SNR dB | Sensitivity dBm (20 MHz, NF 4 dB, 2 dB loss) | Net PHY Mbit/s | Video Mbit/s after 2 Mbit/s telemetry |
+|---|---|---|---|---|---|---|
+| L0 | 1080p60 | QPSK 3/4 | 7 | -88 | 20.8 | 18.8 |
+| L1 | 1080p60 (SYS-003 minimum 10 Mbit/s) | QPSK 1/2 | 5 | -90 | 13.9 | 11.9 |
+| L2 | 720p30 | BPSK 1/2 | 2 | -93 | 6.9 | 4.9 |
+
+L2 at 4.9 Mbit/s keeps the full telemetry share of MAC-007; the 6 Mbit/s of VID-022 leaves 0.9 Mbit/s for telemetry (an earlier inconsistency between VID-022 and MAC-007, now stated in VID-022).
+
+**The resolution problem.** AVC activates a new parameter set only at an IDR picture. At 4.9 Mbit/s and 30 fps a P-frame is 163 kbit, and an IDR is 5 to 10 times that [E]:
+
+| Case | IDR size kbit | Airtime ms at 4.9 Mbit/s | Against 100 ms |
+|---|---|---|---|
+| 720p30 normal IDR, 5 x P-frame | 817 | 167 | fails |
+| 720p30 normal IDR, 10 x P-frame | 1633 | 333 | fails |
+| 720p30 budgeted IDR, 0.15 bit/pixel | 138 | 28 | meets |
+
+A normal IDR takes 167 to 333 ms of airtime, which breaks the 100 ms limit and VID-005. Options: (A) **stay at one resolution** and lower only frame rate and quality: no IDR, but 1080p30 at 4.9 Mbit/s is 0.079 bit per pixel against 0.18 at 720p30, a poor picture; (B) **scalable coding** (T-07 option C): no IDR but a 10 to 20% rate cost and little hardware support; (C) **a budgeted IDR**: the encoder codes the IDR at a high quantiser to 0.15 bit per pixel (138 kbit, 28 ms of airtime, 0.85 frame time) and refines it with the following inter frames within 10 frames [E]; (D) **joint source-channel coding** (T-07 option B), a research track. Chosen: **A for the first step (frame rate and quality), C for a resolution change**, written as VID-026. Quality of the first frames after a change is lower; the region-weighted metric of SYS-004 limits the step.
+
+**Definitions added to SYS-004.** *Frozen* means no newly decoded slice displayed in any picture region for more than 100 ms, measured at the display (so a progressively refreshed picture is not frozen). *Graceful* means that region-weighted quality (VMAF) falls monotonically with SNR with no step larger than 15 points [E, to be set from the open-encoder experiment, notes entry 16]. *Outage* (below BPSK 1/2, SNR under 2 dB, -93 dBm): freeze indicator on the OSD within 100 ms, link-loss procedure of ADA-004 and MAC-008. **Verification:** SNR sweep with a channel emulator, display photodiode for freezes, rung-change test at each boundary.
+
+### 2.5 SYS-006 air-unit mass (notes entry 17)
+
+Public figures for comparison (DJI spec pages as returned by search, to be verified, assumption A-05, not DJI specifications we may quote): O3 Air Unit about 28 g without and 36.4 g with the camera module; O4 Air Unit about 5.1 g and 8.2 g; O4 Air Unit Pro about 15.6 g and 32 g. DJI quotes both ways, so the camera module had to be settled: **SYS-006 excludes it**, as SYS-005 excludes its power.
+
+**Model.** Mass = other parts (PCB, two chips, memory and passives 6 to 8 g; PA and front-end module 1 g; shield and case 2 to 3 g; antennas, cables and connectors 3 to 4 g; together 12 to 16 g) plus a heatsink that scales with the heat to be removed. Heat = DC input minus RF output; the heatsink is 8 to 12 g at the 27 dBm point (`02` section 3, entry 17) and scales linearly with heat [E]:
+
+| Class | Input W | RF output W | Heat W | Heatsink g | Other parts g | Total g | Mass limit g |
+|---|---|---|---|---|---|---|---|
+| 25 dBm | 3.2 | 0.3 | 2.9 | 6.5 to 9.7 | 12 to 16 | 18 to 26 | 25 |
+| 27 dBm | 4.0 | 0.5 | 3.5 | 8.0 to 12.0 | 12 to 16 | 20 to 28 | 25 |
+| 30 dBm | 5.8 | 1.0 | 4.8 | 11.0 to 16.4 | 12 to 16 | 23 to 32 | 30 |
+| 33 dBm | 9.9 | 2.0 | 7.9 | 18.0 to 27.0 | 12 to 16 | 30 to 43 | 40 |
+
+Reading the table: at 27 dBm or less the total of 18 to 28 g makes 25 g feasible but not comfortable; at 30 dBm the heatsink alone is 11 to 16 g and 30 g is the limit that needs the lower half of the range; the 33 dBm SKU needs 40 g. A single 25 g limit for all classes (the old text) holds only below 27 dBm. Heat decides it: THM-004 requires 10 minutes in a hover without airflow at 40 degrees C and 4 W, so the heatsink is the largest single item, and propwash cools only in flight. Beamforming options B to D add 2 to 15 g (`02` section 1.5), which is why they are for large drones (ANT-014).
+
+**Options.** (A) one limit of 25 g for every class: simple, infeasible above 27 dBm; (B) **a limit per power class (chosen)**; (C) a limit including the camera module: matches how some vendors quote, but the module is not ours. **Fix:** the heatsink is the one stated in THM-004, so mass and thermal requirements stay tied. **Verification:** weighing of the product-class unit with the stated heatsink, thermal soak in a hover.
+
+### 2.6 SYS-007 ground-unit run time and hot swap (notes entry 18)
+
+**Why 1 h.** Energy = power x time. 3 h at 6 to 15 W needs 18 to 45 Wh, which a 1S pack (about 11 Wh at 3 Ah) cannot supply (below 3 W); 1 h needs 6 to 15 Wh. With a cold capacity loss of 30% (the note gives 20 to 30%) [E]:
+
+| Pack | Energy Wh (3 Ah cells, 3.7 V nominal) | Cold energy Wh (-30%) | Run time at 8 W, h | Run time at 15 W, h | Largest load for 1 h at -10 C, W |
+|---|---|---|---|---|---|
+| 1S | 11.1 | 7.8 | 1.0 | 0.5 | 7.8 |
+| 2S | 22.2 | 15.5 | 1.9 | 1.0 | 15.5 |
+| 4S | 44.4 | 31.1 | 3.9 | 2.1 | 31.1 |
+| 6S | 66.6 | 46.6 | 5.8 | 3.1 | 46.6 |
+
+A basic unit of up to 8 W (7.8 W) runs 1 h from a 1S pack at -10 degrees C; an enhanced unit of up to 15 W needs a 2S pack (15.5 W). The nominal consumption is defined in PWR-010 so the figure is testable.
+
+**Hot swap.** Connecting pack B and then disconnecting pack A must not interrupt the unit. Design points (PWR-007 to PWR-009): two polarised connectors; ideal-diode OR-ing so the higher-voltage pack supplies the load and no pack charges the other; a fresh pack is normally at a higher voltage and takes over by itself; a lower-voltage new pack is used only after the old one falls below it, so the OSD shows both voltages and when disconnecting is safe (PWR-009); inrush limiting and a surge clamp on each input for the hot-plug of a charged pack; a wide-range converter (3.0 to 25.2 V) that keeps running through the switch-over; at 3.0 V and 11 W the input current is 4.1 A, the hard corner for converter and connector.
+
+**Hold-up for a break** (a pack pulled before the other is seated): C = 2 P t / (V1 squared minus V2 squared), 11 W load:
+
+| Break ms | Capacitor at the 1S input, 4.2 V to 3.0 V, mF | Capacitor on a 12 V bus, 12 V to 8 V, mF |
+|---|---|---|
+| 1 | 2.5 | 0.27 |
+| 5 | 12.7 | 1.38 |
+| 20 | 50.9 | 5.50 |
+| 1S input current at 11 W, 90% converter, 3.0 V | 4.1 A | |
+
+Options: (A) capacitor at the 1S input: 12.7 mF for 5 ms, bulky because the voltage window is only 4.2 to 3.0 V; (B) **capacitor on a boosted 12 V bus (chosen): 1.4 mF for 5 ms**, since the usable energy grows with the square of the voltage window; (C) an internal backup cell: covers seconds, adds mass and a charger. A break of 5 ms covers contact bounce; a longer gap is a power loss, not a swap, and the requirement says so. **Verification:** swap test while streaming, both orders, same and different cell counts, at room and low temperature, logging the minimum rail voltage and any link or video interruption.
+
 ## 3. Rationale table
 
 Columns: **Basis** is why the value is what it is; **Alternative** is what was considered and not taken; **Proved by** is the document, trade study or test.
@@ -109,10 +180,10 @@ Columns: **Basis** is why the value is what it is; **Alternative** is what was c
 | SYS-001 | Glass to glass 20 ms at 1080p60 is the sum of the stage budget in `02` section 2 (15.0 ms plus 3.0 ms reserve = 18.0 ms); 12 ms at 1080p120 from the same table (10.7 ms). Vendor pipelines measure 80 to 95 ms for the camera half alone [S], so the target is a design goal, [TBV] | 33 ms (two frames at 60 fps, what frame-based pipelines reach) is easy but gives no gain over existing digital links | `02` section 2; TG-LAT; PRO-006 baseline and TST-002 rig |
 | SYS-002 | First FPGA milestone relaxed by 10 ms: the prototype uses a hard codec (VCU) and an evaluation transceiver whose stage latencies are not tuned (`13`) | Require 20 ms already in P1: not credible before the stage latencies are measured | TG-LAT in phase A and B |
 | SYS-003 | Range classes S/X/L (5, 10, 14 km) are the link budget of `02` section 1: free-space path loss plus 6 dB margin at the lowest MCS that carries 10 Mbit/s; classes differ in antenna gain; free space only, so real range is lower (G-02) | A single class, or range stated without margin; both hide the antenna trade (`07` T-01) | `scripts/link_budget.py`; range flights |
-| SYS-004 | Graceful degradation needs a quality ladder because a hard drop to a frozen picture is the failure mode of existing links; 100 ms is six frames at 60 fps, the longest a pilot tolerates before the picture is useless. Feasibility review and rewrite proposal in notes entry 15 | Analogue-like continuous degradation by joint source-channel coding (`07` T-07 option B), a research track | Region-weighted quality against SNR, freeze measured at the display |
+| SYS-004 | Ladder, definitions and outage behaviour derived in section 2.4; 100 ms is six frames at 60 fps | Analogue-like continuous degradation by joint source-channel coding (T-07 option B, research track); scalable coding (option C) | SNR sweep, display photodiode, rung-change test |
 | SYS-005 | Input power follows from output power and PA efficiency: `P_in = P_out / PAE` with `PAE = 0.55 sqrt(P/Psat)` and a modulation back-off (`02` section 3, `scripts/link_budget.py` pa_mode_table): 3.5, 4.1, 6.0 W; the efficiency is a model [E] | A fixed 30 dBm limit for all modulations: 64QAM at 30 dBm would need 6.3 W (RF-031) | PA study (T-14), bench power measurement |
-| SYS-006 | 25 g is a mass budget: electronics 6 to 8 g, PA 1 g, shield 2 to 3 g, antennas and cables 3 to 4 g, heatsink 8 to 12 g (notes entry 17); heat, not electronics, sets the mass | Mass per power class (25 g to 27 dBm, more at 30 dBm), proposed in entry 17 | Weighing, THM-004 hover test |
-| SYS-007 | Ground unit battery life: energy = power x time; 3 h at 6 to 15 W needs 18 to 45 Wh, which a 1S pack (about 11 Wh) cannot give; a change to 1 h with hot swap is proposed in notes entry 18 | Keep 3 h and require a 2S or larger pack | Battery run test |
+| SYS-006 | Mass model per power class in section 2.5: other parts 12 to 16 g plus a heatsink that scales with heat | One 25 g limit for every class; a limit including the camera module | Weighing with the THM-004 heatsink; thermal soak |
+| SYS-007 | 1 h at the nominal consumption of PWR-010 from a reference pack, derived in section 2.6 (1S gives 7.8 W at -10 degrees C, 2S 15.5 W) | 3 h with a 2S or larger pack required | Battery run test at room and low temperature |
 | SYS-008 | One pilot may fly several drones or share a ground unit; 4 is the group size of the relay and mesh options (notes entry 14) and costs only a table of keys and channels | Strictly one to one (simpler pairing, SEC-001) | Pairing test with 4 air units |
 | SYS-009 | Channel counts follow from band width and the adjacent-channel rule: 5.8 GHz band 125 MHz gives 6 links at 20 MHz, 12 at 10 MHz, 25 at 5 MHz; the 7 m separation and 500 m range come from the near-far levels in `07` T-05 (184 m and 7 m separation) | Fewer, widely spaced channels (no adjacent use), halving the race capacity | `07` T-05; near-far test with real units |
 | SYS-010 | Goggles optics and head tracking are separate products; the ground unit outputs standard video (VID-015) | Integrate the display (a product, not a link) | Inspection |
@@ -147,6 +218,7 @@ Columns: **Basis** is why the value is what it is; **Alternative** is what was c
 | VID-023 | Per-block QP offsets are in the AVC and HEVC syntax, so the decoder needs no change; saving by region and offset in `14` section 2 (20% to 48%) | A separate high-quality slice (coarse, only vertical) | Region-weighted quality test (TST-003) |
 | VID-024 | A few presets make the feature usable from a goggles menu; mode 3 leaves room for gaze | Free parameters only (hard to use) | Pilot test |
 | VID-025 | The slices carrying the region may use a lower code rate (1/2 against 3/4) when airtime exists, so the region survives fades the rest does not | Equal protection | Slice error rate test |
+| VID-026 | A resolution change needs an IDR at the new parameter set; a normal IDR is 167 to 333 ms of airtime at 4.9 Mbit/s, a budgeted IDR at 0.15 bit per pixel is 28 ms (section 2.4) | Stay at one resolution; scalable coding | Rung-change test at each boundary |
 | LAT-001 | A photodiode or camera at 1000 fps resolves 1 ms; the register-step method (OpenIPC latency probe) splits the camera half from the rest on one clock | Visual stopwatch photo (accuracy 10 ms) | Rig calibration |
 | LAT-002 | A pilot feels jitter more than a constant delay; p99 within 3 ms and p99.9 within 8 ms of the mean is under half a frame; a stale frame is dangerous for machines too (notes entry 22) | Mean only | Histogram over 10 minutes |
 | LAT-003 | 2.5 ms covers the airtime of one slice (about 2.0 ms) plus modem pipeline; the budget row in `02` | A frame of air time (16 ms) | Modem loopback with timestamps |
@@ -279,6 +351,10 @@ Columns: **Basis** is why the value is what it is; **Alternative** is what was c
 | PWR-004 | PAE 27.5% at 30 dBm with DPD for QPSK/16QAM is a model value `0.55 sqrt(P/Psat)` [E]; typical class-AB PAs reach less | Lower PAE and a larger input power budget | PA study (T-14) |
 | PWR-005 | Standby of 1 W keeps a link alive without video; PA and encoder are off | Same as streaming | Power test |
 | PWR-006 | 5 mW sleep with RAM retention; Remote ID runs on its own module (REG-002) | Full off (no fast restart) | Power test |
+| PWR-007 | 3.0 to 25.2 V covers 1S to 6S; 4.1 A at 3.0 V and 11 W sets converter and connector current (section 2.6) | 2S to 6S only (no 1S ground unit) | Input test, hot-plug test |
+| PWR-008 | Ideal-diode OR-ing and hold-up of 5 ms at 11 W (1.4 mF on a 12 V bus) make a pack swap invisible (section 2.6) | Power down to swap; internal backup cell | Swap test while streaming |
+| PWR-009 | A lower-voltage new pack is not used until the old one falls below it, so the pilot must be told when disconnecting is safe | No indication | Display test |
+| PWR-010 | The run time of SYS-007 is testable only with a stated load: 8 W basic, 15 W enhanced (section 2.6) | Undefined nominal consumption | Power measurement in the stated state |
 
 ### 3.7 Security, regulatory, environment (SEC, REG, ENV)
 
@@ -349,7 +425,7 @@ Columns: **Basis** is why the value is what it is; **Alternative** is what was c
 | ASC-001 | Two dice: RF in a mature node and the digital in 12 to 22 nm, 29 plus 18 mm2 against 45 to 50 mm2 for one die, isolating RF from digital noise (`07` T-08, notes entry 21) | Single die in 22 nm FD-SOI (later cost-down) | T-08; RF noise test |
 | ASC-002 | Integration list so that the product needs only the PA, memory and sensor | Separate codec chip | Block review |
 | ASC-003 | Production test time dominates cost at volume; 60 s per unit with scan, BIST and RF loopback | Functional test only | Test plan |
-| ASC-004 | Area targets from `effort.md` (29 mm2 digital, 18 mm2 RF) rounded up [TBV, G-23] | Larger die | Synthesis |
+| ASC-004 | Area targets from `16` (29 mm2 digital, 18 mm2 RF) rounded up [TBV, G-23] | Larger die | Synthesis |
 | ASC-005 | USD 12 per chip at 100k units per year [TBV]; cost model open (G-23) | No target | Cost model |
 | ASC-006 | The inter-die interface 2.95 Gbit/s (2 chains, 12-bit I/Q, 40 MHz) at 5 to 20 pJ per bit is 15 to 59 mW per end (`scripts/link_budget.py`) | Single die (no interface) | Interface table |
 | ASC-007 | Replicating the RF die gives 8 receive chains on one digital SoC (11.8 Gbit/s at 40 MHz) without a second tape-out | Dedicated ground chip | `07` T-22 |

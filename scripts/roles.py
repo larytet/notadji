@@ -14,7 +14,7 @@ SRS = ROOT / "spec" / "01-system-requirements.md"
 AU_ONLY = {
     "SYS-005", "SYS-006",                                   # air unit power and mass
     "VID-001", "VID-002", "VID-005", "VID-006", "VID-007",  # sensor, encoder
-    "VID-013", "VID-014", "VID-020", "VID-021", "VID-022",
+    "VID-013", "VID-014", "VID-020", "VID-021", "VID-022", "VID-026",
     "IF-001", "IF-002",                                     # flight controller and camera interfaces
     "REG-002",                                              # Remote ID module
     "PWR-001", "PWR-005", "PWR-006",                        # battery input, standby, sleep
@@ -28,7 +28,7 @@ GU_ONLY = {
     "ANT-007", "ANT-008", "ANT-009", "ANT-010", "ANT-011", "ANT-012", "ANT-013", "CAL-010",
     "ADA-001", "ADA-002", "ADA-007", "ADA-010", "ADA-011",  # the ground unit scans and decides
     "MAC-011",                                              # timing advance estimated at the ground unit
-    "IF-003", "RF-032",                                     # display and host interfaces, enhanced front end
+    "IF-003", "RF-032", "PWR-007", "PWR-008", "PWR-009", "PWR-010",                                     # display and host interfaces, enhanced front end
 }
 TAGS = {rid: "[AU]" for rid in AU_ONLY} | {rid: "[GU]" for rid in GU_ONLY}
 

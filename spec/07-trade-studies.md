@@ -215,6 +215,8 @@ in-band TDD frame (1 to 4 ms) provide. The periodic wave is kept only as a safet
 same quality (about 30 to 50% [E, literature]) which matters when the net link rate is 18 to 21 Mbit/s (`02`); AVC remains the baseline for risk and licensing reasons (VID-017). Decision: **T-06 unchanged
 (AVC baseline, HEVC quality mode); T-07 option A plus reactive refresh (D)**, new VID-021.
 
+Review (iteration 12, notes entry 15): the cliff behaviour of option A is made explicit as a quality ladder with defined freeze and outage behaviour (SYS-004), and the resolution change is solved by a budgeted IDR (VID-026); scalable coding (option C) stays a P2 option and joint source-channel coding (option B) a research track. Numbers and options: `15` section 2.4.
+
 ## T-08 ASIC partitioning, process, integration (G-23)
 
 | Option | Description | Pros | Cons |
@@ -483,7 +485,7 @@ values and requirements tagged [GU] (PHY-016, PHY-017, RF-032, ADA-011, ANT-012)
 
 ![Silicon family: one digital SoC and one RF die for both roles, replicated RF dice for the enhanced ground unit, an optional dedicated ground chip. Source: diagrams/silicon-family.dot](diagrams/silicon-family.png)
 
-The first draft assumed the same silicon in both roles. The estimate in `effort.md` (area and effort estimates [E]) puts a separate air chip at about 25 mm2 (no decoder, no display PHY) and a separate ground chip at about 24 mm2 (no encoder, no ISP, no CSI)
+The first draft assumed the same silicon in both roles. The estimate in `16` (area and effort estimates [E]) puts a separate air chip at about 25 mm2 (no decoder, no display PHY) and a separate ground chip at about 24 mm2 (no encoder, no ISP, no CSI)
 against about 29 mm2 for the shared design: a saving of about 5 mm2 each (about 15%, roughly USD 0.5 per unit), at the price of a second tape-out (about 3 M for masks and 50 to 60 person-years). Break-even (`scripts/link_budget.py`):
 
 | Second tape-out effort PY | Cost MUSD (masks 3 + labour at 0.15 MUSD/PY) | Saving per unit USD (about 5 mm2, 15%) | Break-even volume million units |
@@ -512,7 +514,7 @@ the selection is a signed value in non-volatile memory (or a fuse); larger array
 | S-c | Same die, but options selected by factory fuses only | Simple, tamper-resistant | No field upgrade; fuse count and test flow |
 | S-d | Beyond the built-in chains, replicate the RF die or the whole chip with a shared reference clock and LO | Scales without a new design | Needs multi-chip coherence from day one: a chip-to-chip interface, a shared clock/LO scheme and per-element calibration |
 
-Cost of S-b from `effort.md` [E]: beamforming logic 0.5 to 2 mm2 plus a chip-to-chip interface of 1 to 2 mm2 on the 29 mm2 digital SoC is 1.5 to 4 mm2, about 5% to 14% of the die; verification effort rises by about 10 to 15% because every option state, fuse state, band and role must be verified even when disabled (mitigation: keep the options orthogonal and verify the power
+Cost of S-b from `16` [E]: beamforming logic 0.5 to 2 mm2 plus a chip-to-chip interface of 1 to 2 mm2 on the 29 mm2 digital SoC is 1.5 to 4 mm2, about 5% to 14% of the die; verification effort rises by about 10 to 15% because every option state, fuse state, band and role must be verified even when disabled (mitigation: keep the options orthogonal and verify the power
 and clock gating once). Caveat: gating removes the digital logic cost but not the RF cost: extra on-die RF chains, converters and mixers cost area, leakage and routing, so the maximum number of on-die chains is fixed at design time (T-08) and only enabled in software; per-element power amplifiers and front ends are external (RF-028), so their cost is board-level.
 The air-unit range gains are 3 dB (B), 5.5 dB (C) and 6 dB (D, N = 4), which doubles the Class S range at 5.8 GHz for D (`02` section 1.5).
 

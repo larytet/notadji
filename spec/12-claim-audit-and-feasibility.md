@@ -113,22 +113,22 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 
 | Class | Requirements |
 |---|---|
-| C | 24 |
-| E | 126 |
+| C | 28 |
+| E | 127 |
 | P | 38 |
 | R | 8 |
 | S | 16 |
-| total | 212 |
+| total | 217 |
 
 | ID | Class | Basis |
 |---|---|---|
 | SYS-001 | E | latency budget in 02 sums to 18.0/10.7 ms [C] but every stage value is an estimate; vendor pipelines measure 80-95 ms camera half [S] |
 | SYS-002 | E | first milestone; depends on VCU first-slice latency, which was not found in sources |
 | SYS-003 | C | link_budget.py: range classes close with QPSK 3/4 and 6 dB margin; free space only (G-02 open) |
-| SYS-004 | E | engineering target; proved by verification method T (see 08) |
+| SYS-004 | C | link_budget.py ladder_table and transition_table: rung rates from the MCS table, IDR airtime; VMAF step bound is E |
 | SYS-005 | C | link_budget.py pa_mode_table (model E): 3.5/4.1/6.0 W; PA efficiency of about 27% at 30 dBm is unproven |
-| SYS-006 | E | 25 g air unit unproven; FPGA prototype is not flyable at this mass (SOM and heatsink alone exceed it) [feasibility] |
-| SYS-007 | E | engineering target; proved by verification method T (see 08) |
+| SYS-006 | E | mass per power class from link_budget.py mass_class_table (heat scaling E); FPGA prototype is not flyable at these masses (SOM and heatsink alone exceed it) [feasibility] |
+| SYS-007 | C | link_budget.py battery_table: 1S 7.8 W and 2S 15.5 W for 1 h at -10 C (30% capacity loss is E) |
 | SYS-008 | E | engineering target; proved by verification method D (see 08) |
 | SYS-009 | C | audit: channel counts from band widths; link_budget.py near_far_table: 184 m / 7 m; RF-029 and ACLR unproven |
 | SYS-010 | E | engineering target; proved by verification method I (see 08) |
@@ -158,6 +158,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | VID-023 | E | saving by rule of thumb (+6 QP halves the bits); link_budget.py foveation_table is arithmetic |
 | VID-024 | P | mode set; region size needs the measurement campaign TST-003 |
 | VID-025 | E | protection level trade not yet quantified |
+| VID-026 | C | link_budget.py transition_table: budgeted IDR 138 kbit, 28 ms at 4.9 Mbit/s; 0.15 bit per pixel is E |
 | LAT-001 | S | OpenIPC latency-probe method (register step, one clock) |
 | LAT-002 | E | engineering target; proved by verification method T (see 08) |
 | LAT-003 | E | engineering target; proved by verification method T (see 08) |
@@ -270,6 +271,10 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | PWR-004 | E | PAE 30% at 27/30 dBm average OFDM with DPD is unproven; typical class-AB PAs reach less |
 | PWR-005 | E | engineering target; proved by verification method T (see 08) |
 | PWR-006 | E | engineering target; proved by verification method T (see 08) |
+| PWR-007 | E | engineering target; proved by verification method T (see 08) |
+| PWR-008 | C | link_budget.py holdup_table: 1.4 mF on a 12 V bus for 5 ms at 11 W |
+| PWR-009 | E | engineering target; proved by verification method D (see 08) |
+| PWR-010 | E | 8 W and 15 W limits sized from battery_table; consumption of the ground unit not yet estimated |
 | SEC-001 | P | security design rule; review by third party |
 | SEC-002 | S | wfb-ng uses ChaCha20-Poly1305 AEAD per packet (protocol draft) |
 | SEC-003 | P | security design rule; review by third party |
@@ -329,7 +334,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | ASC-005 | E | ASIC target; area and cost unproven (G-23) |
 | ASC-006 | C | link_budget.py interface_table: 2.95 Gbit/s, 29-118 mW at 5-20 pJ/bit (energy per bit is E) |
 | ASC-007 | C | link_budget.py interface_table: 8 Rx at 40 MHz is 11.8 Gbit/s |
-| ASC-008 | E | area added 1.5-4 mm2 from effort.md [E] |
+| ASC-008 | E | area added 1.5-4 mm2 from 16-silicon-size-and-effort.md [E] |
 | ASC-009 | P | provisions list; respin avoidance |
 | TST-001 | P | test infrastructure |
 | TST-002 | S | OpenIPC latency-probe method; rig accuracy is an engineering target |

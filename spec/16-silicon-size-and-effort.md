@@ -1,6 +1,6 @@
-# Silicon size and engineering effort estimate
+# 16 - Silicon Size and Engineering Effort
 
-Status: DRAFT, engineering estimate **[E]**, written against SRS rev 1.8 and updated for `notes.md` entries 11 to 22 (beamforming options, single package with two dies, machine-pilot modes and metadata). Not a measured result. Treat every number as plus or minus a factor of 1.5 on area and a factor of 2 on effort. The spec itself only states die-area targets (ASC-004: digital SoC 30 mm2 or less, RF die 15 mm2 or less, [TBV, G-23]) and an A2 NRE of USD 5 to 10 M [TBV] (`04` section 5). This document adds a block-level estimate behind those targets.
+Status: DRAFT, engineering estimate **[E]**, part of the specification since revision 2.5 (earlier a separate estimate file), written against SRS rev 1.8 and updated for `notes.md` entries 11 to 22 (beamforming options, single package with two dies, machine-pilot modes and metadata). Not a measured result. Treat every number as plus or minus a factor of 1.5 on area and a factor of 2 on effort. The spec itself only states die-area targets (ASC-004: digital SoC 30 mm2 or less, RF die 15 mm2 or less, [TBV, G-23]) and an A2 NRE of USD 5 to 10 M [TBV] (`04` section 5). This document adds a block-level estimate behind those targets.
 
 Assumptions: 22 nm class FD-SOI for the digital SoC; mature RF CMOS or FD-SOI for the RF die (ASC-001, T-08 option B); one digital SoC design for both the air-unit and the ground-unit role; person-year (PY) means one engineer for one year.
 
@@ -138,9 +138,9 @@ About 280 to 350 PY with a team of about 60 people gives about 2.5 to 3 years. T
 
 Shared blocks (modem, FEC, MAC) are reused; the cost is the second physical design, DFT, signoff, top-level verification and bring-up: about 50 to 60 PY plus the mask set (about 3 M [E]), roughly 15 to 20% on top of the single-chip program.
 
-## 3. Inconsistency with `04` section 5
+## 3. Relation to `04` section 5 (resolved)
 
-At USD 0.15 M per PY the roughly 255 PY of digital SoC work (design 93, verification 119, firmware 43; about 200 after reuse) come to about USD 38 M (about USD 30 M after reuse). The A2 figure of USD 5 to 10 M therefore looks like masks, IP licences and tools only, not team labour. `04` should say which it is (G-23: "NRE and volume assumptions are missing").
+At USD 0.15 M per PY the roughly 255 PY of digital SoC work (design 93, verification 119, firmware 43; about 200 after reuse) come to about USD 38 M (about USD 30 M after reuse). The A2 figure of USD 5 to 10 M therefore looks like masks, IP licences and tools only, not team labour. `04` section 5 now says which it is: the A2 row states that the NRE covers masks, IP licences and tools, and refers to this document for the team effort. The cost model itself is still open (G-23).
 
 ## 4. To do
 
@@ -148,4 +148,4 @@ At USD 0.15 M per PY the roughly 255 PY of digital SoC work (design 93, verifica
 
 - Replace the block areas by synthesis and IP-vendor figures when available (G-23).
 - Check the RF die area against a published 2T2R transceiver in the chosen node.
-- Decide whether the effort numbers are to be included in `04` or kept here.
+- Decision: the effort numbers stay in this document; `04` refers to it.

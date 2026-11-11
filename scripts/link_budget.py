@@ -362,7 +362,7 @@ def coax_table() -> str:
 
 
 def tapeout_breakeven_table() -> str:
-    """Break-even volume of a second tape-out for separate air and ground chips (T-22). Inputs from spec/effort.md [E]."""
+    """Break-even volume of a second tape-out for separate air and ground chips (T-22). Inputs from spec/16-silicon-size-and-effort.md [E]."""
     mask_musd, usd_per_py_m, saving_usd_per_unit = 3.0, 0.15, 0.5
     rows = ["| Second tape-out effort PY | Cost MUSD (masks 3 + labour at 0.15 MUSD/PY) | Saving per unit USD (about 5 mm2, 15%) | Break-even volume million units |", "|---|---|---|---|"]
     for py in (50, 60):
@@ -460,6 +460,71 @@ def slice_first_out_table() -> str:
         rows.append(f"| {n} | {cells[0]} | {cells[1]} |")
     return "\n".join(rows)
 
+# ---- notes entries 15, 17, 18: quality ladder, mass per power class, ground-unit battery ------------------------------
+TELEMETRY_DL_MBPS = 2.0  # MAC-007 downlink telemetry share
+LADDER = [  # (rung, picture, MCS name, bits per symbol, required SNR dB, sensitivity at 20 MHz and NF 4 dB)
+    ("L0", "1080p60", "QPSK 3/4", 1.5, 7.0),
+    ("L1", "1080p60 (SYS-003 minimum 10 Mbit/s)", "QPSK 1/2", 1.0, 5.0),
+    ("L2", "720p30", "BPSK 1/2", 0.5, 2.0),
+]
+
+
+def ladder_table() -> str:
+    """Quality ladder of SYS-004: the rung is set by the MCS the link can hold; rates at 20 MHz, split-band downlink share (0.95), overhead 0.85."""
+    rows = ["| Rung | Picture | MCS | SNR dB | Sensitivity dBm (20 MHz, NF 4 dB, 2 dB loss) | Net PHY Mbit/s | Video Mbit/s after 2 Mbit/s telemetry |", "|---|---|---|---|---|---|---|"]
+    for rung, pic, name, bps, snr in LADDER:
+        net = DATA_TONES[20.0] * bps / SYMBOL_US * DL_DUTY_SPLIT * 0.85
+        sens = -101.0 + 4.0 + snr + 2.0
+        rows.append(f"| {rung} | {pic} | {name} | {snr:.0f} | {sens:.0f} | {net:.1f} | {net - TELEMETRY_DL_MBPS:.1f} |")
+    return "\n".join(rows)
+
+
+def transition_table() -> str:
+    """Resolution change needs an IDR picture (AVC activates a new SPS only at an IDR): airtime of a normal and of a budgeted IDR against the 100 ms freeze limit (SYS-004)."""
+    rows = ["| Case | IDR size kbit | Airtime ms at 4.9 Mbit/s | Against 100 ms |", "|---|---|---|---|"]
+    rate = 4.9e6
+    p_frame = rate / 30
+    for name, bits in (("720p30 normal IDR, 5 x P-frame", 5 * p_frame), ("720p30 normal IDR, 10 x P-frame", 10 * p_frame), ("720p30 budgeted IDR, 0.15 bit/pixel", 1280 * 720 * 0.15)):
+        ms = bits / rate * 1000
+        rows.append(f"| {name} | {bits / 1000:.0f} | {ms:.0f} | {'fails' if ms > 100 else 'meets'} |")
+    return "\n".join(rows)
+
+
+def mass_class_table() -> str:
+    """Air-unit mass by power class (notes entry 17): heat = input - RF output; heatsink mass scales with heat from 8 to 12 g at the 27 dBm point; other parts 12 to 16 g."""
+    heat27 = input_power_w(27, 7.0) - 10 ** 2.7 / 1000  # heat at the 27 dBm reference point (64QAM back-off)
+    rows = ["| Class | Input W | RF output W | Heat W | Heatsink g | Other parts g | Total g | Mass limit g |", "|---|---|---|---|---|---|---|---|"]
+    for dbm, bo, limit in ((25, 7.0, "25"), (27, 7.0, "25"), (30, 6.0, "30"), (33, 6.0, "40")):
+        pin = input_power_w(dbm, bo)
+        pout = 10 ** (dbm / 10) / 1000
+        heat = pin - pout
+        k = heat / heat27
+        lo, hi = 12 + 8 * k, 16 + 12 * k
+        rows.append(f"| {dbm} dBm | {pin:.1f} | {pout:.1f} | {heat:.1f} | {8 * k:.1f} to {12 * k:.1f} | 12 to 16 | {lo:.0f} to {hi:.0f} | {limit} |")
+    return "\n".join(rows)
+
+
+def battery_table() -> str:
+    """Ground-unit run time (notes entry 18): energy of a reference pack against 1 h, cold capacity loss 30%."""
+    rows = ["| Pack | Energy Wh (3 Ah cells, 3.7 V nominal) | Cold energy Wh (-30%) | Run time at 8 W, h | Run time at 15 W, h | Largest load for 1 h at -10 C, W |", "|---|---|---|---|---|---|"]
+    for cells in (1, 2, 4, 6):
+        wh = cells * 3.0 * 3.7
+        cold = wh * 0.7
+        rows.append(f"| {cells}S | {wh:.1f} | {cold:.1f} | {cold / 8:.1f} | {cold / 15:.1f} | {cold:.1f} |")
+    return "\n".join(rows)
+
+
+def holdup_table() -> str:
+    """Hold-up capacitance for a break in the supply of one pack change (notes entry 18): C = 2 P t / (V1^2 - V2^2); 11 W load."""
+    rows = ["| Break ms | Capacitor at the 1S input, 4.2 V to 3.0 V, mF | Capacitor on a 12 V bus, 12 V to 8 V, mF |", "|---|---|---|"]
+    p = 11.0
+    for t_ms in (1, 5, 20):
+        a = 2 * p * t_ms / 1000 / (4.2 ** 2 - 3.0 ** 2) * 1000
+        b = 2 * p * t_ms / 1000 / (12.0 ** 2 - 8.0 ** 2) * 1000
+        rows.append(f"| {t_ms} | {a:.1f} | {b:.2f} |")
+    rows.append("| 1S input current at 11 W, 90% converter, 3.0 V | 4.1 A | |")
+    return "\n".join(rows)
+
 
 def tdd_table() -> str:
     """TDD frame budget per range class with the range-adaptive frame length (T-03 option C)."""
@@ -534,3 +599,13 @@ if __name__ == "__main__":
     print(slice_count_table())
     print()
     print(slice_first_out_table())
+    print()
+    print(ladder_table())
+    print()
+    print(transition_table())
+    print()
+    print(mass_class_table())
+    print()
+    print(battery_table())
+    print()
+    print(holdup_table())
