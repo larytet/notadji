@@ -1,0 +1,69 @@
+# 12 - FFT and IFFT (64 to 512 points, 1024 optional)
+
+Plan entry: module 12 of `spec/18-development-plan.md`, class M, data plane. Requirements: PHY-001 (FFT sizes 64, 128, 256, 512; 1024 for the optional 80 MHz mode), PHY-002, PHY-013 (programmable numerology). Used by the transmit chain (module 16, as IFFT) and by the receiver (modules 17 and 18, as FFT). Depends on module 1 (stream convention).
+
+## 1. Architecture decision
+
+Sample rates are low against the clock: one OFDM symbol (useful part plus prefix) lasts 14.4 us at the 1/8 prefix for every N (constant sub-carrier spacing, PHY-003), which is 2880 clocks at 200 MHz. A radix-2 decimation-in-time FFT needs N/2 x log2(N) butterflies, that is 2304 for N = 512 and 5120 for N = 1024, so **one butterfly per clock** in an iterative in-place engine is enough for N up to 512 at 200 MHz (80% utilisation) with a memory-based design that is small and easy to verify. N = 1024 (about 5120 butterflies against 11520 clocks at 80 MHz channel bandwidth where the symbol is 14.4 us x 1.0 = 2880 clocks as well) needs two butterflies per clock or a clock above 360 MHz; it is accepted by the hardware but the real-time claim is made for N up to 512 only **[E]**; this is an open item (section 8).
+
+The engine works on two buffers that alternate (ping-pong): while one symbol is being transformed, the next symbol is loaded into the other buffer and the previous result is read out of it, so the engine, the input and the output all run concurrently. Input samples are written in bit-reversed address order (free, it is only an address mapping), the transform is done in place, and the output is read in natural order.
+
+Fixed point, 16-bit signed I and Q (Q15 twiddles with 32767 as full scale), round-half-up rescaling. Per-stage right shifts are configured by a mask so the gain can be chosen (see section 4). A saturation counter shows when a result did not fit.
+
+## 2. Algorithm (the definition the tests use)
+
+Input `x[0..N-1]` (natural order), N = 2^L, L = 6 to `MAX_LOG2`. Buffer `a[bitrev_L(k)] = x[k]`. For stage s = 1 to L: m = 2^s, h = m/2; for each of the N/2 butterflies c = 0 .. N/2-1: `j = c mod h`, `g = floor(c / h)`, `i = g m + j`, `i2 = i + h`, twiddle index `t = j * 2^(10-s)` into a 1024-point table, `w = cos(2 pi t/1024) - sign x j sin(2 pi t/1024)` with `sign = +1` for the forward transform (kernel `e^{-j 2 pi n k/N}`) and `sign = -1` for the inverse (kernel `e^{+j ...}`); table entries are `round(32767 cos)` and `round(32767 sin)`. Then `p = round_Q15(a[i2] x w)` with `round_Q15(v) = (v + 2^14) >> 15` (arithmetic shift) applied to the real and imaginary parts of the product separately and saturated to 16 bits; `u = a[i]`; `a[i] = u + p`, `a[i2] = u - p`. If bit (s-1) of `shift_mask` is set, each of the sums is `(v + 1) >> 1` (round half up; no saturation needed); otherwise the sums are saturated to the 16-bit range and each saturation increments `ovf_cnt`. Output `y[k] = a[k]`. Neither transform is normalised by itself: the forward result is `sum x e^{-j...}` (scaled by `2^-popcount(shift_mask)`), the inverse is `sum x e^{+j...}` likewise.
+
+## 3. Interface
+
+Module `fft_core`, parameters `W` fixed at 16 per component (the 32-bit sample word `{Q[15:0], I[15:0]}` as in modules 4, 6 and 7) and `MAX_LOG2` (default 10, at most 10).
+
+| Port | Description |
+|---|---|
+| `clk`, `rst_n` | as in module 1 |
+| `fft_log2[3:0]` | L, 6 to `MAX_LOG2` (clamped); sampled with the first input sample of a symbol and held for that symbol |
+| `inverse` | 1: inverse transform; sampled with the first sample |
+| `shift_mask[9:0]` | bit s-1 set: shift right by one after stage s; sampled with the first sample (bits above L-1 are ignored) |
+| `s_axis_*` | Input samples, natural order, N per symbol; `last` expected on the N-th sample (`err_len` pulses for every beat where `last` disagrees with the count, as in module 4; the symbol is closed by the count) |
+| `m_axis_*` | Output samples, natural order, `last` on the N-th |
+| `ovf_cnt[15:0]` | Saturating count of saturation events (since reset) |
+| `err_len` | See above |
+
+Latency: the first output sample is available after N input clocks plus N/2 x L butterfly clocks plus a few. Throughput: the engine can start a new symbol every N/2 x L + small clocks when the input and output keep up (N = 512: about 2310 clocks).
+
+## 4. Scaling guidance
+
+The inverse transform with all stage shifts off multiplies a frequency-domain vector with per-tone RMS A over U used tones to a time-domain RMS of about `A sqrt(U)` (for A = 4096 (module 6) and U = 242: 63700, which does not fit); with `popcount(shift_mask)` = 5 the RMS is about 1990 and the peak (PAPR of about 11 dB) fits in 16 bits. A receiver forward transform that must never overflow uses `shift_mask` = all ones (an overall 1/N). Final values come from the fixed-point study SIM-006; they are configuration, not hard-wired.
+
+## 5. Twiddle table
+
+`rtl/12-fft/fft_twiddle_rom.sv` is generated by `scripts/gen_fft_twiddle.py` (1024-point table, indices 0 to 511, cosine and sine as signed 16-bit). The generator is part of the repository; the test recomputes the table independently and compares it with the RTL through the transform results and a direct dump test.
+
+## 6. Test plan
+
+A bit-exact Python model of section 2 (integers only) and `numpy` for accuracy.
+
+| ID | Test | Pass criterion |
+|---|---|---|
+| T12-01 | Bit-exact, forward and inverse | For every L from 6 to `MAX_LOG2` and random 16-bit-range inputs with several `shift_mask` values (none, all, five stages): RTL output equals the model exactly, including `ovf_cnt` |
+| T12-02 | Accuracy against floating point | Forward transform with all stages shifted: error versus `numpy.fft.fft(x)/N` (rms of the error over rms of the signal) below 1e-3 for random full-scale inputs, for each N; inverse likewise against `numpy.fft.ifft(x)` (with the matching scale) |
+| T12-03 | Known signals | An impulse gives a flat spectrum; a single complex exponential at bin k gives one peak at bin k (forward) and the inverse of that peak restores the sinusoid within the fixed-point error |
+| T12-04 | Round trip | Forward then inverse (two passes through the DUT) restores the input within 2 least-significant bits per stage budget (measured and recorded) |
+| T12-05 | Saturation | Full-scale inputs with no shifting: the output saturates, `ovf_cnt` equals the model's count |
+| T12-06 | Back-to-back symbols, random handshakes | Several symbols of different sizes and modes in a row with random valid and ready, configuration changing per symbol (the `pre` hook): all equal the model; the protocol-stability check passes |
+| T12-07 | Throughput and concurrency | With an always-ready sink and always-valid source the output symbol period at N = 256 is at most N/2 x L + 40 clocks (input, compute and output overlap) |
+| T12-08 | Bad `last` | `err_len` pulses; the symbol is still closed by the count; next symbols correct |
+| T12-09 | Twiddle table | Dumped through the transform of a unit impulse at each bin position the table values equal the independently computed table (all 512 entries) |
+| L-12, S-12 | Lint and synthesis | `-Wall` clean; no latches; counts recorded |
+
+Configurations: `MAX_LOG2` = 9 (all sizes up to 512 and the throughput measurement) and `MAX_LOG2` = 10 (1024 point correctness once).
+
+## 7. Deliverables
+
+`scripts/gen_fft_twiddle.py`, `rtl/12-fft/fft_twiddle_rom.sv` (generated), `rtl/12-fft/fft_core.sv`, `tests/12-fft/`, results below, row in `design/README.md`.
+
+## 8. Open items
+
+- Real-time operation at N = 1024 (two butterflies per clock or a faster clock).
+- Pipelining of the butterfly (the multiplier is combinational here; on the FPGA a DSP pipeline of three to four stages is needed and the engine then needs a few more clocks per stage for hazard-free in-place operation) and block-RAM mapping (registered read); both depend on Vivado results.
+- A radix-4 or split-radix engine would reduce the butterfly count if the clock budget requires it.

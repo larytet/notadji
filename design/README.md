@@ -21,3 +21,4 @@ Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` 
 | 9 | Slice packetiser and depacketiser | done (`f34b3ab`) | done: 20 tests (6 configurations) pass, lint clean, no latches |
 | 10 | Frame-timeline sequencer | done (`583bc29`) | done: 20 tests (2 configurations, cycle-accurate model) pass, lint clean, no latches |
 | 11 | Radio interface wrapper | done (`30cee02`) | done: 7 tests in 5 simulations pass, lint clean, no latches |
+| 12 | FFT and IFFT | in progress | pending |
