@@ -15,4 +15,4 @@ Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` 
 | 3 | Scrambler and CRC engines | done (`e4e1f2c`) | done: 40 tests (8 configurations) pass, lint clean, no latches |
 | 4 | Cyclic-prefix insert and remove | done (`db5e482`) | done: 28 tests (6 configurations) pass, lint clean, no latches |
 | 5 | Interleaver and de-interleaver | done (`e9cb26a`) | done: 44 tests (8 configurations) pass, lint clean, no latches |
-| 6 | Constellation mapper | in progress | pending |
+| 6 | Constellation mapper | done (`33cb2ec`) | done: 6 tests pass (all 2048 mod/word combinations), lint clean, no latches |

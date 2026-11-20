@@ -51,3 +51,19 @@ Python reference with the same definition (computed independently from the formu
 - Non-square 32QAM or 128QAM are not included (not in PHY-004).
 - Output scaling (RMS 4096) is a starting value; the final value follows from the fixed-point study SIM-006 and the IFFT scaling (module 12).
 - Pilot and preamble BPSK symbols use this block (module 7 may bypass it with its own table).
+
+## 7. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/06-mapper && tests/common/lint_synth.sh tests/06-mapper`.
+
+| Check | Result |
+|---|---|
+| T6-01 to T6-06 (6 tests) | 6 of 6 pass: all 2048 (mod, input word) combinations equal the independent Python model; nearest neighbours differ in one bit for QPSK, 16QAM, 64QAM and 256QAM; mean power within 1% of 4096^2 for all five modulations; per-beat modulation changes with random handshakes (3000 beats, three handshake patterns); zero-latency pass-through; amplitude tables equal the closed form |
+| Test sensitivity | A deliberate one-unit error in a table entry (1896 changed to 1897) failed three tests; the RTL was restored and the run repeated |
+| Lint (`verilator -Wall`) | Clean |
+| Yosys generic synthesis | 309 cells, 0 flip-flops (purely combinational), no latches |
+
+Notes:
+- BPSK polarity: input bit 1 gives +4096 and bit 0 gives -4096 (the same rule as the QAM axes with one bit). The reserved `mod` values 5 to 7 map as BPSK.
+- The mapper has `clk` and `rst_n` ports for interface uniformity only; they are unused (the block is combinational).
+- Writing the Gray decode in Verilog-2001 function style (variable indices, 32-bit integer arithmetic) was needed to be clean in both Verilator `-Wall` and Yosys.
