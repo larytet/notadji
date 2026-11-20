@@ -252,7 +252,7 @@ known = set(ids)
 dangling = set()
 for doc, t in TEXT.items():
     for r in re.findall(r"\b([A-Z]{2,4}-\d{3})\b", t):
-        if r not in known and not r.startswith(("G-", "T-", "A-", "S-", "R-", "P-", "D-", "O-", "TG-")) and r not in ("AES-256", "RSS-247", "EN-300", "UG-570"):
+        if r not in known and not r.startswith(("G-", "T-", "A-", "S-", "R-", "P-", "D-", "O-", "TG-", "SIM-")) and r not in ("AES-256", "RSS-247", "EN-300", "UG-570"):
             dangling.add((doc, r))
 check("no dangling requirement references", not dangling, str(sorted(dangling)))
 rev = re.search(r"revision (\d+\.\d+)", SRS).group(1)
