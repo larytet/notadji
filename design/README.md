@@ -27,3 +27,4 @@ Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` 
 | 15 | Authenticated encryption (ChaCha20-Poly1305) | done (`d88afd0`) | done: 9 tests pass against the `cryptography` reference (RFC 8439), 1135 Mbit/s, lint clean, no latches |
 | 16 | Transmit chain integration | done (`5e2e0ff`) | done: whole chain bit-exact against the golden model and recovered by a closed-loop receiver; 5 glue blocks tested; lint clean, no latches |
 | 17 | Channel estimator and equaliser | done (`28117b1`) | done: 8 tests pass (bit-exact model, EVM -50 to -60 dB noiseless, within 0.1 dB of a float reference with noise), lint clean, no latches; full gate-level synthesis not completed |
+| 18 | Burst detection, timing and carrier-offset estimation | in progress | pending |
