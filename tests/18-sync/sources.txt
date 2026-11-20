@@ -1,0 +1,3 @@
+rtl/12-fft/fft_twiddle_rom.sv
+rtl/18-sync/cordic_vec.sv
+rtl/18-sync/sync_core.sv

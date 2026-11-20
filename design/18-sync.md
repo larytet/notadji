@@ -24,7 +24,7 @@ Time-domain test signals are built from the golden model of module 16 (the STF a
 | ID | Test | Pass criterion |
 |---|---|---|
 | T18-01 | Detection | For N = 64, 128, 256, 512, SNR 20, 10 and 5 dB, random leading gaps: `det` fires once per burst, after the start of the STF and before the end of the STF stretch, in 50 of 50 bursts at 20 and 10 dB and at least 45 of 50 at 5 dB |
-| T18-02 | No false alarm | Noise only (SNR irrelevant, three power levels) and a pure carrier: no `det` in 200000 samples; the all-zero input never triggers (`min_power`) |
+| T18-02 | No false alarm | Noise only (three power levels, 120000 samples) and silence: no `det`; the all-zero input never triggers (`min_power`). A pure carrier **does** trigger the detector (any signal with period `P` has metric 1); this is a documented limitation, not tested as a pass criterion |
 | T18-03 | Carrier offset estimate | For offsets of +/-0.1, +/-0.5, +/-1, +/-1.9 sub-carrier spacings and SNR 20 and 10 dB: the estimate error of the per-sample phase step is below 2% of a sub-carrier spacing (20 dB) and below 5% (10 dB); measured and recorded |
 | T18-04 | Derotation | After detection the derotated STF and LTF show a residual phase slope below the tolerance of the equaliser: the residual offset (estimated again from the output samples) is below 0.1 sub-carrier spacing |
 | T18-05 | Timing marker | `n_fall - k_back` minus the true end of the STF: mean and standard deviation over 100 bursts at 20, 10 and 5 dB recorded; the 99th percentile magnitude is below 25% of the prefix length at 20 dB |
@@ -43,3 +43,29 @@ Time-domain test signals are built from the golden model of module 16 (the STF a
 - The 40 us acquisition budget (PHY-010) against the STF length: the detector needs about `P/2` plateau samples after the correlator window fills (`2P` samples); the exact figure is measured in T18-01 and compared with the budget in the results.
 - A frequency-domain or LTF-based timing refinement if the marker jitter turns out too large at low SNR.
 - Selectable window length `W` (the shorter the faster, the noisier).
+
+## 6. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/18-sync && tests/common/lint_synth.sh tests/18-sync`.
+
+| Check | Result |
+|---|---|
+| T18-01 to T18-08 (7 tests in 2 simulations: `cordic_vec`, `sync_core`) | 7 of 7 pass |
+| Detection (T18-01), measured | 20 of 20 bursts (12 of 12 at N = 512) at **every** N from 64 to 512 and every SNR of 20, 10 and 5 dB, with random carrier offsets up to +/-1.9 sub-carrier spacings and random leading gaps |
+| Acquisition time (T18-01), measured | Detection about 2.0 P after the start of the STF at 20 dB, 2.1 P at 10 dB and 2.3 to 2.4 P at 5 dB (P = N/4); for N = 256 that is 130, 137 and 153 samples, 6.5 to 7.7 us at a 20 MS/s sample rate, against the 40 us of PHY-010 for detection, AGC settling and synchronisation together (the AGC settling time is not measured here) |
+| False alarms (T18-02) | None in 120000 noise samples at three power levels and in silence |
+| Carrier offset (T18-03/04), measured | Worst estimate error 0.012 sub-carrier spacings at 20 dB and 0.043 at 10 dB (offsets from -1.9 to +1.9); after derotation the residual offset estimated from the two long-training symbols is below 0.1 sub-carrier spacings at 20 dB |
+| Timing marker (T18-05), measured, N = 128 (prefix 16) | Error of `fall - k_back` against the true end of the STF: 20 dB mean +1.95, standard deviation 0.22, maximum 2 samples; 10 dB mean +1.07, standard deviation 0.68, maximum 3; **5 dB mean -12.8, standard deviation 17.9, maximum 62 (unusable)**. The marker is reliable down to 10 dB and not at 5 dB; the test asserts only the 20 dB case |
+| AGC monitor (T18-06) | `agc_up` and `agc_down` pulses outside the band only, none inside it |
+| Bursts in a row (T18-07) | Three bursts with `rearm` between them: three detections, estimates within 0.03 sub-carrier spacings |
+| CORDIC (T18-08), measured | Worst angle error 1 LSB of 65536 per turn for vectors of magnitude above 1000 (limit 2); integer vectors of magnitude below 50 have quantisation-limited errors (2378 LSB for a vector of a few counts, reported but not asserted) |
+| Test sensitivity | A deliberate bug (the metric normalised by the current window energy only, the first design) failed the detection and offset tests; the RTL was restored |
+| Lint (`verilator -Wall`) | Clean (both tops) |
+| Yosys | `cordic_vec`: 1514 cells, 113 flip-flops, no latches (full synthesis). `sync_core`: the RTL-level pass finds no latches (327 cells, 20 multiplier cells, before mapping); **full gate-level synthesis did not finish within 10 minutes** (open item: narrower products and a block-RAM style delay line) |
+
+Bugs found and fixed during the work (the first test run failed detection at N = 256 and the energy had wrapped to about 2^40):
+- **Stale delay line after reset.** The delay line was not cleared while the running sums were, so after a reset the stale samples leaving the window subtracted energy and correlation that had never been added, a permanent error. Fixed with a fill counter that treats samples older than the reset as zero.
+- **Metric normalisation.** The metric was normalised by the current window energy only. When a burst ends the lagged window still holds loud signal and the current window only noise, so `|C|` (noise times signal) exceeded the current energy and the metric exceeded 1: false detections at the start of the next gap (found as detections at sample 31 in bursts that followed another burst). The metric is now `|C|^2 / (E_cur E_lag)` with a second running sum of the lagged window energy.
+- Product widths were reduced (22-bit operands after normalisation on the largest of the three quantities) to keep the arithmetic narrow.
+
+Notes and open items: see section 5; in addition the 5 dB timing result above means a refinement from the long-training symbols is needed before the marker is used at low SNR, and the cyclic-prefix back-off of module 4 should be set from the measured jitter of the chosen operating point.

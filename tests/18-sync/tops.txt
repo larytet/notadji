@@ -1,0 +1,2 @@
+cordic_vec
+sync_core

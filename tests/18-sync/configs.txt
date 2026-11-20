@@ -1,0 +1,2 @@
+cordic|cordic_vec|test_cordic||
+sync|sync_core|test_sync|-GMAX_LOG2=9|
