@@ -1,0 +1,3 @@
+stats|cal_stats|test_cal||G=stats
+corr|iq_corr|test_cal||G=corr
+loop|cal_loop|test_cal||G=loop

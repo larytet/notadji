@@ -57,3 +57,37 @@ Accumulates over a window of samples: `start` (pulse) with `n_samples[23:0]` beg
 - TX power versus frequency and temperature (RF-011) tables are stored and restored by this module but the measurement loop (a power detector, not a sample path) is not part of it.
 - Non-volatile storage drivers, factory calibration procedure and the DPD seed coefficients (CAL-001, module 26).
 - Not run on a target core (no QEMU/Renode).
+
+## 7. Results (implementation commit)
+
+RTL: cocotb on Verilator (`tests/25-calibration`, three simulations: `cal_stats`, `iq_corr`, the loop wrapper `cal_loop`). Firmware: host build with the Python harness `test_cal_fw.py` (7 tests). Everything passes. The loop tests in the wrapper are the long ones (about 25 minutes).
+
+Design changes made while testing (the algorithm as implemented):
+
+- The statistics of **every** job are taken on the signal as it is after the corrections in force, so each estimate is the residual and every update is **additive** (`c += residual`), the first update of a job after a hop or a start with the full residual and later ones with a quarter of it (section 3 described a blend towards a replacement value). This is uniform for RX DC, RX IQ, TX LO leakage and TX IQ, and it follows slow drift.
+- Two windows of 16384 samples are added in the accumulator (no clear between them) for the transmit jobs; the 50 us dwell of a guard window holds about 1000 samples, so a real estimate would add many windows (the accumulator holds up to 2^17 full-scale samples).
+- Bug found by the tests: the temperature-bin index used truncating division for negative temperatures; it is now one expression `(temp_x10 + 200) / 50` clamped to the 21 bins. The lookup probed only 21 positions in the outward search (reaching 10 bins each way) and missed a valid bin at the far end; it now probes up to 42 positions (21 distinct bins).
+- `iq_corr`: a coefficient change takes effect for samples that enter after the pipeline is empty (a sample in the clock of `cfg_valid` sees mixed old and new values); the caller programs it at a frame boundary.
+
+| Test | Result |
+|---|---|
+| T25-01 | `cal_stats`: 27 windows (1 to 65536 samples, duty 100% and 50%, small and extreme values, windows adding up, `clear`) equal the exact numpy sums, `count` and `done`; 24 starts while busy counted |
+| T25-02 | `iq_corr`: 9702 samples in 40 configurations (pass-through, both DC modes, random coefficients, full-scale samples that saturate) equal the integer model bit for bit; against the float formula within 1 LSB (after saturation) |
+| T25-03 | Estimator accuracy over 40 random impairments per size (`|e|` 0.005 to 0.15, DC up to 2000 LSB, signal at 30 dB SNR): worst residual image rejection after correction 33.0 dB at N = 4096 (limit 30), 36.0 dB at N = 16384 (limit 35), 43.3 dB at N = 65536 (limit 40); worst DC error 2.2, 1.2 and 0.8 LSB; the estimate stays within 6 sigma of the exact relation `e / (1 + |e|^2)` |
+| T25-04 | A real tone, DC only, an all-zero window, one-sided noise, a window of 100 samples and a huge DC are rejected with the right status; a rejected window leaves the registers unchanged |
+| T25-05 | Receive loop in RTL (`cal_stats` -> firmware -> `iq_corr`), 12 random impairments, N = 16384, one full update and three quarter-step rounds: image rejection from 21 to 37 dB before to 49.0 to 63.7 dB after (limit 40, RF-024), residual DC -81.6 dBFS worst (limit -80); the verification uses a tone and an FFT, independent of the estimator's circularity assumption |
+| T25-06 | Transmit loop in RTL through an observation receiver with its own impairments (corrected by the receive loop first), 6 random impairments, 6 rounds of 2 x 16384 samples: sideband from -21 to -28 dBc before to -45.3 to -50.4 dBc after (limit -45, RF-025), LO leakage from -17 to -21 dBc before to -46.4 to -58.7 dBc after (limit -45). With a single 16384-sample window per round one trial reached only -42.4 dBc: the estimator noise needs about 32768 samples per estimate for the 5 dB margin |
+| T25-07 | CRC-32 equals `zlib.crc32` for 5 lengths; 4800 single-bit flips in 40 random entries (all 32 bytes) all detected; a wrong version and a misplaced entry detected; 300 random lookups return the nearest valid bin (probes at most 21, exactly 1 for a valid own bin); with no valid entry the neutral default is used and flagged |
+| T25-08 | Temperature ramp of 0.1 degC/s for 600 s: 12 runs of each job, gaps of 51.0 s (5 degC plus the 1 s granularity); constant temperature: every 60 s; a 12 degC step: one set of four jobs within 0.2 s; 20 ms minimum gap and window gating respected (no job without its window); TX jobs wait for the first RX DC job |
+| T25-09 | 40 sequences of 30 noisy updates (N = 4096): steady jitter 0.00248 against 0.00668 for a single window (a factor 2.7); the final error of the last sequence 0.0074 |
+| T25-10 | A hop to a calibrated bin is one table probe; the worst case (one valid bin at the far end) is 21 probes; the register list is 8 values. The path is bounded, not loop-free |
+| T25-11 | Strict build clean (`-mgeneral-regs-only`, no floating point), no undefined symbols, 3779 bytes of code, no data or bss; 300000 random sums and 2000 random table images under UBSan and ASan |
+| L-25, S-25 | `-Wall` clean; `cal_stats` 7600 cells (299 flip-flops), `iq_corr` 8716 cells (301 flip-flops, four 17x16 multiplications), no latches |
+| Mutation | `iq_corr` quadrature term sign flipped: T25-02 fails; estimator `e_i` sign flipped: T25-03 and T25-09 fail; both restored |
+
+### Limits
+
+- Frequency-flat imbalance only; the model of the tests is the first-order `z = x + e x*`. A frequency-dependent imbalance (wide channels) needs a per-sub-band or filter-based correction, not designed here.
+- The blind estimator needs a circular signal; a loop-back tone and the TX power versus temperature measurements are not implemented.
+- The closed-loop tests ran with the previous revision of `iq_corr`'s saturation function written with `return` statements (functionally identical; Yosys did not accept it); the bit-exact test `t25_02_corr` was re-run on the final file, the loop was not.
+- Not run on a target core; non-volatile storage drivers, the factory calibration procedure and TX power tables are outside this module.
