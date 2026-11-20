@@ -1,0 +1,6 @@
+pack_4096|slice_pack|test_pack|-GMAX_BYTES=4096|MAXB=4096
+pack_64|slice_pack|test_pack|-GMAX_BYTES=64|MAXB=64
+unpack_4096|slice_unpack|test_unpack|-GMAX_BYTES=4096|MAXB=4096
+unpack_64|slice_unpack|test_unpack|-GMAX_BYTES=64|MAXB=64
+loop_4096|slice_loop|test_loop|-GMAX_BYTES=4096|MAXB=4096
+loop_64|slice_loop|test_loop|-GMAX_BYTES=64|MAXB=64

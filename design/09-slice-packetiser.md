@@ -40,14 +40,14 @@ Python model of the format (`zlib.crc32`, `binascii.crc_hqx`) builds frames and 
 |---|---|---|---|
 | T9-01 | pack | Random slices (payload 0 to 600 bytes, random metadata), full speed | Output frame equals the model byte for byte, `last` on the final byte |
 | T9-02 | pack | Random valid and ready, several slices queued | Same; no loss; stream protocol stable |
-| T9-03 | pack | Slice of exactly `MAX_BYTES` and of 1 byte, and zero length | Correct frames (zero length gives CRC 0) |
+| T9-03 | pack | Slice of exactly `MAX_BYTES` and of 1 byte | Correct frames. A zero-length slice cannot be expressed on the byte-stream input (a slice needs at least one byte with `last`); the zero-length case (CRC 0) is tested on the receive side in T9-05 |
 | T9-04 | pack | Throughput | Back-to-back slices leave the output with no idle clock inside a frame; the gap between frames is at most 2 clocks while data is queued |
 | T9-05 | unpack | Frames from the model, full speed and random handshakes | Payload equals the original; status fields equal the metadata; `st_hdr_ok` and `st_crc_ok` set |
 | T9-06 | unpack | Padding after the CRC (0 to 40 extra bytes) | Ignored; status unchanged |
 | T9-07 | unpack | Single-bit error in every header byte position (all 64 bits) | `st_hdr_ok` = 0 for every one; no payload forwarded |
 | T9-08 | unpack | Single-bit error in the payload and in the CRC | `st_hdr_ok` = 1 and `st_crc_ok` = 0 for every tested error (200 random) |
 | T9-09 | unpack | Truncated frames (ending inside the header, the payload, the CRC) | `st_trunc` = 1 (or `st_hdr_ok` = 0 inside the header); the stream is closed with `last` when payload bytes were forwarded; the next frame is received correctly |
-| T9-10 | unpack | `len` above `MAX_BYTES` with a valid header CRC | `st_hdr_ok` = 0 |
+| T9-10 | unpack | `len` above `MAX_BYTES` with a valid header CRC; `len` equal to `MAX_BYTES` | `st_hdr_ok` = 0 above the limit; accepted with a good CRC at exactly the limit |
 | T9-11 | both | Loop-back (pack followed by unpack): random slices, handshakes | Payload and metadata recovered; `st_crc_ok` = 1 |
 | L-09, S-09 | both | Lint and synthesis | `-Wall` clean; no latches; counts recorded |
 
@@ -62,3 +62,19 @@ Configuration: `MAX_BYTES` = 4096 (default) for pack and unpack; a small `MAX_BY
 - Whether the header should carry a timestamp for latency measurement (LAT-004) and the acknowledgement bitmap fields (MAC-004); they travel in the MAC frame, not in each slice, in this revision.
 - The partial-word (`keep`) question raised in modules 1 and 3 does not arise here: the frame is a byte stream; byte-to-word conversion is module 1's width converter.
 - Header protection (VID-011) is a PHY/MAC task (code rate of the header codeword), not part of this layer.
+
+## 7. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/09-slice-packetiser && tests/common/lint_synth.sh tests/09-slice-packetiser`.
+
+| Check | Result |
+|---|---|
+| T9-01 to T9-11 in 6 configurations (`slice_pack`, `slice_unpack`, loop-back; each with `MAX_BYTES` 4096 and 64) | 20 of 20 pass: random slices with random handshakes equal the model byte for byte; payloads of 1 byte and exactly `MAX_BYTES`; no idle clock inside a frame and at most 2 clocks between frames; all 64 single-bit header errors detected with no payload forwarded; 200 random payload and CRC errors flagged (`st_crc_ok` = 0, header ok); truncation in the header, payload and CRC; padding ignored; over-long length rejected and the exact limit accepted; loop-back recovers payload and metadata |
+| Test sensitivity | A deliberate off-by-one in the length check (`<=` changed to `<`) was first caught by one test only; T9-10 was extended with the exact-limit case and now two tests catch it; the RTL was restored |
+| Lint (`verilator -Wall`) | Clean (all three tops) |
+| Yosys generic synthesis | `slice_pack` (4096-byte buffer as flip-flops): 106429 cells, 33130 flip-flops; `slice_unpack`: 1444 cells, 188 flip-flops; no latches |
+
+Notes found during the work:
+- The status of a truncated frame inside the header carries zero metadata (the header was never complete); a payload cut short is closed with a dummy 0x00 byte with `last` (the payload stream cannot be retracted), and the status says `st_trunc` = 1.
+- The shared test helper `run_stream` now releases the source one clock after the last accepted word. Before, it left `valid` high on the last byte, which a DUT with no flow limit accepted again as a one-byte frame (six spurious truncated-frame statuses in the first version of the unpack tests). The module 3 CRC test depended on the old timing and was changed to use a monitor that runs throughout.
+- `slice_pack` stores the whole payload before sending (store-and-forward) because the length is in the header.

@@ -4,7 +4,7 @@ import random
 import zlib
 
 import cocotb
-from cocotb.triggers import FallingEdge, Timer
+from cocotb.triggers import ClockCycles, FallingEdge, Timer
 
 from stream_tb import reset, run_stream, start_clock
 
@@ -55,18 +55,16 @@ async def send(dut, frames, rng, pv, pr):
     words = [fw for f in frames for fw in frame_words(f)]
     pulses = []
 
-    def extra(d, cyc):
-        if int(d.crc_valid.value):
-            pulses.append((int(d.crc_value.value), int(d.crc_ok.value)))
+    async def mon():
+        while True:
+            await FallingEdge(dut.clk)
+            if int(dut.crc_valid.value):
+                pulses.append((int(dut.crc_value.value), int(dut.crc_ok.value)))
 
-    res = await run_stream(dut, words, pv, pr, DW, rng, extra=extra)
-    # the pulse for the last frame comes one clock after its last transfer
-    await FallingEdge(dut.clk)
-    dut.s_axis_valid.value = 0
-    dut.m_axis_ready.value = 1
-    await Timer(1, unit="ns")
-    if int(dut.crc_valid.value):
-        pulses.append((int(dut.crc_value.value), int(dut.crc_ok.value)))
+    m = cocotb.start_soon(mon())
+    res = await run_stream(dut, words, pv, pr, DW, rng)
+    await ClockCycles(dut.clk, 3)      # the pulse of the last frame comes one clock after its last transfer
+    m.cancel()
     assert [w for w in res.out] == words
     assert not res.violations
     return pulses

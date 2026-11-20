@@ -3,3 +3,5 @@ reference/*
 !reference/MANIFEST.tsv
 !reference/SKIPPED_LARGE.tsv
 build/
+__pycache__/
+*.pyc

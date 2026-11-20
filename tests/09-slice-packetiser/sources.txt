@@ -1,0 +1,5 @@
+rtl/01-axi-library/axis_fifo.sv
+rtl/03-scrambler-crc/crc_engine.sv
+rtl/09-slice-packetiser/slice_pack.sv
+rtl/09-slice-packetiser/slice_unpack.sv
+tests/09-slice-packetiser/slice_loop.sv

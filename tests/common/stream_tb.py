@@ -97,6 +97,9 @@ async def run_stream(dut, words, p_valid, p_ready, in_w, rng, clk="clk", max_cyc
         if extra:
             extra(dut, cyc)
         cyc += 1
+    # the last accepted word transfers at the coming rising edge; release the source afterwards
+    await FallingEdge(clk_sig)
+    dut.s_axis_valid.value = 0
     res.cycles = cyc
     res.idx_in = idx
     return res

@@ -74,7 +74,7 @@ Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/04-cyclic-pre
 
 | Check | Result |
 |---|---|
-| T4-01 to T4-10 in 6 configurations (`cp_insert`, `cp_remove`, loop-back; each with W=32/MAX_LOG2=9 and W=16/MAX_LOG2=7) | 28 of 28 pass: all N from 64 to 512 and all three prefix lengths, random handshakes, per-symbol configuration changes, back-off including values above L, bad `last` |
+| T4-01 to T4-10 in 6 configurations (`cp_insert`, `cp_remove`, loop-back; each with W=32/MAX_LOG2=9 and W=16/MAX_LOG2=7) | 20 of 20 pass: all N from 64 to 512 and all three prefix lengths, random handshakes, per-symbol configuration changes, back-off including values above L, bad `last` |
 | Throughput (T4-04) | The input period equals N + L clocks within one clock for every N and prefix length, with no deadlock |
 | Test sensitivity | A deliberate bug (prefix read address off by one) failed four of the five insert tests; the RTL was restored |
 | Lint (`verilator -Wall`) | Clean for `cp_insert`, `cp_remove` and the test wrapper |

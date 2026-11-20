@@ -90,5 +90,6 @@ Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/03-scrambler-
 
 Notes:
 - The published check values (`0xCBF43926` for CRC-32 and `0x29B1` for CRC-16 over `123456789`) are checked directly only in the DW=8 configurations, because 9 bytes is not a whole number of wider words; the wider configurations are checked against the library on frames of whole words.
+- The CRC test collects `crc_valid` pulses with a monitor that runs for the whole send (a later change of the shared stream helper, which now releases the source one clock after the last word, broke the first version that sampled the last pulse by hand; the regression found it and the test was changed).
 - Functions in `crc_engine.sv` use Verilog-2001 style (no `automatic logic` return type) because Yosys 0.71 rejects the SystemVerilog form.
 - CRC parameters are passed to the simulator as decimal numbers (`-GPOLY=4129` is `0x1021`).

@@ -77,7 +77,7 @@ Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/08-telemetry-
 
 | Check | Result |
 |---|---|
-| T8-01 to T8-13 (15 tests in 5 simulations: `uart_rx`, `uart_tx`, loop-back, `tlm_framer`, `tlm_uart`) | 15 of 15 pass: divisors 4, 8, 66 and 3000; back-to-back bytes; bad stop bit; start glitch; exact bit timing and gap-free transmission; MAVLink v1, v2 and signed v2 with payload 0 to 255; MSP v1 and v2 including a 300-byte payload; garbage dropped and counted; raw framing by timeout and by `max_len`; truncated frame; invalid MSP header and over-long frames; auto mode; top-level uplink, downlink and FIFO overflow |
+| T8-01 to T8-13 (13 tests in 5 simulations: `uart_rx`, `uart_tx`, loop-back, `tlm_framer`, `tlm_uart`) | 13 of 13 pass: divisors 4, 8, 66 and 3000; back-to-back bytes; bad stop bit; start glitch; exact bit timing and gap-free transmission; MAVLink v1, v2 and signed v2 with payload 0 to 255; MSP v1 and v2 including a 300-byte payload; garbage dropped and counted; raw framing by timeout and by `max_len`; truncated frame; invalid MSP header and over-long frames; auto mode; top-level uplink, downlink and FIFO overflow |
 | Latency (T8-13) | In protocol mode a byte is at the framer output one clock after it was accepted; the receiver adds the stop-bit sampling delay (half a bit after the last data bit). The bound of 8 clocks in the test plan is met by the framer alone; the UART front end is bounded by the bit period |
 | Test sensitivity | A deliberate bug (MAVLink v2 length +11 instead of +12) failed three framer tests (MAVLink, garbage, auto); the RTL was restored |
 | Lint (`verilator -Wall`) | Clean for all five tops |
