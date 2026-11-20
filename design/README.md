@@ -28,3 +28,4 @@ Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` 
 | 16 | Transmit chain integration | done (`5e2e0ff`) | done: whole chain bit-exact against the golden model and recovered by a closed-loop receiver; 5 glue blocks tested; lint clean, no latches |
 | 17 | Channel estimator and equaliser | done (`28117b1`) | done: 8 tests pass (bit-exact model, EVM -50 to -60 dB noiseless, within 0.1 dB of a float reference with noise), lint clean, no latches; full gate-level synthesis not completed |
 | 18 | Burst detection, timing and carrier-offset estimation | done (`b0b5951`) | done: 7 tests pass (100% detection at 5-20 dB, CFO error 0.012 at 20 dB, marker reliable to 10 dB only), lint clean, no latches; full gate-level synthesis not completed |
+| 19 | Multi-branch combiner (MRC) | in progress | pending |
