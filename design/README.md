@@ -20,7 +20,7 @@ Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` 
 | 8 | Serial telemetry bridge | done (`7adcb0c`) | done: 13 tests in 5 simulations pass, lint clean, no latches |
 | 9 | Slice packetiser and depacketiser | done (`f34b3ab`) | done: 20 tests (6 configurations) pass, lint clean, no latches |
 | 10 | Frame-timeline sequencer | done (`583bc29`) | done: 20 tests (2 configurations, cycle-accurate model) pass, lint clean, no latches |
-| 11 | Radio interface wrapper | done (`30cee02`) | done: 7 tests in 5 simulations pass, lint clean, no latches |
+| 11 | Radio interface wrapper | done (`30cee02`) | done: 6 tests in 5 simulations pass, lint clean, no latches |
 | 12 | FFT and IFFT | done (`4626116`) | done: 17 tests (3 simulations, bit-exact model and numpy accuracy) pass, lint clean, no latches |
 | 13 | LDPC encoder | done (`16744b4`) | done: 7 tests (all 8 codes, real 802.11n code cross-checked against the AFF3CT alist) pass, lint clean, no latches; code quality measured with AFF3CT |
 | 14 | Soft demapper | done (`2fb39e1`) | done: 7 tests pass (hard decisions = nearest point, QPSK BER matches theory), lint clean, no latches |
