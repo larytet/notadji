@@ -54,3 +54,22 @@ Python model of section 2 (integer arithmetic), a brute-force exact max-log dema
 - Exact max-log instead of the folded approximation (a ROM or piecewise slope per region); to be decided by SIM-002.
 - The scale of `csi` against the noise variance is defined by the equaliser (module 17).
 - Soft combining of retransmitted slices (PHY-017) adds LLRs of two receptions; a saturating adder stage, not part of this module.
+
+## 7. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/14-demapper && tests/common/lint_synth.sh tests/14-demapper`.
+
+| Check | Result |
+|---|---|
+| T14-01 to T14-08 (7 tests in 2 simulations: `demapper`, `llr_serializer`) | 7 of 7 pass: bit-exact equality with the model over about 30000 points covering every modulation, extremes, random `csi` and `llr_shift`; ideal constellation points give the right bits (and zero LLRs at `csi` = 0); random handshakes with configuration changing every beat and `last` pass-through; serializer order, counts and `last` |
+| Hard decisions (T14-03) | 0 of 59000 checked bits (QPSK, 16QAM, 64QAM, 256QAM, noisy points) differ from the nearest-constellation-point decision |
+| Agreement with exact max-log (T14-04) | 0 differences in sign against the brute-force exact max-log LLR over the same points, as expected for the folded form (same hard decision; only the magnitude differs) |
+| Channel check (T14-08), measured | QPSK at Es/N0 = 6 dB over 80000 bits: bit error rate 2.2975e-2 against the theoretical 2.3007e-2 (relative difference 0.14%); 16QAM noisy points: hard decisions equal nearest point |
+| Test sensitivity | A deliberate bug (a threshold changed from 628 to 600) failed three tests; the RTL was restored |
+| Lint (`verilator -Wall`) | Clean (both tops) |
+| Yosys generic synthesis | `demapper` 10108 cells, 70 flip-flops (combinational datapath for both axes and one output register); `llr_serializer` 146 cells, 3 flip-flops; no latches |
+
+Notes:
+- The thresholds in the RTL are the rounded `2^(m-1) x unit`, `2^(m-2) x unit`, `2^(m-3) x unit` (2591 for 16QAM; 2528 and 1264 for 64QAM; 2513, 1257 and 628 for 256QAM); the test recomputes them from the exact unit.
+- The LLR magnitude of the folded form is not the exact max-log value; the effect on the decoder's frame error rate is the open item for SIM-002 (section 6). The sign agreement above is what makes the approximation safe for hard decisions.
+- A first version of the csi-linearity test used amplitudes that saturate the LLR (a test mistake); the amplitudes were reduced.
