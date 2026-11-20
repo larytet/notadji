@@ -61,7 +61,7 @@ Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/18-sync && te
 | CORDIC (T18-08), measured | Worst angle error 1 LSB of 65536 per turn for vectors of magnitude above 1000 (limit 2); integer vectors of magnitude below 50 have quantisation-limited errors (2378 LSB for a vector of a few counts, reported but not asserted) |
 | Test sensitivity | A deliberate bug (the metric normalised by the current window energy only, the first design) failed the detection and offset tests; the RTL was restored |
 | Lint (`verilator -Wall`) | Clean (both tops) |
-| Yosys | `cordic_vec`: 1514 cells, 113 flip-flops, no latches (full synthesis). `sync_core`: the RTL-level pass finds no latches (327 cells, 20 multiplier cells, before mapping); **full gate-level synthesis did not finish within 10 minutes** (open item: narrower products and a block-RAM style delay line) |
+| Yosys | `cordic_vec`: 1514 cells, 113 flip-flops, no latches (full synthesis). `sync_core`: the RTL-level pass finds no latches (346 cells including 22 multiplier cells, before mapping); **full gate-level synthesis did not finish within 10 minutes** (open item: narrower products and a block-RAM style delay line) |
 
 Bugs found and fixed during the work (the first test run failed detection at N = 256 and the energy had wrapped to about 2^40):
 - **Stale delay line after reset.** The delay line was not cleared while the running sums were, so after a reset the stale samples leaving the window subtracted energy and correlation that had never been added, a permanent error. Fixed with a fill counter that treats samples older than the reset as zero.
