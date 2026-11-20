@@ -22,3 +22,4 @@ Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` 
 | 10 | Frame-timeline sequencer | done (`583bc29`) | done: 20 tests (2 configurations, cycle-accurate model) pass, lint clean, no latches |
 | 11 | Radio interface wrapper | done (`30cee02`) | done: 7 tests in 5 simulations pass, lint clean, no latches |
 | 12 | FFT and IFFT | done (`4626116`) | done: 17 tests (3 simulations, bit-exact model and numpy accuracy) pass, lint clean, no latches |
+| 13 | LDPC encoder | in progress | pending |
