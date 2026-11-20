@@ -1,0 +1,2 @@
+wht|wht8x8|test_rtl||G=wht
+quant|quant|test_rtl||G=quant

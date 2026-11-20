@@ -1,0 +1,2 @@
+rtl/29-custom-codec/wht8x8.sv
+rtl/29-custom-codec/quant.sv
