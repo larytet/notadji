@@ -1,0 +1,5 @@
+rx|uart_rx|test_rx||
+tx|uart_tx|test_tx||
+loop|uart_loop|test_loop||
+framer|tlm_framer|test_framer||
+top|tlm_uart|test_top||

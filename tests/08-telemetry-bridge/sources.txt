@@ -1,0 +1,6 @@
+rtl/01-axi-library/axis_fifo.sv
+rtl/08-telemetry-bridge/uart_rx.sv
+rtl/08-telemetry-bridge/uart_tx.sv
+rtl/08-telemetry-bridge/tlm_framer.sv
+rtl/08-telemetry-bridge/tlm_uart.sv
+tests/08-telemetry-bridge/uart_loop.sv

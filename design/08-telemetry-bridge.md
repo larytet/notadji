@@ -70,3 +70,21 @@ Configurations: framer tests run with `div` = 8 (fast simulation); the UART test
 - Whether the 5 ms of MAC-007 includes the serial transfer of a long frame (a 280-byte MAVLink v2 frame is 24 ms at 115200 baud and 0.9 ms at 3 Mbaud): the latency target is only meaningful at the higher baud rates, or with byte-level forwarding (a streaming mode without framing is available as `proto` 0 with a short idle timeout).
 - Checksum validation at the endpoints and the MAVLink CRC_EXTRA table are not part of this module.
 - Flow control (RTS/CTS) is not implemented.
+
+## 6. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/08-telemetry-bridge && tests/common/lint_synth.sh tests/08-telemetry-bridge`.
+
+| Check | Result |
+|---|---|
+| T8-01 to T8-13 (15 tests in 5 simulations: `uart_rx`, `uart_tx`, loop-back, `tlm_framer`, `tlm_uart`) | 15 of 15 pass: divisors 4, 8, 66 and 3000; back-to-back bytes; bad stop bit; start glitch; exact bit timing and gap-free transmission; MAVLink v1, v2 and signed v2 with payload 0 to 255; MSP v1 and v2 including a 300-byte payload; garbage dropped and counted; raw framing by timeout and by `max_len`; truncated frame; invalid MSP header and over-long frames; auto mode; top-level uplink, downlink and FIFO overflow |
+| Latency (T8-13) | In protocol mode a byte is at the framer output one clock after it was accepted; the receiver adds the stop-bit sampling delay (half a bit after the last data bit). The bound of 8 clocks in the test plan is met by the framer alone; the UART front end is bounded by the bit period |
+| Test sensitivity | A deliberate bug (MAVLink v2 length +11 instead of +12) failed three framer tests (MAVLink, garbage, auto); the RTL was restored |
+| Lint (`verilator -Wall`) | Clean for all five tops |
+| Yosys generic synthesis | `uart_rx` 352 cells / 35 flip-flops; `uart_tx` 143 / 30; `tlm_framer` 1036 / 88; `tlm_uart` 1870 / 296; no latches |
+
+Notes found during the work:
+- Framing decisions as implemented: bytes outside a frame are dropped in protocol modes; the abort byte is forwarded with `last` and `err`; a timeout inside a protocol frame emits a dummy 0x00 byte with `last` and `err`; raw frames end by timeout (the last byte is held back until then) or when `max_len` is reached.
+- The test feeders must align to the falling edge before driving; early versions of the tests lost the first byte of each burst for that reason (a test bug, not an RTL bug).
+- The overflow test needs raw mode: in a protocol mode the framer discards non-start bytes immediately, so the FIFO never fills.
+- No flow control, no checksum validation and no CRC_EXTRA table (section 5).
