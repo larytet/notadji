@@ -23,3 +23,4 @@ Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` 
 | 11 | Radio interface wrapper | done (`30cee02`) | done: 7 tests in 5 simulations pass, lint clean, no latches |
 | 12 | FFT and IFFT | done (`4626116`) | done: 17 tests (3 simulations, bit-exact model and numpy accuracy) pass, lint clean, no latches |
 | 13 | LDPC encoder | done (`16744b4`) | done: 7 tests (all 8 codes, real 802.11n code cross-checked against the AFF3CT alist) pass, lint clean, no latches; code quality measured with AFF3CT |
+| 14 | Soft demapper | in progress | pending |
