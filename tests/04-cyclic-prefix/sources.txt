@@ -1,0 +1,3 @@
+rtl/04-cyclic-prefix/cp_insert.sv
+rtl/04-cyclic-prefix/cp_remove.sv
+tests/04-cyclic-prefix/cp_loop.sv

@@ -34,12 +34,15 @@ class StreamResult:
 
 
 async def run_stream(dut, words, p_valid, p_ready, in_w, rng, clk="clk", max_cycles=200000,
-                     expect_out=None, stall_window=None, extra=None):
+                     expect_out=None, stall_window=None, extra=None, pre=None):
     """Drive `words` (list of (data, last)) through dut.s_axis_* and collect dut.m_axis_*.
 
     stall_window: optional (first_cycle, last_cycle) during which the sink is not ready.
     extra: optional callback(dut, cycle) invoked each cycle after sampling.
-    Returns a StreamResult. Stops when expect_out words were received (default: len(words)).
+    pre: optional callback(dut, cycle, idx) invoked at the falling edge before driving; idx is the index of the
+         word currently presented (or about to be) by the source, so a test can change a configuration input
+         exactly at a word boundary.
+    Returns a StreamResult. Stops when expect_out words were received (default: len(words)) and every input word was accepted.
     """
     clk_sig = getattr(dut, clk)
     res = StreamResult()
@@ -50,8 +53,10 @@ async def run_stream(dut, words, p_valid, p_ready, in_w, rng, clk="clk", max_cyc
     if expect_out is None:
         expect_out = len(words)
     cyc = 0
-    while len(res.out) < expect_out and cyc < max_cycles:
+    while (len(res.out) < expect_out or idx < len(words)) and cyc < max_cycles:
         await FallingEdge(clk_sig)
+        if pre:
+            pre(dut, cyc, idx)
         # source decision: once valid is raised it is held until the transfer
         if not active and idx < len(words) and rng.random() < p_valid:
             active = True

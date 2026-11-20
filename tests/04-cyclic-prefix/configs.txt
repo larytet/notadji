@@ -1,0 +1,6 @@
+ins_w32|cp_insert|test_ins|-GW=32 -GMAX_LOG2=9|W=32 MAXL=9
+ins_w16|cp_insert|test_ins|-GW=16 -GMAX_LOG2=7|W=16 MAXL=7
+rem_w32|cp_remove|test_rem|-GW=32 -GMAX_LOG2=9|W=32 MAXL=9
+rem_w16|cp_remove|test_rem|-GW=16 -GMAX_LOG2=7|W=16 MAXL=7
+loop_w32|cp_loop|test_loop|-GW=32 -GMAX_LOG2=9|W=32 MAXL=9
+loop_w16|cp_loop|test_loop|-GW=16 -GMAX_LOG2=7|W=16 MAXL=7

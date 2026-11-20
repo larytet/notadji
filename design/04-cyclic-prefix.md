@@ -67,3 +67,20 @@ Configurations: `W=32, MAX_LOG2=9` for both blocks; `W=16, MAX_LOG2=7` (small) f
 
 - The sample RAM uses an asynchronous (combinational) read, which synthesises to distributed RAM or flip-flops; a block-RAM mapping needs a registered read and one more pipeline stage. Decide with Vivado results (not available yet).
 - Optional windowing (raised-cosine edge shaping to reduce out-of-band emissions) is not part of this module; it is a transmit filter stage to be added with the RF mask work (RF-014, PHY-009).
+
+## 8. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/04-cyclic-prefix && tests/common/lint_synth.sh tests/04-cyclic-prefix`.
+
+| Check | Result |
+|---|---|
+| T4-01 to T4-10 in 6 configurations (`cp_insert`, `cp_remove`, loop-back; each with W=32/MAX_LOG2=9 and W=16/MAX_LOG2=7) | 28 of 28 pass: all N from 64 to 512 and all three prefix lengths, random handshakes, per-symbol configuration changes, back-off including values above L, bad `last` |
+| Throughput (T4-04) | The input period equals N + L clocks within one clock for every N and prefix length, with no deadlock |
+| Test sensitivity | A deliberate bug (prefix read address off by one) failed four of the five insert tests; the RTL was restored |
+| Lint (`verilator -Wall`) | Clean for `cp_insert`, `cp_remove` and the test wrapper |
+| Yosys generic synthesis | `cp_insert` (W=32, 2 x 512 words): 67165 cells, 32816 flip-flops (the sample memory as flip-flops, 32768 of them); `cp_remove`: 520 cells, 28 flip-flops; no latches |
+
+Notes found during the work:
+- `err_len` pulses once for every beat where `last` disagrees with the count: a missing `last` gives one pulse, a `last` that is early gives two (at the early beat and at the closing beat). The test checks exactly these counts (3 pulses for one early plus one missing). The text of section 3 (item 1) says one pulse per bad symbol; the behaviour above is the implemented and tested one.
+- `run_stream` in `tests/common/stream_tb.py` now also waits until every input word has been accepted. With a back-off, `cp_remove` still consumes discarded samples after the last output sample, and the earlier stop condition left the DUT mid-symbol for the next run (a test bug, not a design bug).
+- The sample memory is 2 x 512 x 32 bits of flip-flops in generic synthesis; the FPGA tools should infer block RAM only if the read is registered (open item in section 7).

@@ -13,4 +13,4 @@ Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` 
 | 1 | AXI-Stream and AXI-Lite library | done (`adc5cac`) | done: 14 tests in 9 configurations pass, lint clean, no latches |
 | 2 | Timestamp unit | done (`3475037`) | done: 20 tests (2 configurations) pass, lint clean, no latches |
 | 3 | Scrambler and CRC engines | done (`e4e1f2c`) | done: 40 tests (8 configurations) pass, lint clean, no latches |
-| 4 | Cyclic-prefix insert and remove | in progress | pending |
+| 4 | Cyclic-prefix insert and remove | done (`db5e482`) | done: 28 tests (6 configurations) pass, lint clean, no latches |
