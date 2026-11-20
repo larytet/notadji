@@ -60,7 +60,7 @@ Class by `R`: up to 7 km (`R` <= 46.7 us) class 0, up to 15 km (`R` <= 100.1 us)
 
 ### 2.3 `ta_ctrl`
 
-Closed-loop timing advance in the GU. The AU measures, from its UL preamble detection (module 18 with the timestamp unit), how late the burst arrived relative to `U` and returns the signed error `e` in the DL header. The GU applies `TA <- clamp(TA + e)`, quantised to `RES` ticks (0.1 us = 20 ticks, MAC-011) by rounding to nearest; the full error is applied at once (the measurement is exact to a tick, the only noise source is the detector, which module 18 bounds to a few samples). `meas_valid`, `meas_err[23:0]` in; `ta_ticks[23:0]` out; `range_dm[19:0]` out = `TA x 15 / 2` decimetres (0.74948 m per tick; the 0.07% error of 7.5 dm per tick is below the quantisation); `ta_max` is a clamp (default `200 x TPU` ticks, the round-trip delay at 30 km). `ta_set_valid`/`ta_set[23:0]` presets `TA` (software, or a coarse acquisition value).
+Closed-loop timing advance in the GU. The AU measures, from its UL preamble detection (module 18 with the timestamp unit), how late the burst arrived relative to `U` and returns the signed error `e` in the DL header. The GU applies `TA <- clamp(TA + e)`, quantised to `RES` ticks (0.1 us = 20 ticks, MAC-011) by rounding to nearest; the full error is applied at once (the measurement is exact to a tick, the only noise source is the detector, which module 18 bounds to a few samples). `meas_valid`, `meas_err[23:0]` in; `ta_ticks[23:0]` out; `range_dm[19:0]` out = `TA x 1499 / TPU` decimetres (7.495 dm per tick at 200 ticks per microsecond; the fixed-point factor `1499 x 1024 / TPU` is exact to 0.01%); parameter `TPU` as in `mac_sched`; `ta_max` is a clamp (default `200 x TPU` ticks, the round-trip delay at 30 km). `ta_set_valid`/`ta_set[23:0]` presets `TA` (software, or a coarse acquisition value).
 
 ### 2.4 `ack_window`
 
@@ -103,3 +103,34 @@ Python models of every block; a cocotb harness per block, plus a two-unit system
 - The AU measures the UL arrival error with the synchroniser (module 18) and reports it in the DL header; the header format and the uplink feedback message layout (CSI summary, MCS recommendation, RSSI, ACK bitmap, `fb_hi`) belong to the control-protocol definition (modules 23 and 8).
 - Split-band mode and hop timing (MAC-010, MAC-012), gaze field (MAC-013), 1 kHz RC channel (MAC-008).
 - Clock-rate difference between the two units (frequency offset of the sample clocks): the GU re-synchronises every frame, so only drift within one frame matters (20 ppm of 4 ms is 0.08 us); not simulated.
+
+## 6. Results (implementation commit)
+
+Simulation: `tests/22-tdd-mac` (Verilator, cocotb), 9 simulations (the scaled-time ones use `TPU` = 10, `RES` = 1), every test passes. The block tests compare with clock-accurate Python models (`mac_model.py`); T22-09 and T22-10 use independent checks on the physics and on the outcome.
+
+| Test | Result |
+|---|---|
+| T22-01 to T22-04 | `mac_frame_timer` equals the model clock by clock (counter, `frame_start`, `frame_no`, `tx_en`, `rx_en`, `ul_win`, `sync_err`, `link_lost`, `cfg_err`) in 12 random runs of 3000 clocks (both roles, consistent and random plans, random synchronisation events); directed edge positions for 1 and 2 ms frames, with and without timing advance, match the formulae |
+| T22-05 | `mac_sched` at 200 ticks per microsecond: 5, 7, 10, 15, 30 km give frames 1, 1, 2, 2, 4 ms, UL 95, 95, 150, 150, 272 us, guard 53.4, 66.7, 86.7, 120.1, 220.2 us (the table of `02`: 53, 67, 87, 120, 220); downlink share 0.842, 0.828, 0.877, 0.860, 0.874 (the table: 0.852, 0.838, 0.882, 0.865, 0.877: lower by the reserved turn-around, section 1); 400 random range steps equal the model; the hysteresis sequence 46, 47, 48, 49, 48, 47, 46, 45, 44, 47, 49 us gives classes 0 0 0 1 1 1 1 1 0 0 1 |
+| T22-06 | `ta_ctrl`: 600 random measurements and presets equal the model at both tick rates; after one correction the residual is at most `RES/2` (10 ticks = 0.05 us at 200 ticks per microsecond); range within 1% above 100 m; clamp at `ta_max` |
+| T22-07 | `ack_window`: 3 x 6000 clocks (sequence bases 0, 65400, 30000: wrap) with reordering up to 90 positions back, loss, duplicates equal the model |
+| T22-08 | `retx_ctrl`: 4 runs of 9000 clocks equal the clock-accurate model (retransmission and refresh sequences, counters, `busy`); runs 3 and 4 starve both queues' consumers to exercise queue-full behaviour |
+| T22-09 | Two timers with a delay line (`TPU` = 10): one-way delay 0, 16.7, 50 and 100 us (frames 1, 1, 2, 4 ms): the first burst arrives late by exactly the round trip (TA = 0), after the first correction every burst arrives with 0 ticks (0.0 us) error; no clock with AU transmit and receive both on, GU transmit and receive both on, an arriving burst overlapping the AU downlink, or `cfg_err`; TA equals the round trip, range 0, 5.0, 15.0 and 30.0 km. With the delay growing 0.1 us per frame for 12 frames the burst is late by at most 2 ticks (0.2 us, the growth) and no violation occurs |
+| T22-10 | `ack_window` + `retx_ctrl` over a lossy channel (500 slices, sequence wrap, 30 tick one-way delay, deadline 600 ticks, `max_retx` 2): at 5% loss all 500 delivered, 22 retransmitted; at 20% loss 495 delivered, 88 retransmitted, 18 sent to refresh, the 5 never delivered are all in the refresh list; no slice retransmitted more than twice or without time left; 13 slices were refreshed although a late copy arrived (the retransmission was in flight when the deadline passed) |
+| L-22 | `-Wall` clean for all five blocks |
+| S-22 | Yosys generic: `mac_frame_timer` 2501 cells, `mac_sched` 508, `ta_ctrl` 1976 (the divide by `RES`), `ack_window` 1314 (178 flip-flops), `retx_ctrl` 20969 (6145 flip-flops: the 64-entry table is flip-flops; a block-RAM version needs a registered read), no latches |
+| Mutation | `retx_ctrl` lost condition `age <= 0` changed to `< 0`: T22-08 fails; GU window start shifted by one tick: T22-01 to T22-04 fail; both restored |
+
+### Defects found and fixed during the tests
+
+1. **Tail loss was invisible.** The window feedback only reports up to the highest slice the receiver has seen; a lost slice newer than every received slice is "in flight" for ever (500 slices, 1 never resolved at 20% loss). `retx_ctrl` now has `tmo_ticks`: an entry unacknowledged for that long counts as lost (the sent time is stored and restarted on a retransmission).
+2. **A sent slice and the sweep touching the same table entry in one clock:** the sweep's free could remove the newly written entry; the write now has priority and the counters are combined.
+3. **Timing advance and plan must change together.** Applying a new `TA` while the old plan is active gives `cfg_err` (the GU has no time to switch to transmit: `U - TA < DL + turn`) until the plan is recomputed. The test applies the correction and the new `rtt_ticks` in the same clock at the frame start; a real unit needs one control message that carries both with an effective frame number (open item).
+4. Range output depended on the 200 MHz tick; now parameterised by `TPU`.
+
+### Limits
+
+- A sudden change of the round trip by 20 us in one frame (not physical: it is 3 km in one millisecond) makes the first burst after the step overrun its slot into the next downlink; the loop recovers one frame later. Real drift at 300 km/h is 0.3 ns per frame.
+- The AU's arrival-time measurement is taken by the testbench from the exact clock; in hardware it comes from the synchroniser of module 18 (marker spread of a few samples at 10 dB and above), so `RES` and the 1 us margin of MAC-003 are consistent only above that SNR.
+- The acknowledgement window is 64 slices; a frame with more slices than that between two feedbacks loses the oldest bits (they are counted as stale by the transmitter).
+- Verified only in simulation with ideal clocks; clock offset between the units (20 ppm) is not modelled.

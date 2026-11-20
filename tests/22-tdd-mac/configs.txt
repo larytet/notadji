@@ -1,0 +1,9 @@
+timer|mac_frame_timer|test_mac||G=timer
+sched200|mac_sched|test_mac||G=sched TPU=200
+sched10|mac_sched|test_mac|-GTPU=10|G=sched TPU=10
+ta200|ta_ctrl|test_mac||G=ta TPU=200
+ta10|ta_ctrl|test_mac|-GRES=1 -GTPU=10|G=ta TPU=10
+ack|ack_window|test_mac||G=ack
+retx|retx_ctrl|test_mac||G=retx
+loop|ack_loop|test_mac||G=loop
+sys|mac_sys|test_mac||G=sys
