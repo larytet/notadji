@@ -1,0 +1,4 @@
+rtl/15-aead/chacha_block.sv
+rtl/15-aead/poly1305.sv
+rtl/15-aead/tail_hold.sv
+rtl/15-aead/aead.sv

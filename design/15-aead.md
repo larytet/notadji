@@ -39,7 +39,7 @@ The reference is the Python `cryptography` package (`ChaCha20Poly1305` for the w
 | T15-03 | Encrypt, whole construction | For AAD of 0 to 20 bytes and payloads of 0 to 300 bytes (including 0, 1, 15, 16, 17, 63, 64, 65, 127, 128, 129), random key and nonce, the output frame equals `AAD || ciphertext || tag` of the reference |
 | T15-04 | Decrypt | The output frame equals `AAD || plaintext`; `st_ok` = 1 |
 | T15-05 | Tamper detection | A single flipped bit anywhere in `AAD || ciphertext || tag` (200 random positions) gives `st_ok` = 0; the nonce or key change gives `st_ok` = 0 |
-| T15-06 | Short decrypt input | Fewer than `aad_len + 16` bytes gives `st_short` = 1 and `st_ok` = 0 and no stuck state; the next frame is processed correctly |
+| T15-06 | Short decrypt input and empty payload | Fewer than `aad_len + 16` bytes gives `st_short` = 1 and `st_ok` = 0 (including a frame of 16 bytes or more whose AAD would be cut short) and no stuck state; a 16-byte frame with `aad_len` = 0 (empty message) verifies; AAD-only frames encrypt and decrypt; the next frame is processed correctly |
 | T15-07 | Handshakes and back-to-back frames | Random valid and ready, several frames in a row with different keys, nonces, AAD lengths and modes: all equal the reference |
 | T15-08 | Throughput | Bytes per clock for a 1200-byte payload recorded; at least 0.5 byte per clock |
 | T15-09 | `tail_hold` | The held-back stream equals the input minus the last 16 bytes, the tail word equals the last 16 bytes, `last` on the final payload byte, shorter input flagged |
@@ -55,3 +55,25 @@ The reference is the Python `cryptography` package (`ChaCha20Poly1305` for the w
 - The 8-byte truncated tag option and tag length negotiation.
 - Nonce construction and anti-replay window (MAC layer).
 - A pipelined ChaCha20 for 4K-class rates if needed (one quarter-round per clock gives about 140 MB/s).
+
+## 8. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/15-aead && tests/common/lint_synth.sh tests/15-aead`.
+
+| Check | Result |
+|---|---|
+| T15-01 to T15-09 (9 tests in 4 simulations: `chacha_block`, `poly1305`, `tail_hold`, `aead`) | 9 of 9 pass: 30 random ChaCha20 blocks equal the reference stream; 44 Poly1305 cases (random and all-ones extremes) equal `Poly1305.generate_tag`; the whole construction equals `ChaCha20Poly1305` of the `cryptography` package for AAD of 0, 1, 8, 13, 16, 20 bytes against payloads of 0, 1, 15, 16, 17, 63, 64, 65, 127, 128, 129, 200 bytes in both directions; 200 random single-bit errors and wrong key or nonce all rejected; short and empty frames; 60 frames with random handshakes and per-frame key, nonce, AAD length and mode |
+| Throughput (T15-08), measured | 1208 bytes in 1703 clocks: 0.709 byte per clock, 1135 Mbit/s at 200 MHz (requirement: 80 Mbit/s) |
+| Test sensitivity | A deliberate bug (the prefetch race described below reintroduced) is caught by the handshake test T15-07 (and only by it); the RTL was restored |
+| Lint (`verilator -Wall`) | Clean (all four tops) |
+| Yosys generic synthesis | `chacha_block` 5341 cells / 1417 flip-flops; `poly1305` 10212 / 786; `tail_hold` 598 / 263; `aead` 20135 / 4455; no latches |
+
+Bugs found and fixed during the work (each a real RTL fault, found by the tests against the reference library):
+- **Keystream prefetch race.** In the clock in which the ChaCha engine pulses `done`, its `busy` is already low and `kn_valid` is not yet set, so the controller started a second prefetch; that run later overwrote an unused keystream block and the second 64 bytes of a frame were encrypted with the wrong block. It appeared only when input or output was slow (always-ready tests consume a block before it is overwritten); found by the random-handshake test. Fix: prefetch is also blocked in the `done` clock.
+- **Lost one-clock events.** `tail_hold` reports an empty frame (exactly 16 bytes) and a short frame with one-clock pulses; if the cipher engine was still busy finishing a prefetch the event was lost and no status was produced. The controller now latches both events until it is idle.
+- **Short decrypt input.** A frame of 16 bytes or more but shorter than `aad_len + 16` would have been authenticated with a truncated AAD; it is now flagged `st_short`.
+- A test mistake: the ChaCha test set `start` right after a rising edge (not aligned to the falling edge), so the engine never saw it.
+
+Notes:
+- The nonce, anti-replay window and key schedule are outside this module (section 1); the decrypt output is released before the tag is checked (cut-through), like the CRC status of module 9: a consumer must drop the frame when `st_ok` is 0.
+- One frame is processed at a time; the next frame's first byte must not be offered before the status of the previous frame (the tail holder can absorb bytes earlier, but a second empty or short event before the first status would overwrite the latched one).

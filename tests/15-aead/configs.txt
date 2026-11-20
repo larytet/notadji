@@ -1,0 +1,4 @@
+chacha|chacha_block|test_chacha||
+poly|poly1305|test_poly||
+tail|tail_hold|test_tail||
+aead|aead|test_aead||
