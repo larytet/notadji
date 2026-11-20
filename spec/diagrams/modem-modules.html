@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modem module map</title>
+<style>
+:root{
+  --bg:#f6f7f9; --fg:#1b2230; --muted:#59657a; --card:#ffffff; --line:#cdd4df; --edge:#6a788f;
+  --done:#def2e3; --done-b:#2c7a4b; --wip:#fff0cc; --wip-b:#a8680f; --plan:#e8ecf2; --plan-b:#6f7b8f;
+  --gap:#fde2e1; --gap-b:#bd3328; --ext:#e1ebfa; --ext-b:#3866b0; --focus:#1a56db;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10141b; --fg:#e6eaf1; --muted:#9aa6ba; --card:#171c25; --line:#2f3847; --edge:#8795ac;
+    --done:#173323; --done-b:#4fb77a; --wip:#3a2d10; --wip-b:#e0a23f; --plan:#1f2631; --plan-b:#8794a8;
+    --gap:#3b1a19; --gap-b:#ef6f63; --ext:#16263f; --ext-b:#6a9be0; --focus:#7aa7ff;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10141b; --fg:#e6eaf1; --muted:#9aa6ba; --card:#171c25; --line:#2f3847; --edge:#8795ac;
+  --done:#173323; --done-b:#4fb77a; --wip:#3a2d10; --wip-b:#e0a23f; --plan:#1f2631; --plan-b:#8794a8;
+  --gap:#3b1a19; --gap-b:#ef6f63; --ext:#16263f; --ext-b:#6a9be0; --focus:#7aa7ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:14px 16px 8px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between}
+h1{font-size:18px;margin:0;font-weight:650}
+.sub{color:var(--muted);font-size:13px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:0 16px 8px}
+button{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--edge)}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,.node:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.crumbs{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-left:4px}
+.crumbs span.sep{color:var(--muted)}
+.crumbs button{border:none;background:none;padding:2px 4px;text-decoration:underline;text-underline-offset:3px}
+.crumbs b{padding:2px 4px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:0 16px 10px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;border:2px solid;vertical-align:-2px;margin-right:5px}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px;padding:0 16px 16px;align-items:start}
+@media (max-width:900px){.main{grid-template-columns:1fr}}
+.stage{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+svg{display:block;width:100%;height:auto;max-height:78vh}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;position:sticky;top:10px}
+.panel h2{font-size:16px;margin:0 0 4px}
+.panel p{margin:8px 0}
+.panel .files{font:12px ui-monospace,Menlo,Consolas,monospace;color:var(--muted);word-break:break-word}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;border:1.5px solid}
+.b-done{background:var(--done);border-color:var(--done-b)} .b-wip{background:var(--wip);border-color:var(--wip-b)}
+.b-planned{background:var(--plan);border-color:var(--plan-b)} .b-gap{background:var(--gap);border-color:var(--gap-b)}
+.b-ext{background:var(--ext);border-color:var(--ext-b)}
+.hint{color:var(--muted);font-size:12px}
+/* diagram */
+.node{cursor:default;outline:none}
+.node.go{cursor:pointer}
+.node rect.box{stroke-width:2;rx:10}
+.st-done rect.box{fill:var(--done);stroke:var(--done-b)}
+.st-wip rect.box{fill:var(--wip);stroke:var(--wip-b)}
+.st-planned rect.box{fill:var(--plan);stroke:var(--plan-b);stroke-dasharray:6 4}
+.st-gap rect.box{fill:var(--gap);stroke:var(--gap-b);stroke-dasharray:3 4}
+.st-ext rect.box{fill:var(--ext);stroke:var(--ext-b)}
+.node:hover rect.box,.node.sel rect.box{stroke-width:3.5}
+.node text{fill:var(--fg);pointer-events:none}
+.node .l{font-size:13.5px;font-weight:650}
+.node .s{font-size:11px;fill:var(--muted)}
+.node .open{font-size:11px;fill:var(--muted)}
+.edge{fill:none;stroke:var(--edge);stroke-width:1.8}
+.edge.dash{stroke-dasharray:6 4}
+.edge.gapedge{stroke:var(--gap-b)}
+.elabel{font-size:11px;fill:var(--muted);paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round}
+marker path{fill:var(--edge)}
+.enter{animation:fade .28s ease both}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.dim{opacity:.18;transition:opacity .25s}
+@media (prefers-reduced-motion: reduce){.enter{animation:none}.dim{transition:none}}
+#tip{position:fixed;z-index:10;max-width:320px;pointer-events:none;background:var(--card);color:var(--fg);border:1px solid var(--edge);
+  border-radius:8px;padding:8px 10px;font-size:12.5px;box-shadow:0 6px 20px rgba(0,0,0,.18);display:none}
+#tip b{display:block;font-size:13px;margin-bottom:2px}
+#tip .k{color:var(--muted);margin-top:4px;font-size:11.5px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Modem module map</h1>
+  <div class="sub" id="summary"></div>
+</header>
+<div class="bar">
+  <button id="back" disabled>&larr; Back</button>
+  <button id="home" disabled>Overview</button>
+  <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
+</div>
+<div class="legend" id="legend"></div>
+<div class="main">
+  <div class="stage"><svg id="svg" role="group" aria-label="Block diagram"></svg></div>
+  <aside class="panel" id="panel" aria-live="polite"></aside>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+"use strict";
+/* ------------------------------------------------------------------
+   Source of truth: spec/18-development-plan.md (module list and order),
+   design/README.md (status and test counts), the rtl folders (files).
+   Edit the data below when a module changes status.
+------------------------------------------------------------------- */
+const ST = {done:"Done", wip:"In progress", planned:"Planned", gap:"Gap: not yet defined", ext:"External / outside the RTL plan"};
+
+/* module registry: number -> info */
+const M = {
+ 1:{name:"AXI-Stream / AXI-Lite library",st:"done",tests:"14 tests, 9 configurations",files:"axis_skid, axis_fifo, axis_width_conv, axis_cdc_fifo, axil_regfile",
+   tip:"Common plumbing: skid buffer, FIFO, width converter, clock-crossing FIFO and register file.",
+   detail:"Defines the valid/ready/data/last stream convention every block uses. The clock-crossing FIFO is used by the radio interface (11); the register file is the configuration path from the processor to the blocks."},
+ 2:{name:"Timestamp unit",st:"done",tests:"20 tests, 2 configurations",files:"timestamp_unit",
+   tip:"64-bit free-running counter with a latch register per pipeline tap.",
+   detail:"Gives per-stage timing evidence for the latency budget (LAT-004). Taps sit on the boundaries of the data-plane blocks and are read by firmware through the register file."},
+ 3:{name:"Scrambler and CRC",st:"done",tests:"40 tests, 8 configurations",files:"scrambler, crc_engine",
+   tip:"PRBS whitening and CRC (default CRC-32, checked against zlib).",
+   detail:"Works on the byte stream in front of the transmit chain. The slice packetiser (9) uses the CRC engine for header and slice CRC."},
+ 4:{name:"Cyclic prefix insert / remove",st:"done",tests:"20 tests, 6 configurations",files:"cp_insert, cp_remove",
+   tip:"Adds the guard interval (1/16, 1/8, 1/4) on transmit; strips it on receive with a programmable back-off.",
+   detail:"Transmit: after the IFFT inside the transmit chain (16). Receive: a stand-alone prefix remover. The receive chain (21) does not use it; its rx_framer places the FFT windows inside the prefix instead."},
+ 5:{name:"Interleaver / de-interleaver",st:"done",tests:"44 tests, 8 configurations",files:"block_interleaver, il_addr_gen",
+   tip:"Spreads burst errors across subcarriers; one block for both directions (DEINT parameter).",
+   detail:"Transmit: inside the transmit chain (16), 1-bit elements. Receive: after the demapper (14), 8-bit LLR elements, in front of the LDPC decoder (20)."},
+ 6:{name:"Constellation mapper",st:"done",tests:"6 tests (all 2048 mod/word combinations)",files:"mapper",
+   tip:"BPSK, QPSK, 16QAM, 64QAM, 256QAM to 32-bit {Q,I} points, RMS 4096 per tone.",
+   detail:"Inside the transmit chain (16). The demapper (14) is the inverse and uses the same amplitude scale, as do the equaliser (17) and synchroniser (18)."},
+ 7:{name:"Preamble and pilot generator",st:"done",tests:"7 tests (STF periodicity checked with numpy)",files:"preamble_gen",
+   tip:"Tone plan: STF, LTF, pilots with polarity sequence, null and data tones for FFT sizes 64 to 512.",
+   detail:"Used by the transmit chain (16), by the equaliser (17, an internal instance gives reference tones and pilot signs) and, as the STF, detected by the synchroniser (18)."},
+ 8:{name:"Serial telemetry bridge",st:"done",tests:"13 tests, 5 simulations",files:"uart_rx, uart_tx, tlm_framer, tlm_uart",
+   tip:"UART with MAVLink, MSP or raw framing: the low-latency telemetry and control channel.",
+   detail:"Faces the flight-controller UART on one side and the radio link on the other. Expected to connect to the MAC engine (22) and the packet path (9). Not connected to other blocks yet."},
+ 9:{name:"Slice packetiser / depacketiser",st:"done",tests:"20 tests, 6 configurations",files:"slice_pack, slice_unpack",
+   tip:"Adds and checks the slice header (frame, index, flags, length) and CRC.",
+   detail:"Feeds the AEAD (15) and then the transmit chain (16). On receive it follows the LDPC decoder (20) and AEAD decrypt. Its status outputs go to the MAC (22) and the video path (28, 29)."},
+ 10:{name:"Frame-timeline sequencer",st:"done",tests:"20 tests, cycle-accurate model",files:"frame_sequencer",
+   tip:"Replays a table of timed events every frame: control lines, pulses, gain and PLL values.",
+   detail:"Keeps running if the CPU stalls; force_safe overrides the outputs. lines, pulses and pll_val go to the radio interface (11). Which line gates transmit or re-arms the synchroniser is not yet assigned."},
+ 11:{name:"Radio interface wrapper",st:"done",tests:"6 tests, 5 simulations",files:"radio_if, rx_path, tx_path, spi_master, pin_map, gray_cnt_sync",
+   tip:"Digital boundary to the AD9361 / ADRV9002: sample paths with clock crossing, SPI, control-pin mapping.",
+   detail:"Receive samples go to the synchroniser (18); transmit samples come from the transmit chain (16); control lines come from the sequencer (10). The LVDS/CMOS electrical layer is not included and must be done on a board."},
+ 12:{name:"FFT / IFFT",st:"done",tests:"17 tests, 3 simulations (bit-exact and numpy accuracy)",files:"fft_core, fft_twiddle_rom",
+   tip:"Memory-based radix-2, ping-pong, 64 to 1024 points, run-time size and scaling.",
+   detail:"IFFT inside the transmit chain (16). FFT on receive between cp_remove (4) and the equaliser (17). One butterfly per clock: about 80% utilisation at N=512 and 200 MHz, so little margin."},
+ 13:{name:"LDPC encoder",st:"done",tests:"7 tests (all 8 codes; real 802.11n code cross-checked)",files:"ldpc_enc, ldpc_code_rom",
+   tip:"Quasi-cyclic LDPC encoder, 8 codes (real 802.11n 648/5/6 plus 7 own designs).",
+   detail:"Inside the transmit chain (16), fed from the message packer. The matching decoder (20) is not written yet and will share the code tables."},
+ 14:{name:"Soft demapper",st:"done",tests:"7 tests (QPSK BER matches theory)",files:"demapper, llr_serializer",
+   tip:"Folded max-log LLRs with channel-quality weighting; serializer turns each beat into an 8-bit LLR stream.",
+   detail:"Takes equalised tones and csi from the equaliser (17). Output goes through the de-interleaver (5) to the LDPC decoder (20)."},
+ 15:{name:"ChaCha20-Poly1305 AEAD",st:"done",tests:"9 tests vs the cryptography reference, 1135 Mbit/s",files:"aead, chacha_block, poly1305, tail_hold",
+   tip:"Per-slice authenticated encryption. Decrypt releases plaintext before the tag check (st_ok).",
+   detail:"Between the slice packetiser (9) and the transmit chain (16). Not yet in the receive chain (21). On receive it needs the exact frame length (nbytes from the MAC) and the consumer must drop frames with st_ok = 0. Key and nonce come from firmware."},
+ 16:{name:"Transmit chain",st:"done",tests:"whole chain bit-exact vs golden model; closed-loop receiver; 5 glue blocks",files:"tx_chain, msg_bits_pack, cw_to_bits, sym_blocker, bit_packer, tx_assembler",
+   tip:"Byte stream to OFDM samples: framing, LDPC, interleave, map, pilots, IFFT, cyclic prefix.",
+   detail:"Integrates modules 4, 5, 6, 7, 12 and 13 with new glue blocks and a frame controller. Input from 9 / 15; output to the radio interface (11). Click to see the internal pipeline."},
+ 17:{name:"Channel estimator and equaliser",st:"done",tests:"8 tests (bit-exact; EVM -50 to -60 dB; within 0.1 dB of float)",files:"equalizer, recip_rom",
+   tip:"One-tap zero-forcing from two LTF symbols, common phase and gain tracking from pilots, per-tone csi.",
+   detail:"After the FFT (12); output to the demapper (14). In the receive chain (21) the kind comes from a counter of completed symbols and last from rx_framer. Full gate-level synthesis was not completed."},
+ 18:{name:"Burst detection, timing, CFO, AGC monitor",st:"done",tests:"7 tests (100% detection at 5-20 dB; CFO error 0.012 at 20 dB; end-of-STF marker reliable to 10 dB only)",files:"sync_core, cordic_vec",
+   tip:"Schmidl-Cox STF detector, coarse timing, CFO estimate with derotation, AGC power monitor.",
+   detail:"Takes samples from the radio interface (11). Derotated samples, fall and k_back go to rx_framer in the receive chain (21). No back-pressure. agc_up / agc_down have no consumer yet. Full gate-level synthesis was not completed."},
+ 19:{name:"Multi-branch combiner (MRC)",st:"done",tests:"15 tests (B = 2, 4, 8; array gain 3.03 / 6.01 / 9.03 dB)",files:"mrc_combine",
+   tip:"Maximum-ratio combining across 2, 4 or 8 receive branches; matches an ideal floating-point combiner.",
+   detail:"Needs the equaliser (17). Not part of the first revision of the receive chain (21), which serves one branch."},
+ 20:{name:"LDPC decoder",st:"done",tests:"5 tests; RTL equals the model; FER at or below AFF3CT; throughput 34-114 Mbit/s (below PHY-015)",files:"ldpc_dec",
+   tip:"Layered normalised min-sum, 9-bit posterior, one codeword at a time, run-time iteration limit.",
+   detail:"Takes LLR codewords from llr_trim in the receive chain (21). A single instance is below the PHY-015 throughput target; Yosys synthesis was not completed."},
+ 21:{name:"Receive chain integration",st:"wip",tests:"design committed; RTL and tests in progress",files:"rx_chain, rx_framer, llr_trim, msg_to_bytes (not yet committed)",
+   tip:"First complete receive path and link loopback against the transmit chain through a software channel.",
+   detail:"Integrates 18, 12, 17, 14, 5 and 20 with three new glue blocks. Prefix removal is done by windowing in rx_framer, so cp_remove (4) is not used; the combiner (19) and AEAD decrypt are not in this revision. Configuration (nsym, ncw, nbytes, backoff) is expected from the MAC (22)."},
+ 22:{name:"TDD MAC engine",st:"planned",files:"",tip:"Super-frame, timing advance, guard sizing, feedback, ACK bitmap, selective retransmission.",detail:"Class L, data plane with a real-time core. Needs 2, 9, 10, 21. Requirements MAC-001 to MAC-006."},
+ 23:{name:"Link-adaptation controller",st:"planned",files:"",tip:"Chooses MCS, power and slice budget; reacts to feedback within 2 ms.",detail:"Class L, real-time core firmware. Needs the MAC engine (22)."},
+ 24:{name:"Spectrum scan and channel selection",st:"planned",files:"",tip:"Scans channels in 50 us dwells, ranks them, drives channel switches.",detail:"Class L. Needs the sequencer (10), radio interface (11) and synchroniser (18)."},
+ 25:{name:"Calibration engine",st:"planned",files:"",tip:"Factory tables, background IQ and LO-leakage loops, thermal triggers.",detail:"Class L. Needs 10, 11, 18. Requirements CAL-001 to CAL-004."},
+ 26:{name:"PAPR reduction and DPD",st:"planned",files:"",tip:"Meets the spectrum mask with the planned PA back-off; adapts from the observation receiver.",detail:"Class XL. Needs 11, 21, 25. Requirements PHY-009, CAL-005, HSI-004."},
+ 27:{name:"Display sync and scan-out",st:"planned",files:"",tip:"Line-synchronised output; pixel clock steered to 0.1 ppm resolution.",detail:"Class XL, ground unit. Would drive the output stage to the goggles (for example a coax proxy). VID-015, VID-018."},
+ 28:{name:"Video path, phase A",st:"planned",files:"",tip:"Wrapper around the hard encoder and a decoder; slice-based low-latency configuration.",detail:"Class XL. Cannot be simulated; measured on boards. The hard video unit exists only on EV-class Zynq UltraScale+ parts, not on a Pluto."},
+ 29:{name:"Custom slice video codec",st:"planned",files:"",tip:"Product encoder and decoder replacing the hard unit: no cross-slice dependencies, reactive refresh, optional foveation.",detail:"Class XL. Optional P2 profile (VID-027); adopted only if a measured comparison with AVC/HEVC favours it. Needs the video wrapper (28)."},
+};
+for (const k in M){ M[k].num=+k; if (+k<=21) M[k].view="m"+k; }
+
+/* helpers to build views */
+const mod=(id,num,c,r,x={})=>({id,mod:num,c,r,...x});
+const nd=(id,label,st,c,r,tip,x={})=>({id,label,st,c,r,tip,...x});
+const ext=(id,label,c,r,tip,x={})=>nd(id,label,"ext",c,r,tip,{sub:"interface",...x});
+
+const GAPS = {
+ pad: {label:"AEAD hookup +\nhold until st_ok",
+   tip:"Not in the receive chain yet. AEAD decrypt must sit after msg_to_bytes, and the slice must be held or dropped until the tag is verified.",
+   detail:"msg_to_bytes trims the payload to nbytes (from the MAC), so the zero padding is removed. The AEAD decrypt (15) is not in the chain, and it releases plaintext before the tag check, so slice_unpack must hold or drop the frame until st_ok. nbytes must equal AAD||ciphertext||tag exactly."},
+ rxcfg: {label:"Frame configuration\nsource (MAC, 22)",
+   tip:"nsym, ncw, nbytes, backoff, thr_sel and min_power come from the MAC, which is not built (module 22).",
+   detail:"The receive chain (21) takes its per-frame configuration as inputs. The slot length gives nsym and the slice length gives ncw and nbytes. Until module 22 exists, tests drive them directly."},
+ regs: {label:"Register map, PS/PL glue,\nfirmware HAL",
+   tip:"Not in the module plan. Interface definitions of doc 17 section 4 are not written; the processor-side software and drivers are sequenced in doc 13.",
+   detail:"No top level or register map exists. The assignment of the 16 sequencer lines and pulses (TX enable, rearm, trigger) is left open by modules 10 and 11. Also missing: DMA path, Linux drivers and device tree on the Zynq, and the real-time firmware."},
+ agc: {label:"AGC consumer\n(firmware or sequencer)",
+   tip:"Nothing consumes agc_up / agc_down yet. The sequencer has no input for them; the likely route is firmware writing the transceiver gain over SPI.",
+   detail:"sync_core only monitors power. The loop (step size, settling) is firmware per doc 13, and the sequencer's gain_val comes from a pre-loaded table. Neither design doc says how the pulses reach the transceiver."},
+ cam: {label:"Camera capture and\nimage path (MIPI CSI-2)",
+   tip:"Not in the module plan. The 4-lane sensor board listed in doc 04 has no capture module in front of the encoder.",
+   detail:"Modules 28 and 29 assume video arrives at the encoder. No block covers the CSI-2 receiver, line buffering or any image processing before it."},
+};
+const gap=(id,key,c,r,x={})=>({id,label:GAPS[key].label,st:"gap",c,r,tip:GAPS[key].tip,detail:GAPS[key].detail,...x});
+
+/* ------------------------------------------------------------------ views */
+const V = {};
+
+/* Overview: absolute coordinates */
+V.root = {title:"System overview",
+ desc:"Click a large component to zoom into its modules; click a module to see its internal blocks. Hover anything for an explanation. Colour shows implementation status; dashed red boxes are interfaces nobody has designed yet.",
+ abs:true, w:1180, h:700,
+ nodes:[
+  {id:"video",label:"Video path\n(modules 27 to 29)",st:"planned",x:50,y:40,w:270,h:100,go:"g_video",
+    tip:"Encoder, decoder and display scan-out. Planned; the video path dominates the schedule.",
+    detail:"Wrapper around the hard encoder (28), the custom slice codec (29) and the display scan-out to the goggles (27). The camera capture path is not in the plan."},
+  {id:"tele",label:"Telemetry bridge\n(module 8)",st:"done",x:50,y:190,w:270,h:100,go:"m8",
+    tip:"UART with MAVLink / MSP framing: the 5 ms telemetry and control channel. Done.",detail:M[8].detail},
+  {id:"mac",label:"MAC and link adaptation\n(modules 22 to 24)",st:"planned",x:50,y:340,w:270,h:100,go:"g_mac",
+    tip:"TDD scheduling, ACK bitmap, MCS and power control, spectrum scan. Planned.",
+    detail:"Needs the receive chain integration (21). Drives MCS and power into the transmit chain and channel switches through the sequencer."},
+  {id:"tx",label:"Transmit path",st:"done",x:440,y:80,w:310,h:150,go:"g_tx",
+    tip:"Slice packetiser, encryption and the OFDM transmit chain. All implemented and tested.",
+    detail:"Modules 3, 9, 15 and 16 (which integrates 4, 5, 6, 7, 12 and 13). Verified bit-exact against a golden model and by a closed-loop receiver model."},
+  {id:"rx",label:"Receive path",st:"wip",x:440,y:310,w:310,h:160,go:"g_rx",
+    tip:"Synchroniser, FFT, equaliser, demapper, de-interleaver and LDPC decoder are done; the integration (21) with its glue blocks is in progress.",
+    detail:"Modules 11 (receive side), 18, 12, 17, 14, 5, 20 and 19 are done. Module 21 adds rx_framer, llr_trim and msg_to_bytes. Open: AEAD hookup and hold until st_ok, the MAC supplying per-frame configuration, and the AGC consumer."},
+  {id:"ctl",label:"Timeline and control\n(modules 1, 2, 10)",st:"done",x:440,y:560,w:310,h:110,go:"g_ctl",
+    tip:"Stream and register library, timestamp unit, frame-timeline sequencer. Done; the register map is not.",
+    detail:"Module 1 is used by every block. The sequencer keeps the radio timing alive without software. The register map and top level are not defined."},
+  {id:"radio",label:"Radio interface\n(module 11)",st:"done",x:870,y:195,w:270,h:110,go:"m11",
+    tip:"Sample paths with clock crossing, SPI, control pins. Done; the LVDS electrical layer is board work.",detail:M[11].detail},
+  {id:"rf",label:"Transceiver and RF front end",st:"ext",x:870,y:390,w:270,h:100,
+    tip:"AD9361 / ADRV9002, FEM, PA, coupler, antennas, clock reference. Hardware, outside the RTL plan.",
+    detail:"No task in the development plan covers board selection, bring-up, the LVDS data-port electrical layer, FEM and PA, the 0.1 ppm reference clock, the uplink radio or the measurement rig. Doc 13 lists candidate boards (ADALM-PLUTO for phase A1, EV-class Zynq UltraScale+ for the hard video unit)."},
+  {id:"cal",label:"Calibration and linearisation\n(modules 25, 26)",st:"planned",x:870,y:560,w:270,h:110,go:"g_cal",
+    tip:"Background calibration loops, PAPR reduction and digital pre-distortion. Planned.",
+    detail:"Needs the observation receiver of the transceiver, the sequencer and the synchroniser."},
+ ],
+ edges:[
+  ["video","tx","slices",{fa:.25,ta:.2}],
+  ["tele","tx","telemetry",{fa:.25,ta:.5}],
+  ["mac","tx","MCS, power, ACKs",{fa:.25,ta:.8}],
+  ["rx","video",null,{fa:.2,ta:.75}],
+  ["rx","tele",null,{fa:.5,ta:.75}],
+  ["rx","mac","feedback",{fa:.8,ta:.75}],
+  ["tx","radio","samples",{ta:.25}],
+  ["radio","rx","samples",{fa:.6,ta:.3}],
+  ["ctl","radio","lines, pulses",{fs:"r",ts:"l",ta:.9}],
+  ["ctl","rx","re-arm, gating",{fs:"t",ts:"b",fa:.5,ta:.5,dash:true}],
+  ["radio","rf","I/Q, SPI, pins",{both:true,fs:"b",ts:"t",fa:.5,ta:.5}],
+  ["cal","rf","observation, DPD",{both:true,fs:"t",ts:"b",fa:.5,ta:.5,dash:true}],
+ ]};
+
+/* Group: transmit */
+V.g_tx = {title:"Transmit path",
+ desc:"Byte stream to OFDM samples. The slice header and CRC are added by 9 (CRC engine from 3), the slice is encrypted by 15 and the transmit chain (16) turns the bytes into samples. Open 16 to see its internal pipeline.",
+ nodes:[
+  ext("in","Slice or telemetry bytes\n(video path, bridge 8)",0,0,"Byte stream from the video path (28, 29) or the telemetry bridge (8)."),
+  mod("m9",9,1,0), mod("m15",15,2,0), mod("m16",16,3,0),
+  ext("out","Samples to radio\ninterface (11)",4,0,"32-bit {Q,I} samples with valid/ready into the radio interface transmit path."),
+  mod("m3",3,1,1),
+ ],
+ edges:[["in","m9"],["m9","m15","slice frame"],["m15","m16","AAD || ct || tag"],["m16","out","{Q,I} samples"],["m3","m9","CRC"]]};
+
+/* Group: receive */
+V.g_rx = {title:"Receive path",
+ desc:"Left to right along each row, snaking down. Boxes marked 'module 21' are the new glue blocks of the receive chain integration (in progress). Dashed red boxes are interfaces that are still undefined; the combiner (19) is done but not in the chain yet.",
+ nodes:[
+  mod("m11",11,0,0,{label:"Radio interface (rx side)",sub:"module 11 · done"}),
+  mod("m18",18,1,0),
+  mod("rf",21,2,0,{label:"rx_framer",sub:"module 21 · in progress",tip:"Counts derotated samples from fall and places the FFT windows (skip, N samples, last), replacing cp_remove.",detail:"Window of LTF1 starts at n0 + Lc - backoff with n0 = n_fall - k_back - BIAS. Limit: the skip must not be negative, which holds for N >= 128 and backoff <= 4; N = 64 would need a history buffer.",files:"rx_framer",go:null}),
+  mod("m12",12,3,0,{label:"FFT",sub:"module 12 · done"}),
+  mod("m17",17,3,1),
+  mod("m14",14,2,1),
+  mod("m5",5,1,1,{label:"De-interleaver",sub:"module 5 · done"}),
+  mod("lt",21,0,1,{label:"llr_trim + LLR FIFO",sub:"module 21 · in progress",tip:"Passes the first ncw x N LLRs of the frame, drops the padding, FIFO of 8-bit LLRs (depth 4096) decouples the symbol rate from the decoder.",detail:"Receive counterpart of the transmit glue blocks.",files:"llr_trim",go:null}),
+  mod("m20",20,0,2),
+  mod("mb",21,1,2,{label:"msg_to_bytes",sub:"module 21 · in progress",tip:"Concatenates decoded K-bit messages, groups bits into bytes, outputs the first nbytes with last, and ANDs the codeword status into frame_ok.",detail:"Trims the zero padding using nbytes from the MAC.",files:"msg_to_bytes",go:null}),
+  mod("m15",15,2,2,{label:"AEAD decrypt",sub:"module 15 · done, not hooked up"}),
+  mod("m9",9,3,2,{label:"Slice depacketiser",sub:"module 9 · slice_unpack · done"}),
+  gap("gpad","pad",2,3),
+  gap("gcfg","rxcfg",3,3),
+  mod("m19",19,0,3,{label:"Multi-branch combiner",sub:"module 19 · done, not in chain yet"}),
+ ],
+ edges:[
+  ["m11","m18","samples"],["m18","rf","samples"],["rf","m12","windows"],
+  ["m12","m17","bins"],["m17","m14","tones"],["m14","m5","LLRs"],["m5","lt"],
+  ["lt","m20","LLRs"],["m20","mb","bits"],["mb","m15","bytes",{dash:true}],["m15","m9",null,{dash:true}],
+  ["gpad","m15",null,{gap:true,dash:true}],
+ ]};
+
+/* Group: control */
+V.g_ctl = {title:"Timeline and control",
+ desc:"The library (1) underlies every block; the timestamp unit (2) taps every stage boundary; the sequencer (10) drives the radio control lines. The register map that ties them to firmware is not defined.",
+ nodes:[
+  gap("greg","regs",0,0),
+  mod("m1",1,1,0), mod("m10",10,2,0),
+  ext("toradio","Radio interface (11)\nlines, pulses, PLL value",3,0,"pin_map in the radio interface turns the 16 lines and 16 pulses into transceiver control pins."),
+  mod("m2",2,1,1),
+  ext("taps","Block boundaries\n(all data-plane modules)",2,1,"Every data-plane block boundary has a timestamp tap (LAT-004)."),
+ ],
+ edges:[["greg","m1","config",{dash:true,gap:true}],["m1","m10","table writes"],["m10","toradio","lines"],["m2","taps","latch",{both:true}]]};
+
+/* Group: video, mac, cal (planned) */
+V.g_video = {title:"Video path (planned)",
+ desc:"Nothing here is written. The camera capture path is not even in the module plan. Module 27 would drive the goggles through a proxy output (for example coax), module 29 is an optional custom codec.",
+ nodes:[
+  gap("gcam","cam",0,0), mod("m28",28,1,0), mod("m29",29,2,0),
+  ext("sl","Slices to the transmit\npath (9, 16)",3,0,"Slice-aligned bitstream in the format of module 9."),
+  mod("m27",27,1,1), ext("gog","Goggles / display\n(coax or digital)",2,1,"The display side needs no codec if the ground unit decodes and re-outputs a standard signal."),
+ ],
+ edges:[["gcam","m28","frames",{dash:true}],["m28","m29","replaced by",{dash:true}],["m28","sl","slices"],["m28","m27","decoded frames",{dash:true}],["m27","gog","line-synchronised video",{dash:true}]]};
+V.g_mac = {title:"MAC and link adaptation (planned)",
+ desc:"All three modules wait for the receive chain integration (21).",
+ nodes:[
+  ext("fb","Feedback and ACKs\nfrom the receive path",0,0,"Uplink feedback each millisecond; ACK bitmap from the depacketiser."),
+  mod("m22",22,1,0), mod("m23",23,2,0),
+  ext("tocfg","MCS, power, slice budget\n(transmit chain, 16)",3,0,"Configuration inputs of the transmit chain: mod, code, cp_sel, fft_log2."),
+  mod("m24",24,1,1),
+ ],
+ edges:[["fb","m22",null,{dash:true}],["m22","m23",null,{dash:true}],["m23","tocfg",null,{dash:true}],["m24","m22","channel ranking",{dash:true}]]};
+V.g_cal = {title:"Calibration and linearisation (planned)",
+ desc:"Both use the observation receiver, which lives in the transceiver, and need the sequencer to schedule loops without interrupting video.",
+ nodes:[
+  mod("m25",25,0,0), mod("m26",26,1,0),
+  ext("obs","Observation receiver\n(transceiver, hardware)",2,0,"TX monitor path of the AD9361 / ADRV9002; whether it can serve as an observation receiver is still to be checked in the data sheet."),
+ ],
+ edges:[["obs","m26","PA output",{dash:true}],["m26","m25",null,{dash:true,both:true}]]};
+
+/* Module views: internal blocks */
+const blk=(id,label,c,r,tip,x={})=>nd(id,label,x.st||"done",c,r,tip,{sub:x.sub||"",...x});
+const done=(id,label,c,r,tip,x={})=>blk(id,label,c,r,tip,{sub:"RTL file",...x});
+
+V.m1 = {title:"1 · AXI-Stream / AXI-Lite library",mod:1,nodes:[
+  done("a","axis_skid",0,0,"Register slice: breaks combinational valid/ready paths at full throughput."),
+  done("b","axis_fifo",1,0,"Synchronous FIFO with valid/ready on both sides."),
+  done("c","axis_width_conv",2,0,"Width converter between stream widths."),
+  done("d","axis_cdc_fifo",0,1,"Clock-crossing FIFO; used by the radio interface (11)."),
+  done("e","axil_regfile",1,1,"AXI-Lite register file: configuration path from the processor."),
+ ],edges:[]};
+V.m2 = {title:"2 · Timestamp unit",mod:2,nodes:[
+  blk("a","64-bit free-running counter",0,0,"Runs on the system clock.",{sub:"inside timestamp_unit"}),
+  blk("b","Latch register per tap",1,0,"One latch per pipeline tap, loaded by the tap strobe.",{sub:"inside timestamp_unit"}),
+  blk("c","Trace output / readout",2,0,"Read by firmware (through the register file) or by a trace port.",{sub:"inside timestamp_unit"}),
+ ],edges:[["a","b"],["b","c"]]};
+V.m3 = {title:"3 · Scrambler and CRC",mod:3,nodes:[
+  done("a","scrambler",0,0,"LFSR PRBS whitening; width, length, taps and seed are parameters."),
+  done("b","crc_engine",1,0,"Parameterised CRC; default CRC-32 with residue check; verified against zlib."),
+ ],edges:[]};
+V.m4 = {title:"4 · Cyclic prefix",mod:4,nodes:[
+  done("a","cp_insert",0,0,"Adds the guard interval (cp_sel: 1/16, 1/8, 1/4) in front of each symbol."),
+  done("b","cp_remove",1,0,"Drops the prefix; backoff starts the symbol window early inside the prefix so small timing errors do not matter."),
+ ],edges:[]};
+V.m5 = {title:"5 · Interleaver",mod:5,nodes:[
+  done("a","il_addr_gen",0,0,"Generates the read addresses of the block permutation (16 columns)."),
+  done("b","block_interleaver",1,0,"Memory plus address generator; DEINT selects the inverse; element width W is a parameter."),
+ ],edges:[["a","b","addresses"]]};
+V.m6 = {title:"6 · Constellation mapper",mod:6,nodes:[
+  done("a","mapper",0,0,"Bit words to {Q,I} points: BPSK, QPSK, 16QAM, 64QAM, 256QAM; RMS 4096 per tone. Tested exhaustively."),
+ ],edges:[]};
+V.m7 = {title:"7 · Preamble and pilot generator",mod:7,nodes:[
+  done("a","preamble_gen",0,0,"Command interface (kind, log2 size, frame start) in; 34-bit tone stream out: STF, LTF, pilot and data-tone positions."),
+ ],edges:[]};
+V.m8 = {title:"8 · Telemetry bridge",mod:8,nodes:[
+  ext("i1","Flight controller\nrxd",0,0,"UART from the flight controller."),
+  done("a","uart_rx",1,0,"Oversampling UART receiver with frame-error flag."),
+  done("b","tlm_framer",2,0,"Finds frame boundaries for MAVLink, MSP or raw bytes using length and idle time; flags errors and drops."),
+  ext("o1","To the radio link",3,0,"Framed bytes towards the packet path."),
+  ext("i2","From the radio link",3,1,"Bytes arriving from the link."),
+  done("c","uart_tx",2,1,"UART transmitter with busy flag."),
+  ext("o2","Flight controller\ntxd",1,1,"UART to the flight controller."),
+ ],edges:[["i1","a"],["a","b"],["b","o1"],["i2","c"],["c","o2"]]};
+V.m9 = {title:"9 · Slice packetiser",mod:9,nodes:[
+  ext("i1","Payload bytes",0,0,"Video or telemetry payload."),
+  done("a","slice_pack",1,0,"Adds the 8-byte slice header (frame, index, flags, length) and the CRC."),
+  ext("o1","Slice frame\nto 15 / 16",2,0,"Goes to the AEAD (header as AAD) and then the transmit chain."),
+  ext("i2","Frame from decoder\n(after decrypt)",0,1,"Receive side; needs the length / padding strip (gap)."),
+  done("b","slice_unpack",1,1,"Checks header and CRC; status outputs: header ok, CRC ok, truncated, frame, index, flags, length."),
+  ext("o2","Payload + status",2,1,"Payload to the video path; status to the MAC."),
+ ],edges:[["i1","a"],["a","o1"],["i2","b"],["b","o2"]]};
+V.m10 = {title:"10 · Frame-timeline sequencer",mod:10,nodes:[
+  blk("w","Write port\nwr_en / addr / data / commit",0,0,"The CPU writes the next frame's table into the inactive bank, then commits.",{sub:"inside frame_sequencer"}),
+  blk("t","Two table banks\n(DEPTH 64)",1,0,"Active bank plays; the other is written. They swap at the frame end.",{sub:"inside frame_sequencer"}),
+  blk("x","Executor\ntick counter, event decode",2,0,"SET_LINES, CLR_LINES, pulse, gain, PLL, END events at their tick.",{sub:"inside frame_sequencer"}),
+  blk("o","lines, pulses,\ngain_val, pll_val",3,0,"Outputs to the radio interface (11). lines clear at every frame start.",{sub:"outputs"}),
+  blk("s","Safe table\n(after reset)",1,1,"A single END at SAFE_PERIOD: radio off until a table is committed.",{sub:"inside frame_sequencer"}),
+  blk("f","force_safe override",3,1,"Thermal trip, PA fault or VSWR: lines take SAFE_LINES and pulses are suppressed.",{sub:"input"}),
+ ],edges:[["w","t"],["t","x"],["x","o"],["s","t",null,{dash:true}],["f","o"]]};
+V.m11 = {title:"11 · Radio interface wrapper",mod:11,nodes:[
+  ext("i1","Radio rx data\n(radio clock)",0,0,"From the transceiver data port (LVDS electrical layer not included)."),
+  done("a","rx_path",1,0,"Clock-crossing FIFO into the system clock with overrun counter."),
+  ext("o1","Samples to\nsynchroniser (18)",2,0,"32-bit {Q,I} stream; no back-pressure."),
+  ext("i2","Samples from\ntransmit chain (16)",0,1,"valid/ready stream."),
+  done("b","tx_path",1,1,"Clock-crossing FIFO to the radio clock; sends zeros and counts an underrun when empty."),
+  ext("o2","Radio tx data",2,1,"To the transceiver data port."),
+  ext("i3","SPI commands",0,2,"32-bit command words queued by firmware."),
+  done("c","spi_master",1,2,"Programs the transceiver; divisor and frame length are configurable."),
+  ext("o3","SPI pins",2,2,"sclk, mosi, cs_n, miso."),
+  ext("i4","lines, pulses, pll_val\nfrom sequencer (10)",0,3,"16 lines and 16 pulses."),
+  done("d","pin_map",1,3,"pin[k] = lines[sel[k]] xor inv[k], registered; hop trigger; hardware force_safe override in one clock."),
+  ext("o4","Control pins,\nhop trigger, profile",2,3,"ENABLE, TXNRX, PA enable, antenna switch and so on."),
+  done("e","gray_cnt_sync",1,4,"Gray-coded counter crossing used by the overrun and underrun counters."),
+ ],edges:[["i1","a"],["a","o1"],["i2","b"],["b","o2"],["i3","c"],["c","o3"],["i4","d"],["d","o4"]]};
+V.m12 = {title:"12 · FFT / IFFT",mod:12,nodes:[
+  blk("a","Sample memory\n(ping-pong)",0,0,"Input and output share memories so a new symbol can load while one transforms.",{sub:"inside fft_core"}),
+  blk("b","Butterfly\n(one per clock)",1,0,"Radix-2 butterfly with a complex multiplier.",{sub:"inside fft_core"}),
+  done("c","fft_twiddle_rom",2,0,"Twiddle factors cos and sin in 16-bit Q15."),
+  blk("d","Stage scaling and saturation\nshift_mask, ovf_cnt",1,1,"Per-stage shift right; saturation events are counted.",{sub:"inside fft_core"}),
+  blk("e","Control\nsize, inverse, last check",0,1,"fft_log2 (6 to 10), inverse flag and shift_mask sampled with the first sample; err_len pulses if last disagrees with the count.",{sub:"inside fft_core"}),
+ ],edges:[["a","b"],["c","b","twiddle"],["b","d"],["d","a","write back",{dash:true}],["e","a",null,{dash:true}]]};
+V.m13 = {title:"13 · LDPC encoder",mod:13,nodes:[
+  done("a","ldpc_code_rom",0,0,"Base-matrix tables of the 8 codes (real 802.11n 648 rate 5/6 plus 7 own designs)."),
+  done("b","ldpc_enc",1,0,"Quasi-cyclic encoder: 32-bit message words in, 32-bit codeword words out; err_len on a length mismatch."),
+ ],edges:[["a","b","shifts"]]};
+V.m14 = {title:"14 · Soft demapper",mod:14,nodes:[
+  ext("i","Equalised tone + csi\nfrom 17",0,0,"32-bit {Q,I} tone with an 8-bit reliability weight on the same beat."),
+  done("a","demapper",1,0,"Folded max-log LLR per bit, scaled by csi and llr_shift, saturated to -127..127; 64-bit beat with up to eight LLRs."),
+  done("b","llr_serializer",2,0,"Emits the valid LLRs of a beat one per clock as 8-bit values."),
+  ext("o","To de-interleaver (5)",3,0,"8-bit LLR stream."),
+ ],edges:[["i","a"],["a","b","8 LLRs + nbits"],["b","o"]]};
+V.m15 = {title:"15 · ChaCha20-Poly1305 AEAD",mod:15,nodes:[
+  done("a","aead",1,0,"Controller: frame state machine, byte datapath (XOR with keystream), MAC block assembly with padding and length block, tag output or compare."),
+  done("b","chacha_block",0,1,"Keystream block; one quarter-round per clock. Counter 0 gives the one-time Poly1305 key."),
+  done("c","poly1305",2,1,"Accumulator with an 8-bit-digit sequential multiplier, about 19 clocks per 16-byte block."),
+  done("d","tail_hold",1,1,"Delays the stream by 16 bytes and presents the final 16 as the tag word (decrypt)."),
+  ext("i","Byte stream in",0,0,"AAD || payload (encrypt) or AAD || ciphertext || tag (decrypt)."),
+  ext("o","Byte stream out\n+ st_ok",2,0,"AAD || ciphertext || tag, or AAD || plaintext with the status pulse."),
+ ],edges:[["i","a"],["a","o"],["b","a","keystream",{dash:true}],["c","a","tag",{dash:true}],["d","a","tail",{dash:true}]]};
+V.m16 = {title:"16 · Transmit chain",mod:16,
+ desc:"The first end-to-end transmit path. Boxes that are modules of their own can be opened. The frame controller (not drawn as a box) commands the preamble symbols, then one data-symbol command per completed block.",
+ nodes:[
+  done("a","msg_bits_pack",0,0,"Bit stream to K-bit message words; pads the final codeword with zeros."),
+  mod("b",13,1,0,{label:"ldpc_enc",sub:"module 13"}),
+  done("c","cw_to_bits",2,0,"Codeword words to a bit stream, N bits per codeword."),
+  done("d","sym_blocker",3,0,"Cuts the coded bits into blocks of Ncbps = Nd x nb bits and pads the last block."),
+  mod("e",5,4,0,{label:"block_interleaver",sub:"module 5"}),
+  done("f","bit_packer",4,1,"nb bits to one tone word."),
+  mod("g",6,3,1,{label:"mapper",sub:"module 6"}),
+  done("h","tx_assembler",2,1,"Merges the tone plan with mapper samples: null bins give 0, data bins take the next sample, pilot and training bins take module 7 values."),
+  mod("i",12,1,1,{label:"fft_core (inverse)",sub:"module 12"}),
+  mod("j",4,0,1,{label:"cp_insert",sub:"module 4"}),
+  mod("k",7,2,2,{label:"preamble_gen",sub:"module 7"}),
+  ext("o","Samples to radio\ninterface (11)",0,2,"Last sample of symbol 3 + nsym carries last."),
+  ext("in","Slice frame bytes",0,-1,"From 9 or 15."),
+  done("fc","Frame controller",4,2,"Commands kinds 0, 1, 1 for the preamble, then kind 2 per completed block (first with frame_start); counts blocks and output symbols; refuses new bytes until the frame has left.",{sub:"inside tx_chain"}),
+ ],
+ edges:[["in","a"],["a","b"],["b","c"],["c","d"],["d","e"],["e","f"],["f","g"],["g","h"],["k","h","tone plan"],["h","i"],["i","j"],["j","o"],["fc","k",null,{dash:true}]]};
+V.m17 = {title:"17 · Channel estimator and equaliser",mod:17,
+ desc:"Five steps per frame, all integer fixed point. The channel H is in Q12. The tone plan and pilot signs come from an internal instance of module 7.",
+ nodes:[
+  blk("a","1 · Channel estimate\nfrom LTF1 + LTF2",0,0,"H from the two long training symbols; kept until the next frame's first LTF.",{sub:"inside equalizer"}),
+  done("r","recip_rom",1,0,"Reciprocal table for 1/H with normalisation (gain-limited for deep fades)."),
+  blk("b","2 · Pass 1\nW = Y x G",2,0,"Per used bin, complex product saturated to 16 bits.",{sub:"inside equalizer"}),
+  blk("c","3 · Pilot common correction",2,1,"Common phase and gain c measured from the pilots with the polarity of module 7.",{sub:"inside equalizer"}),
+  blk("d","4 · Pass 2\nZ = W / c, csi",1,1,"Outputs the data tones in bin order with csi = min(255, |H|^2 >> 17).",{sub:"inside equalizer"}),
+  mod("p",7,0,1,{label:"preamble_gen (internal)",sub:"module 7"}),
+ ],edges:[["a","r"],["r","b"],["b","c"],["c","d"],["p","a","reference tones",{dash:true}]]};
+V.m18 = {title:"18 · Synchroniser",mod:18,
+ desc:"Schmidl-Cox delay-and-correlate on the STF (period P = N/4), threshold detection, coarse CFO by CORDIC, derotation, end-of-STF marker and a power monitor.",
+ nodes:[
+  blk("a","Delay-and-correlate\nC[n], E[n]",0,0,"Running sums over a window of P samples; delay line of 2P samples.",{sub:"inside sync_core"}),
+  blk("b","Threshold and detect\nthr_sel, min_power",1,0,"M = |C|^2 / E^2 above 1/2, 1/4 or 3/4 for P/2 samples, and E above a minimum; then det pulses.",{sub:"inside sync_core"}),
+  done("c","cordic_vec",2,0,"Sequential vectoring CORDIC, 14 iterations: 16-bit angle of C (65536 = 2 pi)."),
+  blk("d","Derotator (NCO)\ncfo_inc",3,0,"24-bit phase accumulator rotates every sample by exp(-j phi n) from detection on.",{sub:"inside sync_core"}),
+  blk("e","End-of-STF marker\nfall, k_back",1,1,"fall pulses when the metric drops after a detection; k_back is the constant to subtract. Reliable to about 10 dB SNR only.",{sub:"inside sync_core"}),
+  blk("f","Power monitor (AGC)\nagc_lo, agc_hi",0,1,"Mean power E/W compared every W samples; agc_up / agc_down pulses.",{sub:"inside sync_core"}),
+  gap("g","agc",0,2),
+  ext("o","Derotated samples, fall,\nk_back to rx_framer (21)",4,0,"Continuous stream; no last and no ready."),
+ ],edges:[["a","b"],["b","c","C"],["c","d","step"],["d","o"],["b","e",null,{dash:true}],["a","f","E[n]",{dash:true}],["f","g","agc_up / down",{gap:true,dash:true}]]};
+V.m19 = {title:"19 · Multi-branch combiner",mod:19,nodes:[
+  done("a","mrc_combine",0,0,"Maximum-ratio combining of B = 2, 4 or 8 branches of equalised tones using their csi weights."),
+ ],edges:[]};
+V.m20 = {title:"20 · LDPC decoder",mod:20,nodes:[
+  done("a","ldpc_dec",0,0,"Layered normalised min-sum with a 9-bit posterior, one codeword at a time, run-time iteration limit and per-codeword parity status. Throughput 34-114 Mbit/s for a single instance."),
+ ],edges:[]};
+V.m21 = {title:"21 · Receive chain integration",mod:21,
+ desc:"Samples to bytes, and a link loopback against the transmit chain through a software channel. The three glue blocks are new; everything else is an existing module.",
+ nodes:[
+  ext("i","Radio samples",0,0,"32-bit {Q,I}, one strobe at most every second clock; the radio cannot be stopped."),
+  mod("a",18,1,0,{label:"sync_core",sub:"module 18"}),
+  nd("b","rx_framer","wip",2,0,"Places the FFT windows after the STF end marker.",{sub:"new glue block"}),
+  mod("c",12,3,0,{label:"fft_core (forward)",sub:"module 12"}),
+  mod("d",17,3,1,{label:"equalizer",sub:"module 17"}),
+  mod("e",14,2,1,{label:"demapper + serializer",sub:"module 14"}),
+  mod("f",5,1,1,{label:"block_interleaver (de-)",sub:"module 5"}),
+  nd("g","llr_trim + FIFO","wip",0,1,"Drops the padding LLRs; FIFO depth 4096 decouples the symbol rate from the decoder.",{sub:"new glue block"}),
+  mod("h",20,0,2,{label:"ldpc_dec",sub:"module 20"}),
+  nd("k","msg_to_bytes","wip",1,2,"Decoded messages to payload bytes, trimmed to nbytes, with frame_ok and iters_max.",{sub:"new glue block"}),
+  ext("o","Bytes + frame_ok",2,2,"8-bit bytes with last; frame_ok valid with last."),
+ ],edges:[["i","a"],["a","b","samples, fall"],["b","c","windows"],["c","d"],["d","e","tones, csi"],["e","f","LLRs"],["f","g"],["g","h"],["h","k","bits"],["k","o"]]};
+
+/* ------------------------------------------------------------------ state */
+let stack = ["root"], selected = null;
+const svg = document.getElementById("svg"), panel = document.getElementById("panel"), tip = document.getElementById("tip");
+const CW=290, CH=135, BW=210, BH=88, PAD=44;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function resolve(n){
+  if (n.mod){ const m=M[n.mod]; return {...n, label:n.label||m.name, sub:n.sub||("module "+n.mod+" · "+ST[m.st].toLowerCase()),
+     st:n.st||m.st, tip:n.tip||m.tip, detail:n.detail||m.detail, files:m.files, tests:m.tests, go:n.go||m.view}; }
+  return {...n, sub:n.sub||ST[n.st]};
+}
+function wrap(s,max){ // honour \n, wrap long lines at word boundaries
+  const out=[]; for(const part of String(s).split("\n")){ let line="";
+    for(const w of part.split(" ")){ if((line+" "+w).trim().length>max && line){out.push(line); line=w;} else line=(line+" "+w).trim(); }
+    out.push(line);} return out;
+}
+function layout(v){
+  const nodes=v.nodes.map(resolve);
+  if(v.abs){ nodes.forEach(n=>{n.W=n.w;n.H=n.h;n.X=n.x;n.Y=n.y;}); return {nodes,w:v.w,h:v.h}; }
+  const minC=Math.min(...nodes.map(n=>n.c)), minR=Math.min(...nodes.map(n=>n.r));
+  nodes.forEach(n=>{n.W=BW;n.H=BH;n.X=PAD+(n.c-minC)*CW;n.Y=PAD+(n.r-minR)*CH;});
+  return {nodes,w:Math.max(...nodes.map(n=>n.X+n.W))+PAD,h:Math.max(...nodes.map(n=>n.Y+n.H))+PAD};
+}
+function port(n,side,f){ f=f??.5;
+  return side==="r"?[n.X+n.W,n.Y+n.H*f]:side==="l"?[n.X,n.Y+n.H*f]:side==="t"?[n.X+n.W*f,n.Y]:[n.X+n.W*f,n.Y+n.H]; }
+function sideFor(a,b,abs){ const dx=(b.X+b.W/2)-(a.X+a.W/2), dy=(b.Y+b.H/2)-(a.Y+a.H/2);
+  const hx=abs?Math.abs(dx):Math.abs(dx)/CW, hy=abs?Math.abs(dy):Math.abs(dy)/CH;
+  if(hx>=hy) return dx>=0?["r","l"]:["l","r"]; return dy>=0?["b","t"]:["t","b"]; }
+const DIR={r:[1,0],l:[-1,0],t:[0,-1],b:[0,1]};
+function edgeSvg(e,byId,abs){
+  const [fa,ta,label,o={}]=e, a=byId[fa], b=byId[ta]; if(!a||!b) return "";
+  let [fs,ts]=sideFor(a,b,abs); fs=o.fs||fs; ts=o.ts||ts;
+  const p1=port(a,fs,o.fa), p2=port(b,ts,o.ta), k=Math.max(40,Math.min(110,Math.hypot(p2[0]-p1[0],p2[1]-p1[1])*.4));
+  const c1=[p1[0]+DIR[fs][0]*k,p1[1]+DIR[fs][1]*k], c2=[p2[0]+DIR[ts][0]*k,p2[1]+DIR[ts][1]*k];
+  const d=`M${p1} C${c1} ${c2} ${p2}`, mx=(p1[0]+3*c1[0]+3*c2[0]+p2[0])/8, my=(p1[1]+3*c1[1]+3*c2[1]+p2[1])/8;
+  const cls="edge"+(o.dash?" dash":"")+(o.gap?" gapedge":"");
+  return `<path class="${cls}" d="${d}" marker-end="url(#ar)"${o.both?' marker-start="url(#al)"':""}/>`+
+    (label?`<text class="elabel" x="${mx}" y="${my-4}" text-anchor="middle">${esc(label)}</text>`:"");
+}
+function nodeSvg(n,i){
+  const lines=wrap(n.label,n.W>BW?30:25).slice(0,3), cx=n.X+n.W/2;
+  const top=n.Y+(n.H-(lines.length*16+18))/2+13;
+  let t=lines.map((l,j)=>`<text class="l" x="${cx}" y="${top+j*16}" text-anchor="middle">${esc(l)}</text>`).join("");
+  t+=`<text class="s" x="${cx}" y="${top+lines.length*16+3}" text-anchor="middle">${esc(n.sub)}</text>`;
+  const go=n.go&&V[n.go];
+  return `<g class="node st-${n.st}${go?" go":""}" data-i="${i}" tabindex="0" role="button" aria-label="${esc(n.label.replace(/\n/g," "))}, ${esc(ST[n.st])}${go?", press Enter to open":""}">`+
+    `<rect class="box" x="${n.X}" y="${n.Y}" width="${n.W}" height="${n.H}"/>${t}`+
+    (go?`<text class="open" x="${n.X+n.W-10}" y="${n.Y+n.H-9}" text-anchor="end">open &#8250;</text>`:"")+`</g>`;
+}
+let cur=null;
+function render(id, anim){
+  const v=V[id]; cur={id,v,lay:layout(v)}; selected=null;
+  const {nodes,w,h}=cur.lay, byId={}; nodes.forEach(n=>byId[n.id]=n);
+  if(id==="root"){ // annotate group nodes with open gaps
+    nodes.forEach(n=>{ if(n.go&&V[n.go]){ const g=V[n.go].nodes.filter(x=>x.st==="gap").length; if(g) n.sub=n.sub+" · "+g+" gap"+(g>1?"s":""); }});
+  }
+  svg.setAttribute("viewBox",`0 0 ${w} ${h}`);
+  svg.innerHTML=`<defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker>
+    <marker id="al" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10 0L0 5L10 10z"/></marker></defs>
+    <g id="scene" class="${anim?"enter":""}">${v.edges.map(e=>edgeSvg(e,byId,!!v.abs)).join("")}${nodes.map(nodeSvg).join("")}</g>`;
+  drawChrome(); showPanel(null);
+}
+function drawChrome(){
+  document.getElementById("back").disabled=stack.length<2;
+  document.getElementById("home").disabled=stack.length<2;
+  const c=document.getElementById("crumbs"); c.innerHTML="";
+  stack.forEach((id,i)=>{ if(i) c.insertAdjacentHTML("beforeend",'<span class="sep">/</span>');
+    if(i===stack.length-1) c.insertAdjacentHTML("beforeend",`<b>${esc(V[id].title)}</b>`);
+    else { const b=document.createElement("button"); b.textContent=V[id].title; b.onclick=()=>{stack=stack.slice(0,i+1);render(id,true);}; c.appendChild(b);} });
+}
+function showPanel(n){
+  if(!n){ const v=cur.v, m=v.mod?M[v.mod]:null;
+    panel.innerHTML=`<h2>${esc(v.title)}</h2>`+(m?`<span class="badge b-${m.st}">${ST[m.st]}</span>`:"")+
+      `<p>${esc(v.desc||(m?m.detail:""))}</p>`+(m&&m.files?`<p class="files">${esc(m.files)}</p>`:"")+(m&&m.tests?`<p class="hint">Tests: ${esc(m.tests)}</p>`:"")+
+      `<p class="hint">Hover a box for a short explanation, click it for details${stack.length>1?"; Esc or Back goes up":""}.</p>`; return; }
+  panel.innerHTML=`<h2>${esc(n.label.replace(/\n/g," "))}</h2><span class="badge b-${n.st}">${ST[n.st]}</span>`+
+    `<p>${esc(n.detail||n.tip)}</p>`+(n.files?`<p class="files">${esc(n.files)}</p>`:"")+(n.tests?`<p class="hint">Tests: ${esc(n.tests)}</p>`:"")+
+    (n.go&&V[n.go]?`<p><button id="openb">Open ${esc(V[n.go].title)} &rsaquo;</button></p>`:"");
+  const b=document.getElementById("openb"); if(b) b.onclick=()=>open(n);
+}
+function nodeOf(el){ const g=el.closest&&el.closest(".node"); return g?cur.lay.nodes[+g.dataset.i]:null; }
+function open(n){
+  if(!(n.go&&V[n.go])) return;
+  const target=n.go;
+  if(reduce){ stack.push(target); render(target,false); return; }
+  // zoom: tween the viewBox onto the clicked node, then show the next view
+  const [,,vw,vh]=svg.getAttribute("viewBox").split(" ").map(Number), ar=vw/vh;
+  let bw=n.W*1.25, bh=bw/ar; if(bh<n.H*1.25){bh=n.H*1.25;bw=bh*ar;}
+  const to=[n.X+n.W/2-bw/2,n.Y+n.H/2-bh/2,bw,bh], from=[0,0,vw,vh], t0=performance.now(), D=380;
+  svg.querySelectorAll(".node").forEach(g=>{ if(cur.lay.nodes[+g.dataset.i]!==n) g.classList.add("dim"); });
+  tip.style.display="none";
+  (function step(t){ const k=Math.min(1,(t-t0)/D), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    svg.setAttribute("viewBox",from.map((f,i)=>f+(to[i]-f)*e).join(" "));
+    if(k<1) requestAnimationFrame(step); else { stack.push(target); render(target,true); } })(t0);
+}
+function goBack(){ if(stack.length>1){ stack.pop(); render(stack[stack.length-1],true);} }
+
+/* events */
+function showTip(n,x,y){
+  tip.innerHTML=`<b>${esc(n.label.replace(/\n/g," "))}</b><span class="badge b-${n.st}">${ST[n.st]}</span><div>${esc(n.tip||"")}</div>`+
+    `<div class="k">${n.go&&V[n.go]?"Click to open":"Click for details"}</div>`;
+  tip.style.display="block";
+  const r=tip.getBoundingClientRect(); let L=x+14,T=y+14;
+  if(L+r.width>innerWidth-8) L=x-r.width-14; if(T+r.height>innerHeight-8) T=y-r.height-14;
+  tip.style.left=Math.max(8,L)+"px"; tip.style.top=Math.max(8,T)+"px";
+}
+svg.addEventListener("mousemove",e=>{ const n=nodeOf(e.target); if(n) showTip(n,e.clientX,e.clientY); else tip.style.display="none"; });
+svg.addEventListener("mouseleave",()=>tip.style.display="none");
+svg.addEventListener("click",e=>{ const n=nodeOf(e.target); if(!n){return;}
+  svg.querySelectorAll(".node.sel").forEach(g=>g.classList.remove("sel")); e.target.closest(".node").classList.add("sel");
+  selected=n; showPanel(n); if(n.go&&V[n.go]) open(n); });
+svg.addEventListener("focusin",e=>{ const n=nodeOf(e.target); if(n){ showPanel(n); const r=e.target.closest(".node").getBoundingClientRect(); showTip(n,r.left+r.width/2,r.bottom-20);} });
+svg.addEventListener("focusout",()=>tip.style.display="none");
+svg.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ const n=nodeOf(e.target); if(n){ e.preventDefault(); showPanel(n); if(n.go&&V[n.go]) open(n);} } });
+addEventListener("keydown",e=>{ if(e.key==="Escape") goBack(); });
+document.getElementById("back").onclick=goBack;
+document.getElementById("home").onclick=()=>{stack=["root"];render("root",true);};
+
+/* header summary and legend */
+(function(){
+  const c={done:0,wip:0,planned:0}; for(const k in M) c[M[k].st]++;
+  document.getElementById("summary").textContent=`${c.done} of 29 modules done, ${c.wip} in progress, ${c.planned} planned. Plan: spec/18-development-plan.md`;
+  document.getElementById("legend").innerHTML=Object.keys(ST).map(k=>`<span><i style="background:var(--${k==="planned"?"plan":k});border-color:var(--${k==="planned"?"plan":k}-b);${k==="planned"?"border-style:dashed":k==="gap"?"border-style:dotted":""}"></i>${ST[k]}</span>`).join("");
+})();
+const h0=decodeURIComponent(location.hash.slice(1));
+if(h0&&h0!=="root"&&V[h0]){ stack=["root",h0]; }
+render(stack[stack.length-1],false);
+</script>
+</body>
+</html>

@@ -6,6 +6,8 @@ Layout: `design/NN-name.md` (this directory), `rtl/NN-name/*.sv` (RTL), `tests/N
 
 Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` (Verilator 5 with cocotb 2). Lint and synthesis checks: `make -C tests/NN-name lint synth`.
 
+Block diagram of all modules, interactive: `spec/diagrams/modem-modules.html` (open it in a browser).
+
 ## Status
 
 | # | Module | Design and test plan | Implementation and tests |

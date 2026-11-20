@@ -18,6 +18,8 @@ schedule; effort in person-years for the whole ASIC programme is in `16`. Test i
 - Clean-room rule (`04` section 6): RTL is written from the specification and the literature; GPL and AGPL projects are
   behavioural references only.
 
+Block diagram of the modules (interactive, open in a browser; zoom from components to modules to internal blocks): [`diagrams/modem-modules.html`](diagrams/modem-modules.html). It also marks the interfaces that no module covers yet.
+
 ## 2. Modules in order of rising complexity
 
 | # | Module | Class | Domain | What it does | Requirements | Needs | Tests |
