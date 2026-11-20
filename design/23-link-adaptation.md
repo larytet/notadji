@@ -44,6 +44,12 @@ State: filtered SNR (fast attack, slow release), the outer-loop offset, the last
 
 Each call runs in bounded time: no loop other than the table scan (at most 16 entries) and the per-message slice accounting, which is done in closed form (`n_lost` and `n_slices - n_lost` multiplied, not iterated).
 
+### 2.1 Changes made while testing (the algorithm as implemented)
+
+- Added configuration `down_hys_x10` (0.3 dB: a step down needs `thr[cur] > snr_eff + down_hys`), `olla_neg_limit_udb` (the offset may not go below -4 dB), `probe_window_us` (200 ms) and `probe_max_us` (8 s).
+- **Explained losses are not evidence of bias.** When a message reports losses and the measurement is more than 0.5 dB below the filtered SNR (or the fall exceeds 6 dB), the filter follows the measurement at once and that message's losses are not added to the outer-loop offset; an abrupt fall also clears a negative (optimistic) offset. Without this, a fade filled the offset with +10 dB penalties that took seconds to unwind (goodput 190 against 840 for the best fixed MCS on a Rayleigh trace).
+- **Two kinds of step up.** A step justified by the measurement alone (`snr_f` minus any positive offset reaches `thr[next] + up_hys`) is taken after `up_dwell` (one frame). A step that only the outer loop's negative offset allows is a **probe**: at most one per `probe_window`, and after a failed probe (a step down within the window with no fall of the filtered SNR) the wait before the next probe is multiplied by 4 up to `probe_max` (halved after every successful probe). Without this the controller probed the next MCS every second on a static channel at 3 dB (the limit cycle of every outer loop).
+
 ## 3. Interface (C)
 
 ```
@@ -83,3 +89,30 @@ A Python harness (`ctypes`) loads the compiled library; the channel model (SNR p
 - The MCS thresholds in the default table are estimates [E] (`02`, `scripts/link_budget.py` for the three lowest; the others by the usual gap-to-capacity pattern). They are to be replaced by the SNRs at slice error 1e-3 from the full-chain simulation (module 21 with the throughput fixes) and AFF3CT (SIM-002).
 - Execution on the target core, cycle counts and the 2 ms bound on silicon (SIM-030 with QEMU or Renode; not available here).
 - Joint adaptation of the uplink MCS (MAC-007) and of the video-band/control band in split-band mode (MAC-012); multi-link and hop decisions belong to module 24.
+
+## 7. Results (implementation commit)
+
+Host build (gcc, x86-64), Python harness `tests/23-link-adaptation/test_la.py` (`run_tests.sh`), 12 tests, all pass. The channel model is independent of the controller (steep waterfall: 1e-3 at the threshold, one decade per 0.5 dB [E]).
+
+| Test | Result |
+|---|---|
+| T23-01 | Table monotonic in threshold, rate and rung; `la_slice_budget` within 2 bytes of the exact rational value for 10 MCS in 4 configurations |
+| T23-02 | 21 static SNRs from 0 to 30 dB, 20 s each: the MCS is the ideal one 97% of the time on average (at least 75% at every SNR), never more than one above and at most two below it (a failed probe), at most 8 switches in 10 s, slice loss at most 1% for SNR at or above the lowest threshold |
+| T23-03 | Drops from 28 dB to 2, 8, 13 and 19 dB: the MCS in the **first** feedback message after the drop is the right one for the new SNR (and stays at it or one above); with feedback every 1 ms this is inside the 2 ms of MAC-005 (the decision is made in the call that handles the message; transmission on the next frame start adds the frame time, not modelled here) |
+| T23-04 | A rise from 5 to 28 dB: 8 steps up within the first second (at least 4 per second), never more than one index per step, never two steps closer than one frame; ends at MCS 9 |
+| T23-05 | Measurement noise sigma 1.5 dB: 10 switches in 20 s (0.5 per second); a controller without filter and hysteresis would switch 411 times per second; slice loss 0.03% |
+| T23-06 | SNR estimate biased by +3 dB (too high): without the outer loop every slice is lost, with it the loss rate settles at 1.0% = the 1% target set for this test (offset +1.9 to +2.1 dB); biased by -3 dB (too low): rate recovered from 768 to 1030 (at 18 dB) with 0.05% loss |
+| T23-07 | Constant 38 dB: power falls 1 dB per 10 ms from 30 dB to 19 dB of setting range until the true SNR is 27.0 dB (the top threshold), one step at a time; after a 10 dB fall it rises again to the maximum; the floor is respected; one direction change on a constant channel |
+| T23-08 | Safe schedule exactly 10 ms after the last message (lowest MCS, maximum power); the next message ends it and the climb restarts from the lowest MCS |
+| T23-09 | Outage after 21 ms below the lowest threshold minus 1 dB; cleared 20 ms after the SNR returns (the rise filter) |
+| T23-10 | 100 Hz Doppler, 22 dB mean, 30 s. **Rician K = 10 dB**: slice loss 2.4%, goodput 1129 against 1116 for the best fixed MCS (6) and 1241 for a per-millisecond genie, 71 MCS changes per second. **Rayleigh**: slice loss 5.8%, goodput 587 against 841 for the best fixed MCS and 1121 for the genie, 195 changes per second. The controller does not beat a well-chosen fixed MCS in deep Rayleigh fading with a 4 ms coherence time and 1 ms feedback; it does in the line-of-sight case that a drone link mostly has |
+| T23-11 | `-std=c99 -Wall -Wextra -Wconversion -Wshadow -Werror -mgeneral-regs-only -ffreestanding`: clean; no undefined symbols; no floating-point instructions; 2620 bytes of code, no data, no bss (x86-64 -O2) |
+| T23-12 | Two runs identical; 2 million random messages in 4 configurations (clock wrapping, random recommendations, extreme counts) under UBSan and ASan with output invariants: no violation |
+| Mutation | Fast-fall path disabled: T23-03 fails; sign of the acknowledgement credit flipped: T23-02, 03, 04, 05 fail; both restored |
+
+### Limits
+
+- Not run on the target core: no QEMU, Renode or ARM toolchain here (SIM-030 not met). The 2 ms bound of MAC-005 is argued from the structure (bounded loops: at most 16 table entries; no division except one 64-bit division at initialisation), not measured in cycles.
+- The MCS thresholds are estimates [E]; the slice-loss waterfall slope of the test channel is an assumption. Results hold for that model; the controller adapts to the real thresholds only through the outer loop (within +/-4 dB negative and +10 dB positive).
+- Rayleigh-fading behaviour is poor (see T23-10); for pedestrian-speed ground units with strong fading a longer filter and fixed-MCS fallback should be configurable. The Doppler of the real drone link (PHY-007, 3.5 kHz) is far above the feedback rate: the controller then works on the average SNR, which the tests do not cover.
+- Slice losses are an input (`n_lost`); where they come from (module 22's refresh list) and the exact meaning of `snr_x10` (a CSI summary) are fixed by the control-protocol definition.
