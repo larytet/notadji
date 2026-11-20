@@ -57,7 +57,7 @@ Python reference models of the tone plan, the two LFSRs and the symbols, written
 | T7-02 | STF equals the model and has period N/4 | Beat-by-beat equality for every N; the inverse DFT (numpy) of the received vector repeats exactly four times (maximum difference between repetitions below 1 unit after rounding) |
 | T7-03 | LTF | Equals the model for every N; the two LTF symbols (two commands) are identical; all used tones have amplitude 4096 |
 | T7-04 | Pilot template | Values and signs equal the model over 300 consecutive data symbols (the polarity sequence cycles with period 127); `frame_start` restarts it |
-| T7-05 | Power | STF, LTF and pilot-bearing data symbols: mean power of the occupied bins equals that of the mapper reference within 1% for STF and LTF (STF power = 4 x 5793^2 x 2 / 4 per used tone ... checked numerically as sum over the symbol equal to LTF sum within 1%) |
+| T7-05 | Energy | The energy of an LTF symbol equals the number of used tones times 4096^2 exactly; the energy of an STF symbol is within 10% of it (the number of tones that are multiples of 4 is not exactly a quarter of the used tones, so the match is exact only for large N) |
 | T7-06 | Handshakes | Random `m_axis_ready` and command timing: output equals the model; back-to-back commands produce no extra gap; `cmd_ready` low while a symbol is in progress |
 | T7-07 | Per-symbol N | Different N and kind for every command; every symbol correct |
 | T7-08 | Clamping and reserved | `cmd_log2` below 6 behaves as 6 and above 10 as 10; kind 3 behaves as kind 2 |
@@ -72,3 +72,19 @@ Python reference models of the tone plan, the two LFSRs and the symbols, written
 - The tone plan and the preamble layout are prototype choices; the channel-estimation and acquisition studies (SIM-003, SIM-011) may change them, and the pilot spacing in frequency should follow the delay spread of the target channels.
 - The 5 MHz mode shares the 64-point plan; whether it needs a different pilot set is open.
 - Time-domain preamble length against PHY-010 (40 us): STF plus two LTF symbols with the 1/8 prefix at N = 256 is 3 x 14.4 us = 43.2 us on air; the detection part of the 40 us budget is the STF only, to be confirmed by SIM-011.
+
+## 8. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/07-preamble-pilot && tests/common/lint_synth.sh tests/07-preamble-pilot`.
+
+| Check | Result |
+|---|---|
+| T7-01 to T7-08 (7 tests, one configuration) | 7 of 7 pass: tone counts and exact pilot positions for N = 64 to 1024; STF equals the model and its inverse DFT (numpy) repeats four times for every N; LTF identical in both symbols; pilot template over 300 symbols with period 127 and restart on `frame_start`; every (kind, N) combination twice, shuffled, under three handshake patterns; gap-free back-to-back symbols; clamping and reserved values |
+| Test sensitivity | A pilot position moved by one (75 changed to 76 for N = 256) is caught by three tests after the tests were tightened. The first version of the tests caught it in only one (the tone-count test checked counts, not positions, and the mixed-command test did not cover every pair); both were corrected |
+| Lint (`verilator -Wall`) | Clean |
+| Yosys generic synthesis | 420 cells, 34 flip-flops, no latches |
+
+Notes:
+- The polarity LFSR state of the generator persists between commands; the first data symbol of a frame must carry `cmd_frame_start`. One of my test runs failed for exactly that reason (a test that replayed a command list without restarting the sequence), which is the intended behaviour.
+- The tone plan for 128 and 256 points and the pilot positions for 64 to 256 points are from memory of the IEEE 802.11 plans and have not been re-checked against the standard; 512 and 1024 points use own pilot positions (section 2).
+- STF values: +/-5793 on both axes; LTF and pilots: +/-4096 on the I axis.
