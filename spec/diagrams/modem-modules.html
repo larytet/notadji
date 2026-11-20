@@ -74,10 +74,14 @@ marker path{fill:var(--edge)}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 .dim{opacity:.18;transition:opacity .25s}
 @media (prefers-reduced-motion: reduce){.enter{animation:none}.dim{transition:none}}
-#tip{position:fixed;z-index:10;max-width:320px;pointer-events:none;background:var(--card);color:var(--fg);border:1px solid var(--edge);
+#tip{position:fixed;z-index:10;max-width:360px;pointer-events:none;background:var(--card);color:var(--fg);border:1px solid var(--edge);
   border-radius:8px;padding:8px 10px;font-size:12.5px;box-shadow:0 6px 20px rgba(0,0,0,.18);display:none}
 #tip b{display:block;font-size:13px;margin-bottom:2px}
 #tip .k{color:var(--muted);margin-top:4px;font-size:11.5px}
+#tip .goal,#tip .what{margin-top:5px}
+.k2{display:block;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:650}
+.panel p.goal{border-left:3px solid var(--edge);padding-left:9px}
+.panel p.goal b{display:block;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -182,6 +186,99 @@ const M = {
 };
 for (const k in M){ M[k].num=+k; if (+k<=21) M[k].view="m"+k; }
 
+/* ------------------------------------------------------------------
+   Goals: WHY each module, subsystem and block exists (the tooltip shows
+   the goal first, then what the block does).
+------------------------------------------------------------------- */
+const GOAL_MOD = {
+ 1:"Give every block one handshake convention so blocks connect without glue and can be tested alone, and provide safe clock crossing and a software configuration path.",
+ 2:"Prove the 30 ms glass-to-glass budget stage by stage, by recording when each block saw a sample or frame (LAT-004).",
+ 3:"Whiten the transmitted bits so the spectrum has no lines, and detect corrupted slices cheaply.",
+ 4:"Absorb multipath delay spread so OFDM subcarriers stay orthogonal: the prefix is a guard against inter-symbol interference.",
+ 5:"Scatter burst errors (for example one faded subcarrier) so the LDPC code sees isolated, correctable errors instead of a burst.",
+ 6:"Turn bits into constellation points at the chosen rate: more bits per tone on a good link, fewer on a weak one (link adaptation).",
+ 7:"Give the receiver known signals to find a burst, measure the carrier offset and learn the channel, plus pilots to track it during the frame.",
+ 8:"Carry flight-controller control and telemetry (MAVLink, MSP) over the same link within 5 ms, independent of video.",
+ 9:"Cut video into independently decodable slices with headers, so one lost codeword costs one slice and not a whole frame (VID-004, VID-011).",
+ 10:"Make radio timing (hop, TX/RX switch, PA enable, gain) deterministic in hardware, so it survives a CPU stall and meets microsecond turn-around.",
+ 11:"Isolate the modem from the specific transceiver chip: move I/Q across clock domains, program the chip over SPI and drive its control pins safely.",
+ 12:"The core of OFDM: the IFFT turns subcarrier values into time samples (transmit) and the FFT turns them back (receive).",
+ 13:"Add redundancy so the receiver can correct errors caused by noise, at a code rate chosen for the link quality.",
+ 14:"Convert received points into soft confidence values (LLRs) for the decoder, giving less weight to faded tones.",
+ 15:"Keep the link private and authentic: encrypt each slice and detect tampering or replay, without needing AES hardware (SEC-002).",
+ 16:"Prove the whole transmit side end to end: bytes in, radio-ready OFDM samples out, bit-exact against a golden model.",
+ 17:"Undo what the radio channel did to each subcarrier (gain and phase) so the demapper sees clean points, and report per-tone quality.",
+ 18:"Find a burst quickly (within 40 us), remove the carrier frequency offset, mark where the preamble ends and watch signal power for gain control.",
+ 19:"Add diversity gain: combine several receive antennas so the signals add coherently and the noise does not (PHY-006).",
+ 20:"Recover the transmitted bits from noisy soft values; its throughput sets the highest video rate the link can carry (PHY-015).",
+ 21:"Close the modem: show that bytes sent through the transmit chain come out of the receive chain across a realistic channel.",
+ 22:"Schedule who transmits when (TDD), keep 1 us time sync, return feedback every millisecond and retransmit selectively.",
+ 23:"Keep video flowing as the link changes by choosing modulation, power and slice budget within 2 ms of feedback.",
+ 24:"Find and switch to a clear channel quickly, with 50 us dwells that do not interrupt video.",
+ 25:"Keep the RF front end accurate (IQ balance, LO leakage) in the background, without interrupting video.",
+ 26:"Let the power amplifier run efficiently while meeting the spectrum mask, by reducing signal peaks and pre-correcting the PA's distortion.",
+ 27:"Start scanning the display before the frame is fully decoded and lock the pixel clock to the link, so display latency is a few lines.",
+ 28:"Get a working low-latency video path early with the hard encoder, so the modem is tested with real video and latency is measured on boards.",
+ 29:"Own the codec: sub-frame latency, per-slice quality degradation, no royalty exposure and optional foveation, behind the same slice interface.",
+};
+const GOAL_ROOT = {
+ video:"Turn camera frames into slices and slices back into display lines with the lowest possible latency.",
+ tele:"Carry control and telemetry reliably alongside video.",
+ mac:"Decide when and how each frame is sent, so the air time is shared in a fixed schedule and the link adapts to conditions.",
+ tx:"Turn payload bytes into an encrypted, error-protected OFDM radio waveform.",
+ rx:"Turn received radio samples back into verified payload bytes.",
+ ctl:"Provide the shared plumbing and timekeeping: one stream convention, timing evidence, and hardware-timed radio control.",
+ radio:"Hide the transceiver chip behind a stable digital boundary, so the modem does not depend on which chip is used.",
+ rf:"Convert between digital samples and the air: mixers, converters, power amplifier, low-noise amplifier and antennas.",
+ cal:"Keep the analogue side accurate and linear over temperature and time.",
+};
+const GOAL_VIEW = {g_tx:"tx", g_rx:"rx", g_ctl:"ctl", g_video:"video", g_mac:"mac", g_cal:"cal"};
+const GAP_GOAL = {
+ pad:"Deliver only authenticated, correctly sized data to the video decoder.",
+ rxcfg:"Tell the receiver, frame by frame, how long the frame is and how it was coded.",
+ regs:"Let software configure and observe the hardware, and assign the sequencer lines to real functions.",
+ agc:"Close the gain-control loop so the receiver input stays in range as the signal level changes.",
+ cam:"Get pixels from the camera sensor into the encoder.",
+};
+/* goals of blocks inside a view: GOAL_BLK[viewId][nodeId] */
+const GOAL_BLK = {
+ g_rx:{ rf:"Make the FFT windows start in the right place after the preamble, without a separate cyclic-prefix block.",
+        lt:"Hand the decoder exactly the coded LLRs of the frame and decouple the symbol rate from the decoder rate.",
+        mb:"Reassemble the payload bytes and report whether every codeword decoded correctly." },
+ m1:{ a:"Break long handshake paths so the design meets timing at 200 MHz without losing throughput.", b:"Absorb rate differences between a producer and a consumer.",
+      c:"Connect blocks with different word widths (for example 8-bit bytes and 32-bit words).", d:"Move samples safely between the radio clock and the system clock.", e:"Let software read and write configuration and status." },
+ m2:{ a:"Provide one common time base for every measurement.", b:"Capture the time at the moment a sample or frame passes a stage.", c:"Let software read the captured times and compute per-stage latency." },
+ m3:{ a:"Remove patterns from the bit stream (whitening).", b:"Detect corrupted headers and slices." },
+ m4:{ a:"Add the guard interval before transmission.", b:"Strip the guard interval and choose where the FFT window starts." },
+ m5:{ a:"Work out where each bit goes for the current symbol size.", b:"Apply the permutation (and undo it on receive)." },
+ m6:{ a:"Convert groups of bits into constellation points." },
+ m7:{ a:"Produce the known reference symbols (STF, LTF, pilots) and tell the other blocks which tones carry data." },
+ m8:{ a:"Turn the serial line into bytes reliably.", b:"Find message boundaries so whole MAVLink or MSP frames are forwarded as one unit with minimal delay.", c:"Send bytes received from the link out to the flight controller." },
+ m9:{ a:"Make each slice self-describing and checkable.", b:"Verify a received slice and report whether it can be used." },
+ m10:{ w:"Let software prepare the next frame's schedule without disturbing the current one.", t:"Allow double buffering: edit one bank while the other plays.",
+       x:"Fire each event at its exact clock tick.", o:"Drive the radio hardware lines at the right time.",
+       s:"Guarantee a defined, radio-off state at power-up or if software never programmed a table.", f:"Let hardware faults (over-temperature, PA fault, VSWR) shut the transmitter regardless of software." },
+ m11:{ a:"Bring samples from the radio clock into the modem without loss, and count overruns.", b:"Deliver samples to the radio at its pace, sending silence rather than stale data on underrun.",
+       c:"Program the transceiver (frequency, gain, mode).", d:"Translate abstract sequencer lines into the pins this transceiver expects, with a hardware safe override.", e:"Carry the event counters across clock domains safely." },
+ m12:{ a:"Let one symbol load while another is being computed.", b:"Do the transform arithmetic.", c:"Supply the rotation constants.",
+       d:"Keep values in 16-bit range without overflow, and count saturation.", e:"Check symbol sizes and sequencing." },
+ m13:{ a:"Hold the parity-check structure of each code.", b:"Compute the parity bits." },
+ m14:{ a:"Compute a soft confidence value for every bit.", b:"Present the soft values one at a time to the de-interleaver." },
+ m15:{ a:"Sequence a frame through encrypt or decrypt and compare the tags.", b:"Produce the keystream and the one-time authentication key.",
+       c:"Compute the authentication tag.", d:"Hold back the last 16 bytes so the tag can be separated from the data." },
+ m16:{ a:"Cut the byte stream into LDPC-sized messages.", b:"Add the parity bits.", c:"Turn codewords back into a bit stream.", d:"Group the coded bits into one OFDM symbol's worth.",
+       e:"Spread the bits across subcarriers.", f:"Group the bits that belong to one subcarrier.", g:"Make constellation points.", h:"Fill every subcarrier: data, pilot, training or empty.",
+       i:"Convert subcarrier values into time samples.", j:"Add the guard interval.", k:"Supply the preamble and pilot values.",
+       fc:"Sequence a frame: preamble first, then the data symbols, then the end marker." },
+ m17:{ a:"Learn how the channel changed each subcarrier.", r:"Do divisions cheaply (1/H) with a lookup table.", b:"Remove the channel's gain and phase from each tone.",
+       c:"Remove the residual common phase and gain drift, symbol by symbol.", d:"Apply the final correction and report the per-tone quality.", p:"Provide the known training and pilot values to compare against." },
+ m18:{ a:"Detect the repeating pattern of the short training field.", b:"Decide that a burst has started without false alarms on noise.", c:"Measure the carrier frequency offset as an angle.",
+       d:"Remove the offset from every following sample.", e:"Mark where the preamble ended, so the FFT window can be placed.", f:"Report whether the signal is too weak or too strong for the receiver gain." },
+ m19:{ a:"Combine the branches with weights proportional to their quality." },
+ m20:{ a:"Correct the errors in each codeword and report whether it decoded." },
+ m21:{ b:"Place the FFT windows correctly after the preamble.", g:"Drop the padding and decouple the symbol rate from the decoder rate.", k:"Reassemble the payload bytes and report the frame status." },
+};
+
 /* helpers to build views */
 const mod=(id,num,c,r,x={})=>({id,mod:num,c,r,...x});
 const nd=(id,label,st,c,r,tip,x={})=>({id,label,st,c,r,tip,...x});
@@ -204,7 +301,7 @@ const GAPS = {
    tip:"Not in the module plan. The 4-lane sensor board listed in doc 04 has no capture module in front of the encoder.",
    detail:"Modules 28 and 29 assume video arrives at the encoder. No block covers the CSI-2 receiver, line buffering or any image processing before it."},
 };
-const gap=(id,key,c,r,x={})=>({id,label:GAPS[key].label,st:"gap",c,r,tip:GAPS[key].tip,detail:GAPS[key].detail,...x});
+const gap=(id,key,c,r,x={})=>({id,label:GAPS[key].label,st:"gap",c,r,tip:GAPS[key].tip,detail:GAPS[key].detail,goal:GAP_GOAL[key],...x});
 
 /* ------------------------------------------------------------------ views */
 const V = {};
@@ -500,18 +597,19 @@ const CW=290, CH=135, BW=210, BH=88, PAD=44;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
-function resolve(n){
-  if (n.mod){ const m=M[n.mod]; return {...n, label:n.label||m.name, sub:n.sub||("module "+n.mod+" · "+ST[m.st].toLowerCase()),
+function resolve(n,vid){
+  const goal=n.goal||(GOAL_BLK[vid]&&GOAL_BLK[vid][n.id])||(vid==="root"&&GOAL_ROOT[n.id])||(n.mod&&GOAL_MOD[n.mod])||"";
+  if (n.mod){ const m=M[n.mod]; return {...n, goal, label:n.label||m.name, sub:n.sub||("module "+n.mod+" · "+ST[m.st].toLowerCase()),
      st:n.st||m.st, tip:n.tip||m.tip, detail:n.detail||m.detail, files:m.files, tests:m.tests, go:n.go||m.view}; }
-  return {...n, sub:n.sub||ST[n.st]};
+  return {...n, goal, sub:n.sub||ST[n.st]};
 }
 function wrap(s,max){ // honour \n, wrap long lines at word boundaries
   const out=[]; for(const part of String(s).split("\n")){ let line="";
     for(const w of part.split(" ")){ if((line+" "+w).trim().length>max && line){out.push(line); line=w;} else line=(line+" "+w).trim(); }
     out.push(line);} return out;
 }
-function layout(v){
-  const nodes=v.nodes.map(resolve);
+function layout(v,vid){
+  const nodes=v.nodes.map(n=>resolve(n,vid));
   if(v.abs){ nodes.forEach(n=>{n.W=n.w;n.H=n.h;n.X=n.x;n.Y=n.y;}); return {nodes,w:v.w,h:v.h}; }
   const minC=Math.min(...nodes.map(n=>n.c)), minR=Math.min(...nodes.map(n=>n.r));
   nodes.forEach(n=>{n.W=BW;n.H=BH;n.X=PAD+(n.c-minC)*CW;n.Y=PAD+(n.r-minR)*CH;});
@@ -545,7 +643,7 @@ function nodeSvg(n,i){
 }
 let cur=null;
 function render(id, anim){
-  const v=V[id]; cur={id,v,lay:layout(v)}; selected=null;
+  const v=V[id]; cur={id,v,lay:layout(v,id)}; selected=null;
   const {nodes,w,h}=cur.lay, byId={}; nodes.forEach(n=>byId[n.id]=n);
   if(id==="root"){ // annotate group nodes with open gaps
     nodes.forEach(n=>{ if(n.go&&V[n.go]){ const g=V[n.go].nodes.filter(x=>x.st==="gap").length; if(g) n.sub=n.sub+" · "+g+" gap"+(g>1?"s":""); }});
@@ -567,10 +665,13 @@ function drawChrome(){
 }
 function showPanel(n){
   if(!n){ const v=cur.v, m=v.mod?M[v.mod]:null;
+    const g=v.goal||(m&&GOAL_MOD[m.num])||GOAL_ROOT[GOAL_VIEW[cur.id]]||"";
     panel.innerHTML=`<h2>${esc(v.title)}</h2>`+(m?`<span class="badge b-${m.st}">${ST[m.st]}</span>`:"")+
+      (g?`<p class="goal"><b>Goal</b> ${esc(g)}</p>`:"")+
       `<p>${esc(v.desc||(m?m.detail:""))}</p>`+(m&&m.files?`<p class="files">${esc(m.files)}</p>`:"")+(m&&m.tests?`<p class="hint">Tests: ${esc(m.tests)}</p>`:"")+
       `<p class="hint">Hover a box for a short explanation, click it for details${stack.length>1?"; Esc or Back goes up":""}.</p>`; return; }
   panel.innerHTML=`<h2>${esc(n.label.replace(/\n/g," "))}</h2><span class="badge b-${n.st}">${ST[n.st]}</span>`+
+    (n.goal?`<p class="goal"><b>Goal</b> ${esc(n.goal)}</p>`:"")+
     `<p>${esc(n.detail||n.tip)}</p>`+(n.files?`<p class="files">${esc(n.files)}</p>`:"")+(n.tests?`<p class="hint">Tests: ${esc(n.tests)}</p>`:"")+
     (n.go&&V[n.go]?`<p><button id="openb">Open ${esc(V[n.go].title)} &rsaquo;</button></p>`:"");
   const b=document.getElementById("openb"); if(b) b.onclick=()=>open(n);
@@ -594,7 +695,9 @@ function goBack(){ if(stack.length>1){ stack.pop(); render(stack[stack.length-1]
 
 /* events */
 function showTip(n,x,y){
-  tip.innerHTML=`<b>${esc(n.label.replace(/\n/g," "))}</b><span class="badge b-${n.st}">${ST[n.st]}</span><div>${esc(n.tip||"")}</div>`+
+  tip.innerHTML=`<b>${esc(n.label.replace(/\n/g," "))}</b><span class="badge b-${n.st}">${ST[n.st]}</span>`+
+    (n.goal?`<div class="goal"><span class="k2">Goal</span> ${esc(n.goal)}</div>`:"")+
+    `<div class="what"><span class="k2">What it does</span> ${esc(n.tip||"")}</div>`+
     `<div class="k">${n.go&&V[n.go]?"Click to open":"Click for details"}</div>`;
   tip.style.display="block";
   const r=tip.getBoundingClientRect(); let L=x+14,T=y+14;
