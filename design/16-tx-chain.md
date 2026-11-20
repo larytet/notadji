@@ -57,3 +57,25 @@ A Python golden model of the whole chain written from section 1 (using the model
 - Header protection (VID-011) with a lower code rate for the first codeword: not in this revision.
 - Several frames in flight (the chain accepts one frame at a time).
 - N = 1024 (the `Ncbps` limit of the interleaver).
+
+## 7. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/16-tx-chain && tests/common/lint_synth.sh tests/16-tx-chain` (the chain simulation takes several minutes).
+
+| Check | Result |
+|---|---|
+| T16-02 bit-exact, 9 configurations | All output samples equal the golden model: N = 64, 128, 256, 512; all three cyclic prefixes; modulations 0 to 4; codes 0 to 7 (both lengths, all four rates); 30 to 300 bytes per frame, giving 2 to 41 data symbols and 680 to 3520 samples; `last` only on the final sample; no protocol violations |
+| T16-03 closed loop | For seven configurations an ideal floating-point receiver (remove the prefix, `numpy` FFT scaled back, nearest-point hard decisions, de-interleave) recovers every byte; every codeword passes `H c = 0`; the padding bits of the last message are zero |
+| T16-04 structure | Sample count `(3 + nsym)(N + prefix)`; the first symbol is the STF, the two LTF symbols are identical; exactly one `last` |
+| T16-05 back to back | Four consecutive frames with different configurations and random handshakes equal the model; no stray samples after a frame |
+| T16-07 performance, measured | 400-byte frame, N = 256, 64QAM, rate 5/6 N = 648: first sample 1539 clocks after the first byte; output at 0.185 samples per clock over the output interval against the 0.10 needed for 20 MS/s at a 200 MHz clock (about 2x margin at N = 256; N = 512 needs 0.20 and is not claimed, see `12`) |
+| T16-01 glue blocks | `msg_bits_pack` (four code lengths, ten frame lengths including exact multiples and off-by-one), `cw_to_bits` (garbage above N ignored), `sym_blocker` (padding, block pulses, final flag), `bit_packer` (all five widths), `tx_assembler` (all combinations of valid, ready and tone type): all pass; each is run with full-speed and random handshakes |
+| Test sensitivity | A deliberate bug (the bit order inside the tone word reversed in `bit_packer`) failed four of the five chain tests; the RTL was restored and the chain tests repeated |
+| Lint (`verilator -Wall`) | Clean for all six tops |
+| Yosys generic synthesis | `tx_chain` 461284 cells, 78376 flip-flops (dominated by the FFT and interleaver buffers as flip-flops); `msg_bits_pack` 298 / 79; `cw_to_bits` 227 / 50; `sym_blocker` 130 / 19; `bit_packer` 84 / 22; `tx_assembler` 103 / 0; no latches |
+
+Notes:
+- The chain was verified end to end against a model built from the earlier modules' models, and independently by the closed-loop receiver (which uses the tone plan only through `numpy` operations and nearest-point detection); the two checks together tie the integration to the framing of section 1.
+- The five glue-block simulations all run the full file; a test returns immediately when it is not the one for that top, so each of those simulations lists five passes of which one does the work.
+- `cw_to_bits` gained an unused `s_last` port (the bit count decides the codeword end) so that it follows the stream convention and can be driven by the shared test helper, which now accepts port prefixes (`sp`, `mp`).
+- Not done: scrambling inside the chain, header protection, several frames in flight (section 6).

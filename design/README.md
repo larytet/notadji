@@ -25,4 +25,4 @@ Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` 
 | 13 | LDPC encoder | done (`16744b4`) | done: 7 tests (all 8 codes, real 802.11n code cross-checked against the AFF3CT alist) pass, lint clean, no latches; code quality measured with AFF3CT |
 | 14 | Soft demapper | done (`2fb39e1`) | done: 7 tests pass (hard decisions = nearest point, QPSK BER matches theory), lint clean, no latches |
 | 15 | Authenticated encryption (ChaCha20-Poly1305) | done (`d88afd0`) | done: 9 tests pass against the `cryptography` reference (RFC 8439), 1135 Mbit/s, lint clean, no latches |
-| 16 | Transmit chain integration | in progress | pending |
+| 16 | Transmit chain integration | done (`5e2e0ff`) | done: whole chain bit-exact against the golden model and recovered by a closed-loop receiver; 5 glue blocks tested; lint clean, no latches |

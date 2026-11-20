@@ -1,0 +1,6 @@
+tx|tx_chain|test_tx||
+g_pack|msg_bits_pack|test_glue||G=pack
+g_cw|cw_to_bits|test_glue||G=cw
+g_blk|sym_blocker|test_glue||G=blk
+g_bp|bit_packer|test_glue||G=bp
+g_asm|tx_assembler|test_glue||G=asm

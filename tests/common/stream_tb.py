@@ -34,7 +34,7 @@ class StreamResult:
 
 
 async def run_stream(dut, words, p_valid, p_ready, in_w, rng, clk="clk", max_cycles=200000,
-                     expect_out=None, stall_window=None, extra=None, pre=None):
+                     expect_out=None, stall_window=None, extra=None, pre=None, sp="s_axis", mp="m_axis"):
     """Drive `words` (list of (data, last)) through dut.s_axis_* and collect dut.m_axis_*.
 
     stall_window: optional (first_cycle, last_cycle) during which the sink is not ready.
@@ -46,6 +46,9 @@ async def run_stream(dut, words, p_valid, p_ready, in_w, rng, clk="clk", max_cyc
     """
     clk_sig = getattr(dut, clk)
     res = StreamResult()
+    g = lambda name: getattr(dut, name)   # noqa: E731
+    S = lambda f: g(f"{sp}_{f}")          # noqa: E731
+    M = lambda f: g(f"{mp}_{f}")          # noqa: E731
     idx = 0
     active = False
     prev_m = None  # (valid, ready, data, last) of the previous cycle
@@ -62,25 +65,25 @@ async def run_stream(dut, words, p_valid, p_ready, in_w, rng, clk="clk", max_cyc
             active = True
         if active:
             d, l = words[idx]
-            dut.s_axis_valid.value = 1
-            dut.s_axis_data.value = d
-            dut.s_axis_last.value = int(l)
+            S('valid').value = 1
+            S('data').value = d
+            S('last').value = int(l)
         else:
-            dut.s_axis_valid.value = 0
-            dut.s_axis_data.value = rng.getrandbits(in_w)
-            dut.s_axis_last.value = rng.getrandbits(1)
+            S('valid').value = 0
+            S('data').value = rng.getrandbits(in_w)
+            S('last').value = rng.getrandbits(1)
         # sink decision
         if stall_window and stall_window[0] <= cyc <= stall_window[1]:
             mr = 0
         else:
             mr = 1 if rng.random() < p_ready else 0
-        dut.m_axis_ready.value = mr
+        M('ready').value = mr
         await Timer(1, unit="ns")
-        sv = int(dut.s_axis_valid.value)
-        sr = int(dut.s_axis_ready.value)
-        mv = int(dut.m_axis_valid.value)
-        md = int(dut.m_axis_data.value) if mv else None
-        ml = int(dut.m_axis_last.value) if mv else None
+        sv = int(S('valid').value)
+        sr = int(S('ready').value)
+        mv = int(M('valid').value)
+        md = int(M('data').value) if mv else None
+        ml = int(M('last').value) if mv else None
         # protocol checks
         if prev_m is not None and prev_m[0] and not prev_m[1]:
             if not mv or md != prev_m[2] or ml != prev_m[3]:
@@ -99,7 +102,7 @@ async def run_stream(dut, words, p_valid, p_ready, in_w, rng, clk="clk", max_cyc
         cyc += 1
     # the last accepted word transfers at the coming rising edge; release the source afterwards
     await FallingEdge(clk_sig)
-    dut.s_axis_valid.value = 0
+    S('valid').value = 0
     res.cycles = cyc
     res.idx_in = idx
     return res
