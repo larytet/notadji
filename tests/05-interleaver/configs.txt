@@ -1,0 +1,8 @@
+int_w1|block_interleaver|test_il|-GW=1 -GMAX_N=1024 -GDEINT=0|W=1 MAXN=1024 DEINT=0
+deint_w1|block_interleaver|test_il|-GW=1 -GMAX_N=1024 -GDEINT=1|W=1 MAXN=1024 DEINT=1
+int_w8|block_interleaver|test_il|-GW=8 -GMAX_N=512 -GDEINT=0|W=8 MAXN=512 DEINT=0
+deint_w8|block_interleaver|test_il|-GW=8 -GMAX_N=512 -GDEINT=1|W=8 MAXN=512 DEINT=1
+int_w1_4096|block_interleaver|test_il|-GW=1 -GMAX_N=4096 -GDEINT=0|W=1 MAXN=4096 DEINT=0
+deint_w1_4096|block_interleaver|test_il|-GW=1 -GMAX_N=4096 -GDEINT=1|W=1 MAXN=4096 DEINT=1
+loop_w1|il_loop|test_loop|-GW=1 -GMAX_N=1024|W=1 MAXN=1024 DEINT=0
+loop_w8|il_loop|test_loop|-GW=8 -GMAX_N=512|W=8 MAXN=512 DEINT=0

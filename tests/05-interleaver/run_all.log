@@ -1,0 +1,53 @@
+=== int_w1 (block_interleaver -GW=1 -GMAX_N=1024 -GDEINT=0)
+  pass  t5_01_model_selfcheck
+  pass  t5_02_03_many_n
+  pass  t5_05_random_handshakes
+  pass  t5_06_n_per_block
+  pass  t5_07_throughput
+  pass  t5_08_bad_last
+  pass  t5_09_clamping
+=== deint_w1 (block_interleaver -GW=1 -GMAX_N=1024 -GDEINT=1)
+  pass  t5_01_model_selfcheck
+  pass  t5_02_03_many_n
+  pass  t5_05_random_handshakes
+  pass  t5_06_n_per_block
+  pass  t5_07_throughput
+  pass  t5_08_bad_last
+  pass  t5_09_clamping
+=== int_w8 (block_interleaver -GW=8 -GMAX_N=512 -GDEINT=0)
+  pass  t5_01_model_selfcheck
+  pass  t5_02_03_many_n
+  pass  t5_05_random_handshakes
+  pass  t5_06_n_per_block
+  pass  t5_07_throughput
+  pass  t5_08_bad_last
+  pass  t5_09_clamping
+=== deint_w8 (block_interleaver -GW=8 -GMAX_N=512 -GDEINT=1)
+  pass  t5_01_model_selfcheck
+  pass  t5_02_03_many_n
+  pass  t5_05_random_handshakes
+  pass  t5_06_n_per_block
+  pass  t5_07_throughput
+  pass  t5_08_bad_last
+  pass  t5_09_clamping
+=== int_w1_4096 (block_interleaver -GW=1 -GMAX_N=4096 -GDEINT=0)
+  pass  t5_01_model_selfcheck
+  pass  t5_02_03_many_n
+  pass  t5_05_random_handshakes
+  pass  t5_06_n_per_block
+  pass  t5_07_throughput
+  pass  t5_08_bad_last
+  pass  t5_09_clamping
+=== deint_w1_4096 (block_interleaver -GW=1 -GMAX_N=4096 -GDEINT=1)
+  pass  t5_01_model_selfcheck
+  pass  t5_02_03_many_n
+  pass  t5_05_random_handshakes
+  pass  t5_06_n_per_block
+  pass  t5_07_throughput
+  pass  t5_08_bad_last
+  pass  t5_09_clamping
+=== loop_w1 (il_loop -GW=1 -GMAX_N=1024)
+  pass  t5_04_round_trip
+=== loop_w8 (il_loop -GW=8 -GMAX_N=512)
+  pass  t5_04_round_trip
+ALL TESTS PASSED

@@ -32,6 +32,7 @@ Module `block_interleaver`, parameters `W` (element width, default 1), `MAX_N` (
 | `clk`, `rst_n` | as in module 1 |
 | `n[$clog2(MAX_N+1)-1:0]` | Block length; sampled with the first element of each block and held for that block (values 0 and above `MAX_N` are clamped to 1 and `MAX_N`) |
 | `s_axis_*`, `m_axis_*` | Element stream (`W` bits per beat), module 1 convention; the block ends after exactly `n` accepted elements |
+| `m_n` | Length of the block currently at the output (valid while `m_axis_valid`); a downstream stage that needs the same length (for example the de-interleaver in a loop-back) takes it from here |
 | `err_len` | Pulse for every beat where `s_axis_last` disagrees with the count (as in module 4) |
 
 Buffer: two banks of `MAX_N` elements (ping-pong), so a block is read out while the next one is written. Latency: the first element leaves the clock after the last element of the block has been written (a block of delay inherent in an interleaver). Throughput: one element per clock in and out; with both banks full the input is stalled by `ready`.
@@ -66,3 +67,21 @@ Configurations: `W=1, MAX_N=1024` and `W=8, MAX_N=512` for both directions plus 
 - Second permutation and its interaction with the demapper (module 14) and the code structure.
 - Whether the interleaver stays in the design at all (decided by SIM-002 and SIM-003 with the fading channel).
 - Memory mapping: the buffer is a flip-flop or distributed array with a combinational read in generic synthesis; block RAM needs a registered read (same open item as module 4).
+
+## 7. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/05-interleaver && tests/common/lint_synth.sh tests/05-interleaver`.
+
+| Check | Result |
+|---|---|
+| T5-01 to T5-09 in 8 configurations (interleaver and de-interleaver with W=1/MAX_N=1024, W=8/MAX_N=512, W=1/MAX_N=4096; round trip with W=1 and W=8) | 44 of 44 pass |
+| Model | `pos` is a bijection for every n from 1 to 4096 and equals the 802.11 first permutation for multiples of 16 |
+| Block lengths exercised | 1, 2, 3, 15, 16, 17, 31, 32, 33, 47, 48, 64, 100, 242, 255, 256, 257, 484, 968, 1000, 1024 and 4096 (where allowed), random changes of n from block to block |
+| Throughput | Steady input period equals n clocks per block (within one clock) |
+| Test sensitivity | A deliberate bug (wrong column step in `il_addr_gen`) failed three of the six tests of that configuration (the two throughput and bad-`last` tests do not depend on the permutation); the RTL was restored |
+| Lint (`verilator -Wall`) | Clean (`il_addr_gen`, `block_interleaver`, the test wrapper) |
+| Yosys generic synthesis | `il_addr_gen`: 332 cells, 29 flip-flops; `block_interleaver` (W=1, MAX_N=4096): 29837 cells, 8292 flip-flops (the 2 x 4096-bit buffer as flip-flops); no latches |
+
+Changes made during the work:
+- The block gained an output `m_n` (length of the block at the output, added to section 3). The first version of the round-trip wrapper gave the second stage the live `n`, which is N clocks later than the first stage saw it; with `n` changing per block the second stage used the wrong length. The wrapper now takes `n` from `m_n` of the first stage. This is also how a real receiver chain has to supply the length to a de-interleaver that follows a stage with latency.
+- `err_len` counts one pulse per mismatching beat, as in module 4 (an early `last` gives two pulses, a missing one gives one).
