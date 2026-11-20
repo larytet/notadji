@@ -1,0 +1,3 @@
+b2|mrc_combine|test_mrc|-GB=2|B=2
+b4|mrc_combine|test_mrc|-GB=4|B=4
+b8|mrc_combine|test_mrc|-GB=8|B=8

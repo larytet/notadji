@@ -41,3 +41,21 @@ Python model of section 1 (integer arithmetic) and a `numpy` simulation of the a
 - Noise-power-aware weights (unequal noise on the branches), which needs the noise estimate of each front end in the weight (`csi` then carries `|H|^2 / sigma^2`).
 - Combining before the equaliser (a joint channel estimate, which handles correlated noise), and the correlation loss of PHY-016 (depends on the antenna array).
 - Soft combining of retransmitted slices (PHY-017) is a separate saturating LLR adder.
+
+## 6. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/19-combiner && tests/common/lint_synth.sh tests/19-combiner`.
+
+| Check | Result |
+|---|---|
+| T19-01 to T19-06 in 3 configurations (B = 2, 4, 8) | 15 of 15 pass |
+| Bit-exact and accuracy (T19-01/02) | 12000 random tone sets per configuration (random values including saturating ones, `csi` 0, 1, 128, 255, and sets with `S` = 0) equal the integer model; the value is within 0.5% (plus 1.5 least-significant bits) of the exact weighted mean for every set |
+| Array gain (T19-03), measured | Equal-quality branches with independent noise, 16QAM: combined error vector magnitude -11.76, -14.72 and -17.75 dB against -8.72 dB for a single branch: **3.03, 6.01 and 9.03 dB** gain for B = 2, 4, 8 (ideal 3.01, 6.02, 9.03 dB). With random branch gains (Rayleigh-like, limited to 0.2..1.4) and `csi` = 128 |g|^2 the result equals an ideal floating-point MRC to within 0.01 dB (-8.80, -13.27, -16.73 dB) and is much better than the best single branch (about -3.1 dB) |
+| Erased branch, alignment, `last` (T19-04 to T19-06) | A branch with `csi` 0 contributes nothing even with garbage values; branches presenting their tones at different times (valid probabilities 0.2 to 0.9) and a random sink: no tone lost or mixed, output stable while stalled, `last` passes through; a `last` mismatch raises `err_len` |
+| Test sensitivity | A deliberate bug (equal weights instead of `csi` weights) failed four of the five tests; the RTL was restored |
+| Lint (`verilator -Wall`) | Clean for B = 2, 4 and 8 |
+| Yosys generic synthesis (B = 2) | 15485 cells, 43 flip-flops, no latches (13 s) |
+
+Notes:
+- The array gain of the test is the ideal one because the branches have independent noise; correlated noise (PHY-016) and imperfect channel estimates reduce it and are not modelled here (section 5).
+- As in modules 17 and 18, the multiplier operands were given natural widths (28 x 37 bits) instead of widening every product to 64 bits, which keeps synthesis fast.
