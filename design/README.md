@@ -4,10 +4,10 @@ One file per module of `spec/18-development-plan.md` (same numbering). Each file
 
 Layout: `design/NN-name.md` (this directory), `rtl/NN-name/*.sv` (RTL), `tests/NN-name/` (cocotb tests and Makefile).
 
-Run a module's tests: `source /home/arkady/tools/oss-cad-suite/environment && make -C tests/NN-name` (Verilator 5 with cocotb 2). Lint and synthesis checks: `make -C tests/NN-name lint synth`.
+Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` (Verilator 5 with cocotb 2). Lint and synthesis checks: `make -C tests/NN-name lint synth`.
 
 ## Status
 
 | # | Module | Design and test plan | Implementation and tests |
 |---|---|---|---|
-| 1 | AXI-Stream and AXI-Lite library | pending | pending |
+| 1 | AXI-Stream and AXI-Lite library | done (`adc5cac`) | done: 14 tests in 9 configurations pass, lint clean, no latches |

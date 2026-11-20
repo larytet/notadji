@@ -16,11 +16,11 @@ binaries on 2026-11-20 (Ubuntu 22.04 class host, 12 cores).
 | Yosys | 0.71 (suite); 0.9 (apt) | OSS CAD Suite | Synthesis estimates, netlist checks | Version read |
 | SymbiYosys (`sby`) | 0.71 | OSS CAD Suite | Formal properties (sequencer, handshakes) | Version read |
 | nextpnr (ice40, ecp5) | 0.11.1 | OSS CAD Suite | Not a target (no Zynq UltraScale+ support); small-block timing experiments only | Version read |
-| cocotb | 2.1.0 devel | OSS CAD Suite Python 3.11 | Python testbenches over Verilator or Icarus | Imports [C]; no test written yet |
+| cocotb | 2.1.0 | virtual environment `/home/arkady/tools/venv-cocotb` (system Python 3.10) | Python testbenches over Verilator | Used by the module 1 tests [C]. The suite's own cocotb 2.1 devel does not link on this host (needs glibc 2.38, host has 2.35) |
 | GTKWave | apt and suite | system and suite | Waveform viewer | Starts (a harmless `canberra-gtk-module` message is printed) |
 | Surfer | in suite | suite | Waveform viewer | **Does not run**: needs glibc 2.43, host has less |
 | ngspice | 36 | apt | Circuit-level SPICE (filters, matching) | Installed; not exercised |
-| AFF3CT | 4.7.3 | `/home/arkady/tools/aff3ct` | LDPC encoder/decoder simulation, BER and FER curves | Build in progress (see section 5) |
+| AFF3CT | 4.7.3 | `/home/arkady/tools/aff3ct` | LDPC encoder/decoder simulation, BER and FER curves | Built; smoke test passed (section 5) |
 | Python 3.10 modelling stack | numpy 2.2.6, scipy 1.15.3, matplotlib 3.10.3, scikit-rf 2.2.0, commpy 1.2.0 | `~/.local` (system Python) | Golden model, channel and RF impairment models, S-parameters | Installed [C] |
 | gcc / g++ / cmake | system | `/usr/bin` | Bit-accurate C++ model, AFF3CT build | Installed |
 
@@ -82,8 +82,8 @@ SIM-001 to SIM-006 need no RTL and can start immediately. SIM-010 onward need th
 | Verilator 5.055 compiles and runs a hello-world `--binary` build | Pass |
 | cocotb imports in the suite Python | Pass |
 | numpy, scipy, matplotlib, scikit-rf and commpy import in the system Python | Pass (versions in section 1) |
-| AFF3CT builds and runs one short LDPC simulation | Pending (build running) |
-| cocotb test driving a Verilator model of a small block | Not done |
+| AFF3CT builds and runs one short LDPC simulation | Pass: N=648, K=540 (rate 5/6, the only 802.11 matrix bundled), layered normalised min-sum, 20 iterations, BPSK over AWGN: FER 0.99 at Eb/N0 2 dB falling to 1.9e-2 at 4 dB. The other 802.11 rates have to be built from the standard's base matrices (module 13) |
+| cocotb test driving a Verilator model of a small block | Pass: module 1 (`tests/01-axi-library`, 14 tests, 9 configurations); environment in `scripts/sim_env.sh` |
 | ngspice runs a netlist | Not done |
 
 ## 6. Licence reminder

@@ -70,3 +70,30 @@ Coverage target: every branch of the five modules exercised by the tests above; 
 
 - Whether `keep` or `user` sideband signals are needed (decide with module 9, the slice packetiser).
 - A formal proof of skid and FIFO invariants with SymbiYosys (optional, after the cocotb tests).
+
+## 7. Results (implementation commit)
+
+Environment: `source scripts/sim_env.sh` (Verilator 5.055 and Yosys 0.71 from the OSS CAD Suite, cocotb 2.1.0 from `/home/arkady/tools/venv-cocotb`). Run `make -C tests/01-axi-library test lint synth`.
+
+| Check | Result |
+|---|---|
+| Tests T1-01 to T1-14 (9 configurations: skid, fifo, width conversion 8>32, 32>8, 16>64, 64>16, 8>8, cdc fifo, regfile) | All pass |
+| Lint (`verilator --lint-only -Wall`, all five tops) | Clean, no waivers except the intentional unused address bits in `axil_regfile` (tied off in an `unused_ok` wire) |
+| Yosys generic synthesis, latch check | No latches in any block |
+
+Yosys generic gate counts (`synth`, no technology mapping, so they only compare blocks; Vivado numbers are needed for the FPGA):
+
+| Block (default parameters) | Cells | Flip-flops |
+|---|---|---|
+| `axis_skid` (W=32) | 112 | 68 |
+| `axis_fifo` (W=32, depth 16) | 1362 | 542 |
+| `axis_width_conv` (8 to 32) | 201 | 69 |
+| `axis_cdc_fifo` (W=32, depth 16) | 1362 | 568 |
+| `axil_regfile` (16 registers) | 1343 | 608 |
+
+The FIFO memories are flip-flop arrays here because generic synthesis does not infer block RAM; the FPGA tools will map them to RAM.
+
+Implementation notes found during the work:
+- `axil_regfile` does not pulse `wr_pulse` for a write to a read-only register (the design text in 3.5 said a pulse per written register; read-only writes are ignored entirely).
+- The clock-crossing test uses 200 MHz against about 150 MHz (period 6666 ps, because the simulator needs an even period in picoseconds).
+- The OSS CAD Suite's own cocotb cannot link on this host (it needs glibc 2.38; the host has 2.35), hence the separate virtual environment.
