@@ -1,0 +1,1 @@
+rtl/10-sequencer/frame_sequencer.sv

@@ -1,0 +1,2 @@
+default|frame_sequencer|test_seq|-GDEPTH=64|DEPTH=64
+small|frame_sequencer|test_seq|-GDEPTH=8|DEPTH=8

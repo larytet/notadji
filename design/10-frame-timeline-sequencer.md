@@ -68,3 +68,21 @@ Configuration: `DEPTH` = 64 (default) and `DEPTH` = 8 (to exercise table-full an
 - A table without `END` hangs the frame (T10-10); a hardware watchdog that forces a frame end after a maximum length is proposed (not implemented).
 - Event times are in clocks; tying the frame start to the air-ground time alignment (MAC-003) needs the timestamp unit's adjust function and is added with the MAC module.
 - Timing closure at 200 MHz of the table read and compare path needs Vivado (not available).
+
+## 8. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/10-sequencer && tests/common/lint_synth.sh tests/10-sequencer`.
+
+| Check | Result |
+|---|---|
+| T10-01 to T10-10 in 2 configurations (`DEPTH` 64 and 8) | 20 of 20 pass. Every output and status is compared with the cycle-accurate Python model in every clock (random tables with all actions, same-time and late entries, `run` freezing, `force_safe`, alternating tables); explicit assertions check the frame length, the commit timing (one clock before the END clock takes effect, in the END clock waits a frame), the CPU stall behaviour (50 frames replayed, `missed` counting), the safe reset frame and the no-END behaviour |
+| Test sensitivity | A deliberate bug (lines not cleared at the frame end) failed six of the ten tests of the default configuration; the RTL was restored |
+| Lint (`verilator -Wall`) | Clean |
+| Yosys generic synthesis | 19149 cells, 6298 flip-flops (two 64 x 48-bit banks as flip-flops), no latches |
+
+Changes made during the work:
+- The first RTL closed a frame at tick = T for `END` at time T, so frames were T + 1 clocks long, against the stated meaning (time = frame length). END now executes at tick = time - 1; frames are exactly `time` clocks long (section 3 updated). The test that checks frame lengths (T10-08) found it.
+- The model is advanced once at reset release because the DUT takes one clock before the first sample.
+- The test model was written from section 3 independently of the RTL; the explicit semantic assertions (frame length, commit timing, `missed`, `exhausted`) do not depend on the model.
+
+Not done (section 7): formal properties, hardware watchdog for tables without `END`, 200 MHz timing.
