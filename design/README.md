@@ -11,3 +11,4 @@ Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` 
 | # | Module | Design and test plan | Implementation and tests |
 |---|---|---|---|
 | 1 | AXI-Stream and AXI-Lite library | done (`adc5cac`) | done: 14 tests in 9 configurations pass, lint clean, no latches |
+| 2 | Timestamp unit | in progress | pending |
