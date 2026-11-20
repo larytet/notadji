@@ -18,3 +18,4 @@ Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` 
 | 6 | Constellation mapper | done (`33cb2ec`) | done: 6 tests pass (all 2048 mod/word combinations), lint clean, no latches |
 | 7 | Preamble and pilot generator | done (`23cb7ba`) | done: 7 tests pass (STF periodicity via numpy), lint clean, no latches |
 | 8 | Serial telemetry bridge | done (`7adcb0c`) | done: 15 tests in 5 simulations pass, lint clean, no latches |
+| 9 | Slice packetiser and depacketiser | in progress | pending |
