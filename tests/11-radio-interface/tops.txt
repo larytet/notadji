@@ -1,0 +1,6 @@
+gray_cnt_sync
+rx_path
+tx_path
+spi_master
+pin_map
+radio_if

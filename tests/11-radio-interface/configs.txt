@@ -1,0 +1,5 @@
+spi|spi_master|test_spi||
+pins|pin_map|test_pins||
+rx|rx_path|test_rx|-GAW=4|
+tx|tx_path|test_tx|-GAW=4|
+top|radio_if|test_top|-GAW=4|

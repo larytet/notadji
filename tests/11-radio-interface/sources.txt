@@ -1,0 +1,8 @@
+rtl/01-axi-library/axis_fifo.sv
+rtl/01-axi-library/axis_cdc_fifo.sv
+rtl/11-radio-interface/gray_cnt_sync.sv
+rtl/11-radio-interface/rx_path.sv
+rtl/11-radio-interface/tx_path.sv
+rtl/11-radio-interface/spi_master.sv
+rtl/11-radio-interface/pin_map.sv
+rtl/11-radio-interface/radio_if.sv

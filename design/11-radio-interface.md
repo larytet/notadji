@@ -58,3 +58,19 @@ Configurations: `AW` = 4 (default depth 16) for both paths; clock ratios in the 
 - The electrical data-port layer (LVDS or CMOS DDR cells, frame pins, delay calibration) and the FPGA clocking of the radio data clock are board work for phase A.
 - Pin-level behaviour and SPI mode of AD9361 and ADRV9002 are to be checked against the data sheets (configuration only).
 - Fast-lock and hop sequences (the transceiver-specific SPI or pin sequences behind `hop_trig` and `profile`) belong to the front-end firmware and the sequencer tables.
+
+## 9. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/11-radio-interface && tests/common/lint_synth.sh tests/11-radio-interface`.
+
+| Check | Result |
+|---|---|
+| T11-01 to T11-08 (7 tests in 5 simulations: `spi_master`, `pin_map`, `rx_path`, `tx_path`, `radio_if`) | 7 of 7 pass: SPI frames of 8, 16, 24 and 32 bits at half-period divisors 1, 2 and 5 (MOSI order, frame length, SCLK period, idle level, read-back, six queued commands, chip-select gap); 2000 random pin-map configurations and the one-clock fault override; RX and TX paths with the radio clock slower (16.276 ns) and faster (4 ns) than the 5 ns system clock; exact overrun and underrun counts through the Gray synchroniser; zero fill; no underrun count while `tx_run` is low; back-pressure at the FIFO depth; integration loop of 200 samples with SPI and pins active |
+| Test sensitivity | Two deliberate bugs, each caught by the test that targets it and restored: stale data instead of zeros on TX underrun (T11-07 failed), inverted MISO sampling in the SPI master (T11-01/02 failed) |
+| Lint (`verilator -Wall`) | Clean for all six tops |
+| Yosys generic synthesis | `gray_cnt_sync` 161 cells / 63 flip-flops; `rx_path` 1467 / 615; `tx_path` 1610 / 617; `spi_master` 1892 / 649; `pin_map` 169 / 11; `radio_if` 5158 / 1892; no latches |
+
+Notes found during the work:
+- Two of my test mistakes are worth recording: a second `setup()` inside one test started a second clock generator on the same signal (the TX test then received a spurious extra sample), and a cancelled radio model left `tx_req` high so the "stalled radio" never stalled. Both were test faults; the RTL behaved as specified. The clock handling is now explicit (previous clock tasks are cancelled).
+- The overrun test checks the property that holds for an asynchronous FIFO: the accepted samples are the oldest ones in order, at most the FIFO depth, and the counter equals the number dropped.
+- The data-port electrical layer, transceiver pin polarities and the SPI mode remain open items (section 8).
