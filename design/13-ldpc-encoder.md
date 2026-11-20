@@ -20,7 +20,7 @@ Message `s` = K bits as `kb` blocks of Z bits (block j = bits `jZ .. jZ+Z-1`, bi
 3. `p_1 = lambda_0 XOR rot(p_0, x)`; for i = 1 to mb-2: `p_{i+1} = lambda_i XOR p_i`, and additionally `XOR p_0` when `i = mb/2`.
 4. Codeword `c = [s | p_0 | p_1 | ... | p_{mb-1}]`, N bits, systematic.
 
-(The last block row is a redundant check; the tests verify `H c = 0` for every row.)
+(All block rows are used: the sum of all rows gives `p_0` and rows 0 to mb-2 give `p_1 .. p_{mb-1}`; the tests verify `H c = 0` for every row, the last block row included.)
 
 ## 3. Interface
 
@@ -54,3 +54,37 @@ Python `LDPC` helper builds `H` from the generated base matrices (`tests/13-ldpc
 - The own-design codes are placeholders until the standard tables are obtained; the generator and the ROM format accept replacements without RTL changes.
 - Slice-aligned packing of bytes into K-bit messages and codeword padding (module 16 and the MAC).
 - Block-RAM mapping of the message and parity buffers (flip-flops here), and a higher-throughput parallel variant if the clock budget requires it.
+
+## 7. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/13-ldpc-encoder && tests/common/lint_synth.sh tests/13-ldpc-encoder`; code quality: `python3 tests/13-ldpc-encoder/check_codes.py` (needs the AFF3CT build of `17`); tables: `python3 -I scripts/gen_ldpc_codes.py`.
+
+| Check | Result |
+|---|---|
+| T13-01 to T13-08 (7 tests, one simulation) | 7 of 7 pass: `H c = 0` for 20 random messages of each of the 8 codes; systematic prefix and framing; the real 802.11n 648/5/6 codewords satisfy the parity-check matrix read directly from the AFF3CT alist (108 checks, independent of the generator); linearity; different code per codeword under random handshakes; bad `last`; base-matrix properties (dimensions, rates, dual-diagonal parity, no 4-cycles) and equality of the stored 648/5/6 base matrix with an independent extraction from the alist |
+| Cycle count (T13-06), measured | Clocks per codeword and information throughput at 200 MHz: N = 648: R1/2 188 (345 Mbit/s), R2/3 171 (505), R3/4 151 (644), R5/6 122 (885); N = 1944: R1/2 248 (784), R2/3 238 (1089), R3/4 221 (1319), R5/6 196 (1653); all well above the 155 Mbit/s of PHY-015, so the encoder is not a throughput limit |
+| Test sensitivity | A deliberate bug (the `p_0` term of the middle row dropped) failed four tests; the RTL was restored |
+| Lint (`verilator -Wall`) | Clean |
+| Yosys generic synthesis | 74952 cells, 4104 flip-flops (message and parity buffers and 12 lambda registers as flip-flops, plus the rotators and a ROM), no latches |
+
+### Code quality (T13-09), AFF3CT, measured
+
+Layered normalised min-sum, 20 iterations, BPSK over AWGN, stopping at 40 frame errors or 20000 frames. FER against Eb/N0 (dB):
+
+| Code | Eb/N0 points and FER |
+|---|---|
+| N=648 R1/2, own | 1.0: 0.70, 1.5: 0.47, 2.0: 8.7e-2, 2.5: 9.4e-3 |
+| N=648 R2/3, own | 2.0: 0.49, 2.5: 0.12, 3.0: 1.1e-2, 3.5: 6.0e-4 |
+| N=648 R3/4, own | 2.5: 0.43, 3.0: 9.5e-2, 3.5: 5.8e-3, 4.0: 4.0e-4 |
+| N=648 R5/6, **802.11n standard** | 3.0: 0.55, 3.5: 0.20, 4.0: 1.8e-2, 4.5: 6.0e-4 |
+| N=648 R5/6, own design (comparison) | 3.0: 0.50, 3.5: 0.13, 4.0: 9.6e-3, 4.5: 7.0e-4 |
+| N=1944 R1/2, own | 1.0: 0.89, 1.5: 0.44, 2.0: 3.0e-2, 2.5: 1.5e-4 |
+| N=1944 R2/3, own | 2.0: 0.46, 2.5: 3.1e-2, 3.0: 2.0e-4 |
+| N=1944 R3/4, own | 2.5: 0.41, 3.0: 2.2e-2, 3.5: 2.0e-4 |
+| N=1944 R5/6, own | 3.0: 0.63, 3.5: 4.6e-2, 4.0: 4.0e-4 |
+
+Reading: every code has a clean waterfall. The own-design 648/5/6 code performs about like the real standard code at the same length and rate (slightly better at 3.5 and 4.0 dB, equal within the statistics at 4.5 dB, where 12 to 14 frame errors were counted), so the design procedure is not obviously weaker than the standard for this case; **this is one comparison, with few errors at the lowest FER, and does not prove equivalence for the other rates and lengths**. The SNR for FER 1e-3 per codeword is about 2.8 dB (R1/2, N = 648), 3.4 dB (R2/3), 3.9 dB (R3/4), 4.5 dB (R5/6) and about 2.3 dB (R1/2, N = 1944); the required FER for the system is 1.2e-5 per codeword (PHY-011), so error floors at much lower FER are still to be studied (SIM-002).
+
+Notes:
+- The alist file is the only verified standard matrix available; the first version of the quality script mis-indexed the AFF3CT output columns and missed negative Es/N0 values (fixed).
+- The encoder is block-serial and processes one codeword at a time; throughput is far above the requirement, so no parallel variant is built.
