@@ -1,0 +1,39 @@
+# Publishes only the interactive module diagram to GitHub Pages.
+name: Publish module diagram
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - spec/diagrams/modem-modules.html
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage the site (the diagram only)
+        run: |
+          mkdir site
+          cp spec/diagrams/modem-modules.html site/modem-modules.html
+          cp spec/diagrams/modem-modules.html site/index.html
+          touch site/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
