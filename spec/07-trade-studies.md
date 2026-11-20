@@ -170,10 +170,12 @@ air units: removes simultaneous leakage but cuts rate and raises latency by the 
 | A | HEVC (H.265) with a custom low-latency slice encoder | Best compression at 1080p to 4K (roughly 30 to 50% below AVC at equal quality); the vendor hard cores support it (waybeam, Xilinx VCU) | Several patent pools and royalty exposure; encoder complexity is high |
 | B | AVC (H.264) | Lower complexity and area; simplest low-latency encoder; mature hardware decoders everywhere | Higher bit rate (about 1.5x), so more link margin or lower quality at range; also in patent pools (though the older and better understood) |
 | C | AV1 (or an intra-heavy codec such as JPEG-XS for the lowest latency) | AV1: offered royalty-free by AOMedia members, but a third-party patent pool also claims essential patents [to be checked]; JPEG-XS: sub-millisecond latency and slice-based by design | AV1 low-latency hardware encoders are heavy; JPEG-XS needs roughly 10x or more of the bit rate of AVC at similar quality [typical compression ratios, from memory] and does not fit the link at long range |
+| D | Project-specific codec for video and audio (line-based or wavelet intra coding, coding tied to the PHY, per-slice quality ladder, optional native foveation), as a selectable profile (VID-027) | Can fit a scenario better than a general codec (sub-frame latency, graceful per-slice degradation, no royalties); full control of latency and rate; reuses the FPGA fabric and the slice interface | Both ends must run it (no commodity phone or goggle decoder); a big development and verification effort; the compression gain over AVC/HEVC is unproven and for plain inter coding is likely negative; needs its own rate control and loss recovery on the same interfaces |
 
 Recommendation: **B and A in parallel**: AVC as the P1 baseline and the ASIC fallback (easier, lower risk, decoders
 everywhere), HEVC as the quality mode. Keep the encoder architecture codec-agnostic at slice level; start the
 licensing review now (G-11). Keep JPEG-XS as an "ultra-low-latency short-range mode" research item.
+Option D is kept as an optional P2 profile (VID-027): research it on the FPGA behind the same slice interface, adopt it only for a scenario where a measured comparison with AVC/HEVC shows a better fit, and keep AVC as the fallback.
 
 ## T-07 Loss protection and graceful degradation
 

@@ -115,10 +115,10 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 |---|---|
 | C | 28 |
 | E | 127 |
-| P | 38 |
+| P | 39 |
 | R | 8 |
 | S | 16 |
-| total | 217 |
+| total | 218 |
 
 | ID | Class | Basis |
 |---|---|---|
@@ -159,6 +159,7 @@ Verdicts: **Feasible** (evidence supports), **At risk** (plausible, a named risk
 | VID-024 | P | mode set; region size needs the measurement campaign TST-003 |
 | VID-025 | E | protection level trade not yet quantified |
 | VID-026 | C | link_budget.py transition_table: budgeted IDR 138 kbit, 28 ms at 4.9 Mbit/s; 0.15 bit per pixel is E |
+| VID-027 | P | option; benefit unproven until the measured comparison with AVC/HEVC on the reference set |
 | LAT-001 | S | OpenIPC latency-probe method (register step, one clock) |
 | LAT-002 | E | engineering target; proved by verification method T (see 08) |
 | LAT-003 | E | engineering target; proved by verification method T (see 08) |

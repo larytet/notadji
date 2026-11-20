@@ -98,6 +98,7 @@ OVERRIDE = {
     "SYS-004": ("C", "link_budget.py ladder_table and transition_table: rung rates from the MCS table, IDR airtime; VMAF step bound is E"),
     "SYS-007": ("C", "link_budget.py battery_table: 1S 7.8 W and 2S 15.5 W for 1 h at -10 C (30% capacity loss is E)"),
     "VID-026": ("C", "link_budget.py transition_table: budgeted IDR 138 kbit, 28 ms at 4.9 Mbit/s; 0.15 bit per pixel is E"),
+    "VID-027": ("P", "option; benefit unproven until the measured comparison with AVC/HEVC on the reference set"),
     "PWR-008": ("C", "link_budget.py holdup_table: 1.4 mF on a 12 V bus for 5 ms at 11 W"),
     "PWR-010": ("E", "8 W and 15 W limits sized from battery_table; consumption of the ground unit not yet estimated"),
 }
