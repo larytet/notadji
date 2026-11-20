@@ -1,0 +1,2 @@
+rtl/03-scrambler-crc/scrambler.sv
+rtl/03-scrambler-crc/crc_engine.sv

@@ -75,3 +75,20 @@ Configurations: scrambler `W=8` and `W=32` (default polynomial), `W=16 LEN=15`; 
 
 - Partial last words (frames whose byte count is not a multiple of `DW/8`) need a `keep` field; deferred to module 9 (see the open item in `01`).
 - Final polynomial and seed choice with the frame format.
+
+## 8. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/03-scrambler-crc && tests/common/lint_synth.sh tests/03-scrambler-crc`.
+
+| Check | Result |
+|---|---|
+| T3-01 to T3-11 in 8 configurations (scrambler W=8, W=32, LEN=15 W=16; CRC-32 DW=8, 32, 64; CRC-16 DW=8, 16) | 40 of 40 pass |
+| References | Scrambler: bit-serial Python LFSR model; CRC-32: `zlib.crc32`; CRC-16/CCITT-FALSE: `binascii.crc_hqx`; 500 random single-bit errors per CRC configuration, none undetected |
+| Test sensitivity | A deliberate bug (no re-seed at the end of a frame) failed four of the five scrambler tests; the RTL was restored |
+| Lint (`verilator -Wall`) | Clean |
+| Yosys generic synthesis | `scrambler` (W=32): 79 cells, 7 flip-flops; `crc_engine` (CRC-32, DW=32): 420 cells, 34 flip-flops; no latches |
+
+Notes:
+- The published check values (`0xCBF43926` for CRC-32 and `0x29B1` for CRC-16 over `123456789`) are checked directly only in the DW=8 configurations, because 9 bytes is not a whole number of wider words; the wider configurations are checked against the library on frames of whole words.
+- Functions in `crc_engine.sv` use Verilog-2001 style (no `automatic logic` return type) because Yosys 0.71 rejects the SystemVerilog form.
+- CRC parameters are passed to the simulator as decimal numbers (`-GPOLY=4129` is `0x1021`).

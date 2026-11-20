@@ -1,0 +1,8 @@
+scr_w8|scrambler|test_scr|-GW=8|W=8 LEN=7 TAPS=72 SEED=127
+scr_w32|scrambler|test_scr|-GW=32|W=32 LEN=7 TAPS=72 SEED=127
+scr_len15|scrambler|test_scr|-GW=16 -GLEN=15 -GTAPS=24576 -GSEED=32767|W=16 LEN=15 TAPS=24576 SEED=32767
+crc32_dw8|crc_engine|test_crc|-GDW=8|KIND=crc32 DW=8
+crc32_dw32|crc_engine|test_crc|-GDW=32|KIND=crc32 DW=32
+crc32_dw64|crc_engine|test_crc|-GDW=64|KIND=crc32 DW=64
+crc16_dw8|crc_engine|test_crc|-GCRC_W=16 -GPOLY=4129 -GINIT=65535 -GREFIN=0 -GREFOUT=0 -GXOROUT=0 -GRESIDUE=0 -GDW=8|KIND=crc16 DW=8
+crc16_dw16|crc_engine|test_crc|-GCRC_W=16 -GPOLY=4129 -GINIT=65535 -GREFIN=0 -GREFOUT=0 -GXOROUT=0 -GRESIDUE=0 -GDW=16|KIND=crc16 DW=16
