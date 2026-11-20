@@ -1,0 +1,7 @@
+clip|cfr_clip|test_rtl||G=clip
+fir|cfr_fir|test_rtl||G=fir
+chain|cfr_chain|test_rtl||G=chain
+dpd1|dpd_mp|test_rtl|-GNCM=1|G=dpd NCM=1
+dpd3|dpd_mp|test_rtl|-GNCM=3|G=dpd NCM=3
+dpd9|dpd_mp|test_rtl|-GNCM=9|G=dpd NCM=9
+corr|dpd_corr|test_rtl||G=corr

@@ -1,0 +1,6 @@
+rtl/26-papr-dpd/cfr_coef_pkg.sv
+rtl/26-papr-dpd/cfr_clip.sv
+rtl/26-papr-dpd/cfr_fir.sv
+rtl/26-papr-dpd/cfr_chain.sv
+rtl/26-papr-dpd/dpd_mp.sv
+rtl/26-papr-dpd/dpd_corr.sv
