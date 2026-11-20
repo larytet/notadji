@@ -1,0 +1,2 @@
+rtl/12-fft/fft_twiddle_rom.sv
+rtl/12-fft/fft_core.sv

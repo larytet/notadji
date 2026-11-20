@@ -4,7 +4,7 @@ Plan entry: module 12 of `spec/18-development-plan.md`, class M, data plane. Req
 
 ## 1. Architecture decision
 
-Sample rates are low against the clock: one OFDM symbol (useful part plus prefix) lasts 14.4 us at the 1/8 prefix for every N (constant sub-carrier spacing, PHY-003), which is 2880 clocks at 200 MHz. A radix-2 decimation-in-time FFT needs N/2 x log2(N) butterflies, that is 2304 for N = 512 and 5120 for N = 1024, so **one butterfly per clock** in an iterative in-place engine is enough for N up to 512 at 200 MHz (80% utilisation) with a memory-based design that is small and easy to verify. N = 1024 (about 5120 butterflies against 11520 clocks at 80 MHz channel bandwidth where the symbol is 14.4 us x 1.0 = 2880 clocks as well) needs two butterflies per clock or a clock above 360 MHz; it is accepted by the hardware but the real-time claim is made for N up to 512 only **[E]**; this is an open item (section 8).
+Sample rates are low against the clock: one OFDM symbol (useful part plus prefix) lasts 14.4 us at the 1/8 prefix for every N (constant sub-carrier spacing, PHY-003), which is 2880 clocks at 200 MHz. A radix-2 decimation-in-time FFT needs N/2 x log2(N) butterflies, that is 2304 for N = 512 and 5120 for N = 1024, so **one butterfly per clock** in an iterative in-place engine is enough for N up to 512 at 200 MHz (80% utilisation) with a memory-based design that is small and easy to verify. N = 1024 needs 5120 butterflies in the same 2880-clock symbol period (the symbol lasts 14.4 us for every N), so it needs two butterflies per clock or a clock above 360 MHz; the hardware accepts it, but the real-time claim is made for N up to 512 only **[E]** (open item, section 8).
 
 The engine works on two buffers that alternate (ping-pong): while one symbol is being transformed, the next symbol is loaded into the other buffer and the previous result is read out of it, so the engine, the input and the output all run concurrently. Input samples are written in bit-reversed address order (free, it is only an address mapping), the transform is done in place, and the output is read in natural order.
 
@@ -67,3 +67,22 @@ Configurations: `MAX_LOG2` = 9 (all sizes up to 512 and the throughput measureme
 - Real-time operation at N = 1024 (two butterflies per clock or a faster clock).
 - Pipelining of the butterfly (the multiplier is combinational here; on the FPGA a DSP pipeline of three to four stages is needed and the engine then needs a few more clocks per stage for hazard-free in-place operation) and block-RAM mapping (registered read); both depend on Vivado results.
 - A radix-4 or split-radix engine would reduce the butterfly count if the clock budget requires it.
+
+## 9. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/12-fft && tests/common/lint_synth.sh tests/12-fft`; the twiddle table is regenerated with `python3 -I scripts/gen_fft_twiddle.py`.
+
+| Check | Result |
+|---|---|
+| T12-01 to T12-09 in 3 simulations (`fft_twiddle_rom`; `fft_core` with `MAX_LOG2` 9 and 10) | 17 of 17 pass: bit-exact equality with the integer model for every N from 64 to 512 (and 1024) in forward and inverse mode with five shift masks, including the saturation counter; floating-point accuracy; known signals; round trip; saturation; mixed symbols with random handshakes and per-symbol configuration; throughput; bad `last`; all 512 twiddle entries |
+| Accuracy (T12-02) | Relative rms error against `numpy.fft` below 3e-3 for every N, forward (scaled by 1/N) and inverse |
+| Round trip (T12-04), measured | Relative rms error 4.0e-4 (N = 64), 5.0e-4 (128), 9.7e-4 (256), 8.2e-3 (512), 4.3e-3 (1024); grows with N because the inverse transform sums N quantised values; limit in the test 2e-2 |
+| Throughput (T12-07), measured | Steady output period 1025 clocks at N = 256 (butterflies 1024): input, compute and output overlap. For N = 512 the butterfly count is 2304 clocks against the 2880-clock symbol period |
+| Test sensitivity | A deliberate bug (truncation instead of round-half-up in the stage shift) failed three tests; the RTL was restored |
+| Lint (`verilator -Wall`) | Clean |
+| Yosys generic synthesis | `fft_core` (`MAX_LOG2` 10): 559170 cells, 65655 flip-flops (two 1024 x 32-bit buffers as flip-flops plus a combinational multiplier and ROM), no latches; the cell count is dominated by the flip-flop memory and read multiplexers and is not representative of the FPGA mapping (block RAM, DSP slices) |
+
+Notes:
+- The test of the model against floating point is what ties the algorithm (bit-reversed loading, stage order, twiddle indexing, sign of the inverse) to the mathematical DFT; the bit-exact comparison ties the RTL to the model. Both matter: the model alone could share a mistake with the RTL.
+- The memory is written in bit-reversed address order and read in natural order, so no output reorder buffer is needed.
+- Not done: pipelining of the multiplier and block-RAM mapping (section 8).

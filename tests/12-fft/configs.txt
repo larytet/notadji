@@ -1,0 +1,3 @@
+rom|fft_twiddle_rom|test_rom||
+fft9|fft_core|test_fft|-GMAX_LOG2=9|MAXL=9
+fft10|fft_core|test_fft|-GMAX_LOG2=10|MAXL=10
