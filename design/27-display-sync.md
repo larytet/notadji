@@ -8,7 +8,7 @@ What can and cannot be simulated: the pixel clock itself (a steerable oscillator
 
 ### 1.1 `scan_timing` (pixel clock domain)
 
-Programmable video timing generator. Configuration: `h_active`, `h_fp`, `h_sync`, `h_bp`, `v_active`, `v_fp`, `v_sync`, `v_bp` (16 bits each), `hs_pol`, `vs_pol` (1 = active high), `slip[7:0]` signed (pixel clocks added to, or removed from, the front porch of the first line of the vertical blanking in the next frame; limited so the front porch stays at least 1 pixel), `en`. Outputs: `hs`, `vs`, `de`, `x[15:0]`, `y[15:0]` (position inside the active area, valid with `de`), `line_start` (pulse at the first pixel of every line), `vs_start` (pulse at the first pixel of the vertical sync: the frame marker used for the phase measurement), `frame_cnt[15:0]`. The frame has `(h_active + h_fp + h_sync + h_bp) x (v_active + v_fp + v_sync + v_bp)` pixel clocks plus the slip. Order within a line: active, front porch, sync, back porch; within a frame: active lines, vertical front porch, sync, back porch (CEA-861 order from the first active pixel).
+Programmable video timing generator. Configuration: `h_active`, `h_fp`, `h_sync`, `h_bp`, `v_active`, `v_fp`, `v_sync`, `v_bp` (16 bits each), `hs_pol`, `vs_pol` (1 = active high), `slip[7:0]` signed (pixel clocks added to, or removed from, the end of the back porch of the first line of the vertical blanking in the next frame, so the sync pulse positions of that line do not move; limited so the back porch stays at least 1 pixel), `en`. Outputs: `hs`, `vs`, `de`, `x[15:0]`, `y[15:0]` (position inside the active area, valid with `de`), `line_start` (pulse at the first pixel of every line), `vs_start` (pulse at the first pixel of the vertical sync: the frame marker used for the phase measurement), `frame_cnt[15:0]`. The frame has `(h_active + h_fp + h_sync + h_bp) x (v_active + v_fp + v_sync + v_bp)` pixel clocks plus the slip. Order within a line: active, front porch, sync, back porch; within a frame: active lines, vertical front porch, sync, back porch (CEA-861 order from the first active pixel).
 
 ### 1.2 `phase_meas` (system clock, 200 MHz)
 
@@ -48,3 +48,27 @@ The scan-out of the frame starts `L` after the received frame timing. For a slic
 - Display variable refresh rate (VRR) as an alternative to clock steering is not considered.
 - The clock-domain crossing of `vs_start` into the system domain (two-flop synchroniser plus pulse stretcher) is a library item and is assumed to add at most 2 system clocks of uncertainty.
 - Not run on a target core; `start_rule` is firmware with integer arithmetic only.
+
+## 5. Results (implementation commit)
+
+RTL: cocotb on Verilator (4 simulations, `tests/27-display-sync`); loop and early scan-out simulations: `test_sys.py` (host build of the firmware, numpy). `run_tests.sh` runs both. All pass.
+
+Deviations from the plan: the standard 1080p60 mode was compared with the model for three lines only (a frame is 2.5 million clocks of per-clock Python checking); the frame period is checked on a small mode with the same code path (`mid`, 96 x 50) and the 720p60 mode ran one complete frame. The `slip` adds to the **end of the back porch** of the first blanking line (section 1.1 was corrected). `T27-06` compares against the wait-for-complete-frame time with the model of decode times only; the line freshness block is checked against its model in T27-04 and driven with the same arrival pattern in a short consistency run.
+
+| Test | Result |
+|---|---|
+| T27-01 | `scan_timing`: every output (`hs`, `vs`, `de`, `x`, `y`, `line_start`, `vs_start`, `frame_cnt`) equals the model on every clock for a tiny mode (6 frames with random slips), `mid` (4 frames, period exactly 4800 clocks), 720p60 (one full frame, 1 237 500 clocks) and the first three lines of 1080p60 (2200 x 1125 = 2 475 000 clocks per frame); both polarities; slips of +5, -3, 0, +100, -100 change every frame period by exactly the clamped amount (the negative slip is limited to `h_bp - 1`); disabled: outputs inactive |
+| T27-02 | `phase_meas` equals the model on every clock for 6 runs (periods 1 to 4000, drift, missing and spurious pulses): `err`, `err_valid`, `lost` |
+| T27-03 | `pi_steer` equals the model for 8 parameter sets (3426 updates; saturation, slew limit, anti-windup, hold, preset, disable); |ctl| within `ppm_max`, no step above `slew_max` |
+| T27-04 | `line_sel` equals the model over 12 frames of random slice arrivals with 5% of the slices never arriving: `use_cur`, `buf_sel`, `rd_valid`, `late_wr_cnt`, and the latched `stale_cnt`/`cur_cnt`; the last frame showed 384 lines fresh and 696 from the previous frame (the arrivals of that test are deliberately late) |
+| T27-05 | Steering loop (bit-exact `pi_steer` model, kp 0.005 ppm per clock, ki 0.00004 ppm per clock per frame, 36 000 frames, control quantised to 0.1 ppm, thermal drift 1 ppm per minute, reference jitter 0.1 us sigma): initial offset +40 / -40 / +25 / 0 ppm: peak deviation 67 / 68 / 26 / 0 us, after lock (15.6, 15.7, 9.4 s) within 1.0 us; the steering word reaches 50.0 ppm (the limit) for the 40 ppm offsets (overshoot of the integrator: the clamp holds) and never changes by more than 0.2 ppm per frame; uniform +/-1 us reference jitter (the MAC-003 bound): peak 27 us, 2 us after lock; a fixed 1 ppm residual would give 600 us over 10 minutes (the figure of `07`); a 10 s reference outage (holdover): 3 us during it; integrator preset to the true offset: peak 0 us. All far inside the 1 ms of VID-018 |
+| T27-06 | Early scan-out, 30 slices of 36 lines, decode time with a lognormal jitter of about 0.15 ms: decoder at 0.2 ms per slice: start offset 1.43 ms against 6.95 ms for waiting for the whole frame (saves 5.52 ms), late-line fraction 3.3e-05; 0.5 ms per slice: 1.49 ms against 15.65 ms (saves 14.16 ms), 2.3e-04; 0.7 ms per slice (slower than the 0.53 ms the display needs per slice): 6.29 ms against 21.45 ms, 1.5e-04. The firmware rule (`start_rule.c`, integer arithmetic) keeps the late fraction below 3e-3 (target 1e-3 at z = 3.1) |
+| L-27, S-27 | `-Wall` clean; no latches; `scan_timing` 1456 cells, `phase_meas` 1066, `pi_steer` 7179, `line_sel` 23376 cells (2144 flip-flops: the 2048-bit bitmap) |
+| Mutation | slew limit removed in `pi_steer`: T27-03 fails; `buf_sel` inverted in `line_sel`: T27-04 fails; both restored |
+
+### Limits
+
+- The oscillator, the display transmitters, the frame buffer and the display are not simulated; the 0.1 ppm resolution and +/-50 ppm range must come from the hardware (voltage-controlled crystal with a 16-bit DAC, or a PLL with a sigma-delta fractional word that can do 0.1 ppm); this is the first item to check on the evaluation board.
+- The loop gains were chosen for 0.1 us jitter and a 60 Hz frame rate; lock takes 10 to 16 s from a 25 to 40 ppm offset (a preset from the previous flight removes it); a faster acquisition would use a higher gain until the error is small.
+- Reference jitter above 1 us, a missing reference at start-up and frame-rate changes (120 Hz, 30 Hz) were not simulated; the period is a parameter of `phase_meas`.
+- The test of the early scan-out uses a decode-time model; real decoders have frame-dependent times (intra and refresh frames).

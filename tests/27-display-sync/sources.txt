@@ -1,0 +1,4 @@
+rtl/27-display-sync/scan_timing.sv
+rtl/27-display-sync/phase_meas.sv
+rtl/27-display-sync/pi_steer.sv
+rtl/27-display-sync/line_sel.sv

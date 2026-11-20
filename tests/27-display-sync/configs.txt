@@ -1,0 +1,4 @@
+timing|scan_timing|test_rtl||G=timing
+phase|phase_meas|test_rtl||G=phase
+pi|pi_steer|test_rtl||G=pi
+lines|line_sel|test_rtl||G=lines
