@@ -29,4 +29,4 @@ Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` 
 | 17 | Channel estimator and equaliser | done (`28117b1`) | done: 8 tests pass (bit-exact model, EVM -50 to -60 dB noiseless, within 0.1 dB of a float reference with noise), lint clean, no latches; full gate-level synthesis not completed |
 | 18 | Burst detection, timing and carrier-offset estimation | done (`b0b5951`) | done: 7 tests pass (100% detection at 5-20 dB, CFO error 0.012 at 20 dB, marker reliable to 10 dB only), lint clean, no latches; full gate-level synthesis not completed |
 | 19 | Multi-branch combiner (MRC) | done (`899988a`) | done: 15 tests (B = 2, 4, 8) pass, array gain 3.03 / 6.01 / 9.03 dB, matches ideal float MRC; lint clean, no latches |
-| 20 | LDPC decoder | in progress | pending |
+| 20 | LDPC decoder | done (`189c69d`) | done: 5 tests pass; RTL equals the model and corrects as many frames as a floating-point reference; model FER at or below AFF3CT; single-instance throughput 34-114 Mbit/s (below PHY-015); lint clean; Yosys not completed |
