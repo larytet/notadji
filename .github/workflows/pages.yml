@@ -30,7 +30,6 @@ jobs:
         run: |
           mkdir site
           cp spec/diagrams/modem-modules.html site/modem-modules.html
-          cp spec/diagrams/modem-modules.html site/index.html
           touch site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
