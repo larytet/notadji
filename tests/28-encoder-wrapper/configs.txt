@@ -1,0 +1,7 @@
+split0|nal_split|test_rtl||G=split CODEC=0
+split1|nal_split|test_rtl|-GCODEC=1|G=split CODEC=1
+tag|slice_tag|test_rtl||G=tag
+mon|budget_mon|test_rtl||G=mon
+refresh|refresh_map|test_rtl||G=refresh
+rc|rc_hook|test_rtl||G=rc
+e2e|enc_link|test_e2e||G=e2e

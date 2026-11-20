@@ -53,3 +53,33 @@ Integration: `nal_split` -> `slice_tag` (+ `budget_mon` in parallel) -> module 9
 - The decoder side on the ground unit (a hardware or software decoder, plan row 28) and the concealment are not part of this module.
 - Parameter-set transport and the IDR at start-up and after a link loss.
 - Not run on a target core.
+
+## 5. Results (implementation commit)
+
+Simulation: cocotb on Verilator (`tests/28-encoder-wrapper`, 7 simulations: `nal_split` for AVC and HEVC, `slice_tag`, `budget_mon`, `refresh_map`, `rc_hook`, and `enc_link` = `enc_wrap` followed by the depacketiser of module 9). All pass. The encoder is `enc_model.py`, a stand-in (Annex-B output, slice sizes drawn from assumed distributions); **nothing here characterises the hard encoder**.
+
+Changes against the plan, found by the tests:
+
+- The intra mask and the budget of a frame are **queued** at the encoder input (`cmd_start`) and used when the frame leaves the encoder (`bs_start`), because the encoder has a latency of at least one frame; the first version applied the newest value and tagged every slice with the wrong frame's intra flag. `tag_mask` is the head of the queue (visible before the pop) so that the tagger, which latches it at the boundary, sees the right entry.
+- `budget_mon` compares each slice with the budget **commanded for its frame** (`budget_tag`), not with the value in force when the slice appears.
+- `rc_hook` now counts two invalid values in one clock as two errors.
+- `budget_mon` uses a combinational 24-bit division for `ratio_q8` (one clock after `done`); for synthesis it must be a multi-cycle path or pipelined (it is not on a data path).
+
+| Test | Result |
+|---|---|
+| T28-01 | `nal_split`: 6 streams of 3 frames each for AVC and for HEVC (3- and 4-byte start codes, 0 to 2 trailing zeros, payload with `00 00 03` sequences and zero runs, NAL units of 1 to 1500 bytes, random valid and ready): every NAL unit equals the model byte for byte with the right type, slice and IDR flags |
+| T28-02 | `slice_tag`: frame and slice numbering from delimiter NAL units and from the sync pulse, flags (commanded intra, IDR, last slice), 7- and 9-slice frames counted as errors, parameter sets and SEI routed to the `ps` port |
+| T28-03 | `budget_mon`: 72 slices including exactly 105% (not over), one byte more (over), zero budget, size and budget extremes: `over`, `ratio_q8`, `max_ratio_q8`, counters equal the exact integer model; the buffer check counts a slice once |
+| T28-04 | `refresh_map`: 3 configurations (S = 8; S = 12 with a rolling wave of 20 frames; S = 34), 400 random steps each, sequence numbers around the 16-bit wrap, requests for frames older than 16 counted: masks, delayed tag masks and the three counters equal the model |
+| T28-05 | `rc_hook`: 300 random commands: valid budgets and QP bias reach the outputs one clock later (the limit was 4), 149 invalid values rejected with the previous value kept |
+| T28-06 | End to end, 121 frames of 8 slices (budgets 300 to 600 bytes changing every 20 frames, one frame of encoder latency, 5% slice loss reported through the refresh path one frame later, rolling wave of 40 frames): all 968 slice payloads, headers (frame, index, flags) equal the model; 82 intra slices commanded and flagged; the monitor counted 88 oversize slices, **equal to the number the model produced** (injected 1.3x slices plus intra slices at 1.7x to 2.6x, which a real encoder must hold to the budget by quantisation: the monitor sees them as violations); largest size/budget 2.61; 138 parameter-set and delimiter NAL units routed to the `ps` port intact |
+| L-28, S-28 | `-Wall` clean; no latches; `nal_split` 396 cells, `slice_tag` 467, `budget_mon` 5278 (the divider), `refresh_map` 6397, `rc_hook` 249, `enc_wrap` 120 361 cells (34 719 flip-flops: the payload buffer of the packetiser) |
+| Mutation | `budget_mon` boundary `>` changed to `>=`: T28-03 fails; start-code detection changed to three zero bytes: T28-01 fails; both restored |
+
+### Limits
+
+- The hard encoder was not simulated or characterised (section 4): slice structure, the adherence to a per-slice budget (the model's intra slices exceed it, and a real encoder has to be configured so that they do not), latency, response time to commands and rate-buffer behaviour are all open and are the purpose of the board measurements.
+- The slice index is the arrival counter inside the frame, so the encoder must emit the slices of a frame in order and complete; a lost or reordered slice NAL unit is only noticed through `err_count`. Parameter sets are routed out but their transport (start-up, every IDR, after a link loss) is not designed here.
+- The 16-bit sequence numbering `seq = frame x S + idx` is a convention that module 22's refresh queue has to follow.
+- Only the AVC and HEVC NAL-unit header types are recognised; the HEVC test used two-byte headers with a fixed second byte.
+- Not run on a target core.

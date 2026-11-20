@@ -1,0 +1,70 @@
+// Test-only wrapper: enc_wrap followed by the depacketiser of module 9 (the PHY and the channel are a wire here).
+module enc_link #(
+    parameter int CODEC = 0
+) (
+    input  logic        clk,
+    input  logic        rst_n,
+    input  logic        frame_src,
+    input  logic [7:0]  slices_per_frame,
+    input  logic [7:0]  wave_period,
+    input  logic [15:0] max_budget,
+    input  logic [7:0]  qp_bias_max,
+    input  logic        buf_check_en,
+    input  logic [15:0] fifo_level,
+    input  logic        enc_valid,
+    output logic        enc_ready,
+    input  logic [7:0]  enc_data,
+    input  logic        enc_flush,
+    input  logic        frame_sync,
+    input  logic        budget_valid,
+    input  logic [15:0] budget_in,
+    input  logic        qp_valid,
+    input  logic [7:0]  qp_bias_in,
+    input  logic        rf_valid,
+    output logic        rf_ready,
+    input  logic [15:0] rf_seq,
+    input  logic        cmd_start,
+    output logic [15:0] target_bytes,
+    output logic        rc_update,
+    output logic [7:0]  qp_bias,
+    output logic        qp_update,
+    output logic [63:0] intra_mask,
+    output logic        ps_valid,
+    input  logic        ps_ready,
+    output logic [7:0]  ps_data,
+    output logic        ps_last,
+    output logic        mon_done,
+    output logic [15:0] mon_size,
+    output logic [15:0] mon_ratio_q8,
+    output logic        mon_over,
+    output logic [15:0] mon_max_ratio_q8,
+    output logic [15:0] mon_n_slices,
+    output logic [15:0] mon_n_over,
+    output logic [15:0] mon_n_zero,
+    output logic [15:0] mon_err_buf,
+    output logic [15:0] err_overflow,
+    output logic [15:0] err_count,
+    output logic [15:0] err_rc,
+    output logic [15:0] rf_n_req,
+    output logic [15:0] rf_n_applied,
+    output logic [15:0] rf_n_old,
+    output logic        u_valid,
+    output logic        u_hdr_ok,
+    output logic        u_crc_ok,
+    output logic [15:0] u_frame,
+    output logic [7:0]  u_idx,
+    output logic [3:0]  u_flags,
+    output logic [15:0] u_len,
+    output logic        p_valid,
+    output logic [7:0]  p_data,
+    output logic        p_last
+);
+  logic        m_axis_valid, m_axis_ready, m_axis_last;
+  logic [7:0]  m_axis_data;
+  enc_wrap #(.CODEC(CODEC)) u_w (.*);
+  logic trunc;
+  slice_unpack u_u (.clk(clk), .rst_n(rst_n), .s_axis_valid(m_axis_valid), .s_axis_ready(m_axis_ready), .s_axis_data(m_axis_data), .s_axis_last(m_axis_last),
+      .m_axis_valid(p_valid), .m_axis_ready(1'b1), .m_axis_data(p_data), .m_axis_last(p_last), .st_valid(u_valid), .st_hdr_ok(u_hdr_ok), .st_crc_ok(u_crc_ok),
+      .st_trunc(trunc), .st_frame(u_frame), .st_idx(u_idx), .st_flags(u_flags), .st_len(u_len));
+  wire unused_ok = &{1'b0, trunc};
+endmodule
