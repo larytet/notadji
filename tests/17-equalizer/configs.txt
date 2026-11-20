@@ -1,0 +1,2 @@
+rec|recip_rom|test_recip||
+eq|equalizer|test_eq|-GMAX_LOG2=9|

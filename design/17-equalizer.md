@@ -48,3 +48,31 @@ A bit-exact Python model of section 1; a channel simulation with `numpy` (random
 - Tracking a changing channel shape inside a frame (pilot interpolation in time and frequency) and a per-pilot slope for timing drift.
 - Diversity: the combiner (module 19) takes several branches; this module serves one branch (or the combined signal).
 - Noise-variance aware `csi` (it is proportional to `|H|^2` only, assuming equal noise on all tones).
+
+## 6. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/17-equalizer`; the table with `python3 -I scripts/gen_recip_rom.py`.
+
+| Check | Result |
+|---|---|
+| T17-01 to T17-09 (8 tests in 2 simulations: `recip_rom`, `equalizer`) | 8 of 8 pass |
+| Reciprocal (T17-01) | The ROM equals `round(2^23/(256+i))` for all 256 entries; the worst relative error of `2^40/x` over 20000 random operands is 0.38% (limit 0.5%); saturation at `2^31 - 1` for small operands |
+| Bit-exact (T17-02) | Equal to the integer model for N = 64, 128, 256, 512, two channels each (noiseless and noisy), three data symbols with random common phase rotations (+/-1 rad), every output sample and `csi`; `last` only on the final data tone |
+| Accuracy, noiseless (T17-03), measured | Error vector magnitude -60 dB (N = 64) and -50 dB (N = 256, 512) after common phase rotations of +50, -60 and +20 degrees per symbol (limit -34 dB); the floor is the Q12 and 16-bit quantisation |
+| Accuracy with noise (T17-04), measured | At 25 dB per-tone SNR the DUT error vector magnitude is -21.3 to -22.8 dB, within 0.11 dB of a floating-point equaliser of the same structure on the same inputs (limit 1 dB) |
+| CSI (T17-05) | `csi` equals `floor(128 |H|^2)` within one least significant bit for gains 0.25 to 2.0 (2.0 saturates at 255 as designed) |
+| Deep fade (T17-06) | A tone with `|H|` = 0.02: no overflow, `csi` 0, the other tones within 3% error vector magnitude |
+| Frames, handshakes, bad `last` (T17-07, T17-08) | Two frames with different channels and random handshakes equal the model; a wrong `last` raises `err_len` and the next frame is processed correctly |
+| Cycle count (T17-09), measured | Clocks per data symbol: N = 64: 128, N = 128: 255, N = 256: 511, N = 512: 1022 (limit 2880) |
+| Test sensitivity | A deliberate bug (the pilot sign reversed in the common-phase measurement) failed five of the seven equaliser tests; the RTL was restored |
+| Lint (`verilator -Wall`) | Clean (both tops) |
+| Yosys | `recip_rom`: 740 cells, no latches (full technology-independent synthesis). `equalizer`: the RTL-level pass (`proc`) finds no latches and reports 685 cells (about 11 flip-flop and 18 multiplier cells before memory mapping) and 6 memories; **full gate-level synthesis did not finish within 15 minutes** because of the six 512-entry behavioural memories with asynchronous reads (open item: block-RAM style memories with registered reads) |
+
+Bugs found and fixed during the work:
+- **Signedness.** `rn` and the reciprocal result were unsigned, and one unsigned operand makes a whole SystemVerilog product unsigned: negative pilot sums were treated as huge positive numbers and the arithmetic shift became logical. The first test run showed all equalised values exactly 8 times too large (the correction was wrong while the channel quality was right). Fixed with explicit signed copies.
+- **Product width.** Every product was written inside a `64'(...)` cast, which makes the multiplications 64 bits wide (about 18 wide multipliers and a Yosys run that never finished). The products now have their natural widths (16x16, 16x33, 24x16); results are unchanged (the same test numbers were reproduced).
+- A negation applied before widening would have wrapped for -32768; it is applied after widening.
+
+Notes:
+- The reference signs and tone types come from an internal preamble generator (module 7), so the equaliser and the transmit chain always agree on the tone plan.
+- The estimate is one tap per tone with common correction only; it does not track a channel whose shape changes inside the frame (section 5).

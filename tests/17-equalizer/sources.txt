@@ -1,0 +1,3 @@
+rtl/07-preamble-pilot/preamble_gen.sv
+rtl/17-equalizer/recip_rom.sv
+rtl/17-equalizer/equalizer.sv
