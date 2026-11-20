@@ -1,0 +1,7 @@
+frm|rx_framer|test_glue||G=frm
+trim|llr_trim|test_glue||G=trim
+m2b|msg_to_bytes|test_glue||G=m2b
+loop|link_top|test_loop||G=loop
+noise|link_top|test_loop||G=noise
+rate|link_top|test_loop||G=rate
+seq|link_top|test_loop||G=seq

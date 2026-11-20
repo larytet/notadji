@@ -89,7 +89,7 @@ module sync_core #(
       default: begin lhs = c2 << 1; rhs = e2; end            // M > 1/2
     endcase
   end
-  wire mok = (lhs > rhs) && (en > {8'd0, min_power});
+  wire mok = (lhs > rhs) && (en > {8'd0, min_power}) && (eln > {8'd0, min_power});
   assign metric_ok = mok;
 
   // ---------------- cordic ----------------
