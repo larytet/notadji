@@ -1,0 +1,2 @@
+rtl/24-spectrum-scan/scan_meas.sv
+rtl/24-spectrum-scan/scan_engine.sv

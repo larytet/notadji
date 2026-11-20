@@ -74,3 +74,38 @@ Rules:
 - Decoded video quality of channels other than the current one is not measurable; the memory of past quality is the only proxy.
 - Radar detection (DFS) for regions that need it (ADA-011, optional P2) is not part of this module.
 - Not run on the target core (no QEMU/Renode), as in module 23.
+
+## 6. Results (implementation commit)
+
+RTL: cocotb on Verilator (`tests/24-spectrum-scan`, 2 simulations, 4 tests). Firmware: host build, Python harness `test_cs.py` (11 tests), both started by `run_tests.sh`. All pass.
+
+| Test | Result |
+|---|---|
+| T24-01 | `scan_meas`: 30 dwells (settle 0 to 200, dwell 1 to 2000 strobes, strobe duty 100%, 50% and 20%, random and extreme samples) equal the exact energy sum (also against numpy), the integer logarithm, `done` after exactly `settle + dwell` strobes; 27 starts while busy ignored and counted; `lg` within 0.0861 + 1/16 octave of `log2(sum)`; no saturation for 2000 samples of -32768 |
+| T24-02 to T24-04 | `scan_engine`: 5 runs (6 to 32 channels, random masks and home channel, settle 0 to 30, dwell up to 120, strobe duty 100%, 50%, 25%): the pointer visits enabled channels in order skipping `home`, wraps and counts sweeps; `retune_req` and `retune_ch` as specified and every slot ends with the retune back to `home`; the table (`last`, `lg_last`, `max_hold`, `count`, `strong`) equals the exact sum of the strobes of the window; a slot spans `settle + dwell` strobes (at most 6 more in the pipeline); an empty mask gives `no_ch`; a missing `rx_ready` aborts the slot after the timeout with `err_tmo` and the retune back |
+| T24-05 | 300 random spectra with disabled, unscanned, stale, strong-adjacent and remembered-bad channels: every score equals the independent formula of section 2 |
+| T24-06 | No switch in 5 minutes with 2 dB scan noise and two equal best channels when nothing is degraded; after a real degradation exactly one switch and none in the next 2 minutes |
+| T24-07 | 500 trials each: decision latency after a step of the loss to 20% at most 13 ms; to 80% (severe) at most 11 ms (ADA-002: 20 ms; `det_ms` 10, 1 ms ticks, scan noise 2 lg) |
+| T24-08 | 100 trials, a 20 dB interferer on the current channel: one switch to a clean channel within 25 ms of its appearance, never to a busy channel |
+| T24-09 | The chosen channel turns bad 5 ms after arrival: blacklisted, next best taken 16 ms later (reason probation), no further switch |
+| T24-10 | No scan data and a dead link: the fallback list is walked in order (9, 2, 6); a blacklisted entry is skipped |
+| T24-11 | 4 links, 12 channels, all starting on channel 0, a jammer moving every 5 s, 60 s: 2 to 4 switches per link, no second with a shared channel (0 of 60 s), no switch within the minimum stay unless severe |
+| T24-13 (added) | Interference alternating between two channels every 100 ms: 2 switches in 20 s, shortest gap 501 ms |
+| T24-14 (added) | Loss of 6% on the current channel: candidates 48 lg above its level are not taken, candidates 20 lg above are |
+| T24-12 | Strict build clean (`-Wall -Wextra -Wconversion -Wshadow -Werror -mgeneral-regs-only`), no undefined symbols, 3237 bytes of code, no data or bss; about 1.2 million random calls in 3 configurations under UBSan and ASan, target channel always in range |
+| L-24, S-24 | `-Wall` clean; `scan_meas` 3875 cells (85 flip-flops), `scan_engine` 18818 cells (4214 flip-flops: the 32-entry table is flip-flops), no latches |
+| Mutation | `scan_meas` dwell off by one: T24-01 fails; minimum-stay check removed: T24-13 fails; margin check removed: T24-14 fails (the first two firmware mutations passed all tests until T24-13 and T24-14 were added); all restored |
+
+### Defects found and fixed during the tests
+
+1. The scan pointer started after channel 0, so channel 0 was skipped in the first sweep.
+2. The first probation fallback walked back to the previous channel, which was the dead one; the order is now best scanned candidate, fallback list, previous channel (last resort).
+3. A current channel with no own-level measurement was given a score of 0 (always best), so the link never left it; its score is now taken as just short of the best candidate's.
+
+### Limits
+
+- The interference-to-loss model of the tests (loss doubles per 0.75 dB above a 3 dB excess) and the level constants are assumptions [E]; the penalties and thresholds in `cs_default_cfg` are untuned starting values.
+- The current channel's own interference level comes from an idle-slot measurement that the engine does not schedule (it excludes `home`); the firmware accepts it through `cs_scan` for the current channel, and without it only the loss triggers a switch.
+- The radio timing (retune, settle, return) is the sequencer's; the engine was tested with a model of `rx_ready`, not against module 11 and 10 together.
+- Not run on a target core (no QEMU/Renode); no cycle count. Execution of the switch (MAC-010, gap of one frame or less) and the control message that carries `effective_frame` are not modelled.
+- Four links on twelve channels is one scenario; denser reuse (SYS-009: 6 links on 20 MHz channels in 5.8 GHz, 25 on 5 MHz) was not simulated.
