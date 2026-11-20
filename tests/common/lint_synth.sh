@@ -11,7 +11,7 @@ while read -r t; do
   [ -z "$t" ] && continue
   out=$(verilator --lint-only -Wall --top-module "$t" $SRC 2>&1 | grep -E '^%(Warning|Error)')
   if [ -n "$out" ]; then echo "lint $t: FAIL"; echo "$out"; rc=1; else echo "lint $t: clean"; fi
-  if yosys -q -p "read_verilog -sv $SRC; hierarchy -top $t; synth -top $t; tee -o synth_$t.txt stat; select -assert-none t:\$dlatch t:\$_DLATCH_?_ t:\$_DLATCH_??_" > synth_$t.log 2>&1; then
+  if yosys -q -p "read_verilog -sv $SRC; hierarchy -top $t; synth -flatten -top $t; tee -o synth_$t.txt stat; select -assert-none t:\$dlatch t:\$_DLATCH_?_ t:\$_DLATCH_??_" > synth_$t.log 2>&1; then
     cells=$(grep -E "^ +[0-9]+ +cells" synth_$t.txt | head -1 | awk '{print $1}')
     ffs=$(grep -E "DFF" synth_$t.txt | awk '{s+=$1} END{print s+0}')
     echo "synth $t: $cells cells, $ffs flip-flops, no latches"

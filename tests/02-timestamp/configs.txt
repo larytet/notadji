@@ -1,0 +1,2 @@
+default|timestamp_unit|test_ts|-GNTAPS=16 -GTRACE_DEPTH=64|NTAPS=16 TRACE_DEPTH=64
+small|timestamp_unit|test_ts|-GNTAPS=4 -GTRACE_DEPTH=4|NTAPS=4 TRACE_DEPTH=4

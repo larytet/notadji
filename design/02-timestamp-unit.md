@@ -69,3 +69,17 @@ Configurations: `NTAPS=16, TRACE_DEPTH=64` (default) and `NTAPS=4, TRACE_DEPTH=4
 
 - Whether the 64 bits of timestamp are all needed in the trace record (a 40-bit record at 5 ns still covers 91 minutes); kept at 64 to match HSI-003 until the trace port bandwidth is known.
 - Clock-domain crossing of taps from the radio-interface clock: handled by module 11, not here.
+
+## 7. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/common/run_tests.sh tests/02-timestamp && tests/common/lint_synth.sh tests/02-timestamp`.
+
+| Check | Result |
+|---|---|
+| T2-01 to T2-10, configurations NTAPS=16/depth 64 and NTAPS=4/depth 4 | 20 of 20 pass; every clock is compared with the Python model (counter, all latches and event counters, snapshot, drop count, trace stream) |
+| Test sensitivity | A deliberate bug (no sign extension on the adjust delta) is caught by T2-07 and fails the run; the RTL was restored afterwards |
+| Lint (`verilator -Wall`) | Clean |
+| Yosys generic synthesis (flattened, default parameters) | 16230 cells, 5796 flip-flops, no latches; most of the flip-flops are the 64-entry trace FIFO (generic synthesis does not map it to RAM) and the 16 x 64-bit tap latches |
+| 200 MHz timing | Not checked: needs Vivado (open item) |
+
+Notes: the trace FIFO is the module 1 `axis_fifo`. The shared runner is in `tests/common` (`run_tests.sh` and `lint_synth.sh` read `configs.txt`, `sources.txt` and `tops.txt` from the module's test directory).
