@@ -19,3 +19,4 @@ Run a module's tests: `source scripts/sim_env.sh && make -C tests/NN-name test` 
 | 7 | Preamble and pilot generator | done (`23cb7ba`) | done: 7 tests pass (STF periodicity via numpy), lint clean, no latches |
 | 8 | Serial telemetry bridge | done (`7adcb0c`) | done: 13 tests in 5 simulations pass, lint clean, no latches |
 | 9 | Slice packetiser and depacketiser | done (`f34b3ab`) | done: 20 tests (6 configurations) pass, lint clean, no latches |
+| 10 | Frame-timeline sequencer | in progress | pending |
