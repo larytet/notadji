@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Mutation check of the firmware framework (T33-M): each mutant is a one-line change of a copy of fw/33-framework; the named tests must fail.
 Usage: ./mutate.py [step-prefix]    (a mutant that survives is a hole in the tests)"""
-import shutil, subprocess, sys, os
+import re, shutil, subprocess, sys, os
 from pathlib import Path
 HERE = Path(__file__).resolve().parent
 FW = HERE.parent.parent / "fw" / "33-framework"
@@ -63,7 +63,7 @@ M = [
  ("S4-th-leave",       "thermal.c", "hot < c->leave_x4[t->level - 1u]", "hot <= c->leave_x4[t->level - 1u]", ["t_thermal"]),
  ("S4-th-leave-enter", "thermal.c", "hot < c->leave_x4[t->level - 1u]", "hot < c->enter_x4[t->level - 1u]", ["t_thermal"]),
  ("S4-th-dwell",       "thermal.c", "(uint32_t)(now_ms - t->level_since_ms) >= c->min_dwell_ms", "(uint32_t)(now_ms - t->level_since_ms) > c->min_dwell_ms", ["t_thermal"]),
- ("S4-th-fallback",    "thermal.c", "if (inv && fallback > hot) hot = fallback;", "", ["t_thermal"]),
+ ("S4-th-fallback",    "thermal.c", "if (inv && fallback > hot) hot = fallback;", "if (inv && fallback > hot) hot = hot;", ["t_thermal"]),
  ("S4-th-allbad",      "thermal.c", "if (nvalid == 0) hot = (int16_t)(c->enter_x4[3] + 1);", "", ["t_thermal"]),
  ("S4-th-range",       "thermal.c", "raw[i] < c->valid_min_x4 || raw[i] > c->valid_max_x4 || t->stuck[i]", "raw[i] < c->valid_min_x4 || t->stuck[i]", ["t_thermal"]),
  ("S4-th-stuck",       "thermal.c", "absd(raw[j], t->anchor[i][j]) > c->stuck_move_x4", "absd(raw[j], t->anchor[i][j]) > 4000", ["t_thermal"]),
@@ -79,14 +79,14 @@ M = [
  ("S4-rf-trip",        "rf_prot.c", "if (v >= c->trip_q8) { if (r->over_trip", "if (v > c->trip_q8 + 256u) { if (r->over_trip", ["t_rfprot"]),
  ("S4-rf-foldconf",    "rf_prot.c", "r->over_fold >= c->fold_confirm) set_state(r, RF_FOLDBACK", "r->over_fold >= 1u) set_state(r, RF_FOLDBACK", ["t_rfprot"]),
  ("S4-rf-recover",     "rf_prot.c", "if (v < c->fold_rec_q8) {", "if (v < c->fold_q8) {", ["t_rfprot"]),
- ("S4-rf-recover-t",   "rf_prot.c", ">= c->fold_rec_us) set_state(r, RF_OK, now_us);", ">= 0u) set_state(r, RF_OK, now_us);", ["t_rfprot"]),
+ ("S4-rf-recover-t",   "rf_prot.c", ">= c->fold_rec_us) set_state(r, RF_OK, now_us);", ">= 1u) set_state(r, RF_OK, now_us);", ["t_rfprot"]),
  ("S4-rf-hold",        "rf_prot.c", ">= c->trip_hold_us) set_state(r, RF_PROBE, now_us);", ">= c->trip_hold_us / 2u) set_state(r, RF_PROBE, now_us);", ["t_rfprot"]),
  ("S4-rf-probe-n",     "rf_prot.c", "if (++r->good_probe >= c->probe_samples) {", "if (++r->good_probe >= 1u) {", ["t_rfprot"]),
  ("S4-rf-probe-bad",   "rf_prot.c", "if (valid && v >= c->trip_rec_q8) { set_state(r, RF_TRIP, now_us); break; }", "", ["t_rfprot"]),
  ("S4-rf-probe-to",    "rf_prot.c", "if ((uint32_t)(now_us - r->state_since_us) >= c->probe_timeout_us) set_state(r, RF_TRIP, now_us);   /* no forward power seen */", "", ["t_rfprot"]),
  ("S4-rf-pa",          "rf_prot.c", "o->pa_enable = r->state != RF_TRIP;", "o->pa_enable = true;", ["t_rfprot", "t_protect"]),
  ("S4-rf-floor",       "rf_prot.c", "bool valid = fwd_x100 >= c->fwd_floor_x100;", "bool valid = true;", ["t_rfprot"]),
- ("S4-rf-gross",       "rf_prot.c", "if (valid && v >= c->gross_q8) flags |= ANT_FLAG_GROSS;", "", ["t_rfprot"]),
+ ("S4-rf-gross",       "rf_prot.c", "if (valid && v >= c->gross_q8) flags |= ANT_FLAG_GROSS;", "if (0 && valid && v >= c->gross_q8) flags |= ANT_FLAG_GROSS;", ["t_rfprot"]),
  ("S4-rf-detune",      "rf_prot.c", "r->cal_valid && (uint32_t)v >= (uint32_t)r->vswr_cal_q8 + c->detune_delta_q8", "r->cal_valid", ["t_rfprot"]),
  ("S4-rf-recal-n",     "rf_prot.c", "if (r->recal_cnt >= c->recal_confirm) r->recal_due = true;", "if (r->recal_cnt >= 1u) r->recal_due = true;", ["t_rfprot"]),
  ("S4-rf-caldone",     "rf_prot.c", "void rf_cal_done(rf_t *r) { r->vswr_cal_q8 = r->vswr_q8;", "void rf_cal_done(rf_t *r) { ", ["t_rfprot"]),
@@ -100,6 +100,21 @@ M = [
  ("S4-pr-fast",        "protect.c", "if (p->rout.changed || !p->rout.pa_enable) prot_merge(p);", "if (p->rout.changed) prot_merge(p);", []),
  ("S4-pr-hw",          "protect.c", "(hal_rd(p->h, SENS_HW_TRIP) & 1u) != 0u", "false", ["t_protect"]),
  ("S4-pr-log",         "protect.c", "if (p->tout.invalid_mask != prev_inv) clog_append", "if (0) clog_append", ["t_protect"]),
+ ("S5-mav-incompat",   "hostproto.c", "if (b[2] & ~1u) {", "if (0) {", ["t_hostproto"]),
+ ("S5-mav-sig",        "hostproto.c", "if (b[2] & 1u) sig = 13u;", "", ["t_hostproto"]),
+ ("S5-mav-unknown",    "hostproto.c", "if (extra < 0) {", "if (0) {", ["t_hostproto"]),
+ ("S5-mav-extra",      "hostproto.c", "    crc = crc16_mcrf4xx_update(crc, &(uint8_t){ (uint8_t)extra }, 1);\n    if (crc != fw_ld16", "    if (crc != fw_ld16", ["t_hostproto"]),
+ ("S5-mav-total",      "hostproto.c", "total = 10u + len + 2u + sig;", "total = 10u + len + 1u + sig;", ["t_hostproto"]),
+ ("S5-mav-crcrange",   "hostproto.c", "crc = crc16_mcrf4xx(b + 1, 9u + len);", "crc = crc16_mcrf4xx(b, 9u + len);", ["t_hostproto"]),
+ ("S5-msp1-xor",       "hostproto.c", "for (i = 3; i < 5u + len; i++) x ^= b[i];", "for (i = 4; i < 5u + len; i++) x ^= b[i];", ["t_hostproto"]),
+ ("S5-msp1-jumbo",     "hostproto.c", "if (len == 255u) {", "if (0) {", ["t_hostproto"]),
+ ("S5-msp2-len",       "hostproto.c", "if (len > HP_MAX_PAYLOAD) {", "if (0) {", ["t_hostproto"]),
+ ("S5-msp-dir",        "hostproto.c", "if (b[2] != '<' && b[2] != '>' && b[2] != '!') {", "if (0) {", ["t_hostproto"]),
+ ("S5-msp2-crc",       "hostproto.c", "crc8_dvb_s2(b + 3, 5u + len)", "crc8_dvb_s2(b + 4, 4u + len)", ["t_hostproto"]),
+ ("S5-bad-drop",       "hostproto.c", "if (r == TRY_BAD) { drop(h, 1); continue; }", "if (r == TRY_BAD) { drop(h, 2); continue; }", ["t_hostproto"]),
+ ("S5-backpressure",   "hostproto.c", "if (!spsc_push(h->out, &f)) { h->st.out_full++; break; }", "if (!spsc_push(h->out, &f)) { h->st.out_full++; }", ["t_hostproto"]),
+ ("S5-budget",         "hostproto.c", "while (h->n < HP_WIN && pulled < max_bytes && spsc_pop", "while (h->n < HP_WIN && spsc_pop", ["t_hostproto"]),
+ ("S5-wait-break",     "hostproto.c", "if (pulled >= max_bytes || spsc_count(in_ring) == 0) break;", "", []),
  ("S2-mon-release",    "sup.c", "hal_wr(m->h, SYS_MAIN_HALT, 0);                  /* release", "                  /* release", ["t_monitor"]),
 ]
 def run(tests, fwdir, bdir):
@@ -119,7 +134,7 @@ for mid, f, old, new, tests in M:
     (d / f).write_text(src.replace(old, new, 1))
     rc, out = run(tests, d, HERE / "build" / "mut" / "b")
     # the mutant build must be compiled; a compile error is not a kill
-    if "error:" in out or "Error " in out:
+    if re.search(r":\d+:\d+: (fatal )?error:", out):
         print(f"  BUILD ERROR  {mid}\n{out[-600:]}"); surv += 1; continue
     killed = rc != 0
     print(f"  {'killed' if killed else 'SURVIVED'}  {mid}")
