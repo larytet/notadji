@@ -51,6 +51,8 @@ typedef struct {
     uint32_t   n_ok, n_len, n_type, n_n, n_crc, n_stale, n_applied;
     uint32_t   shadow_mcs, shadow_pwr, shadow_budget;
     bool       shadow_valid;
+    uint32_t   safe_hold_until_us;  /* the safe schedule requested by supervision holds until this time, whatever the feedback says */
+    bool       safe_hold;
     uint32_t   last_apply_cycles;   /* cycles from the feedback poll to the last register commit (measured on the HAL counter) */
 } mac_ctl_t;
 
@@ -58,7 +60,8 @@ void mac_ctl_init(mac_ctl_t *c, hal_t *h, clog_t *log, const uint8_t *rx_buf);
 /* poll the receive buffer: process one pending message; returns the status (FB_OK if one was applied; FB_ERR_LEN when nothing was pending) */
 fb_status mac_ctl_poll(mac_ctl_t *c);
 void mac_ctl_tick(mac_ctl_t *c);                                  /* feedback timeout handling of the link adaptation, once per frame */
-void mac_ctl_force_safe(mac_ctl_t *c);                            /* supervision asks for the safe schedule */
+#define MAC_SAFE_HOLD_US 100000u
+void mac_ctl_force_safe(mac_ctl_t *c);                            /* supervision asks for the safe schedule: held for MAC_SAFE_HOLD_US, feedback is only tracked meanwhile */
 void mac_ctl_apply(mac_ctl_t *c, bool force);                     /* write MCS, power and budget (with the limits) to the modem registers */
 
 /* per-slice byte targets for the encoder: the frame budget scaled by the bitrate limit, minus the telemetry share, spread over the slices with the

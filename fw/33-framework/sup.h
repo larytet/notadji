@@ -37,8 +37,12 @@ bool sup_safe_requested(const sup_t *u);
 void sup_safe_clear(sup_t *u);
 
 /* ---- monitor core ---- */
+/* The ownership word: bit 0 is the owner, the upper 31 bits count the changes of ownership (the epoch). A driver that wrote the banks before a change cannot
+ * trust what it believes they hold, because the other core has written them since. */
 #define MON_OWNER_MAIN 0u
 #define MON_OWNER_MON  1u
+static inline uint32_t mon_owner_of(uint32_t w) { return w & 1u; }
+static inline uint32_t mon_epoch_of(uint32_t w) { return w >> 1; }
 #define MON_STALL_FRAMES 2u                  /* HSI-011: no table update (or heartbeat) for two frames */
 
 typedef enum { MON_WATCH = 0, MON_SAFE_HOLD = 1, MON_WAIT_ALIVE = 2 } mon_state;
@@ -63,6 +67,10 @@ bool mon_init(mon_t *m, hal_t *h, clog_t *log, const mbox_t *hb, _Atomic uint32_
 void mon_poll(mon_t *m);                              /* once per frame (or faster; it acts on frame counter changes) */
 
 /* main core side: may I write the sequencer? (the owner word is checked before every table load) */
-static inline bool mon_main_owns(_Atomic uint32_t *owner) { return atomic_load_explicit(owner, memory_order_acquire) == MON_OWNER_MAIN; }
+static inline bool mon_main_owns(_Atomic uint32_t *owner) { return mon_owner_of(atomic_load_explicit(owner, memory_order_acquire)) == MON_OWNER_MAIN; }
+
+/* the main core's way to load a sequencer table: refused while the monitor owns the sequencer, and the driver forgets what it believed the banks hold when the
+ * ownership changed since its last load */
+seq_status seq_load_owned(seq_drv_t *d, _Atomic uint32_t *owner, const seq_entry *t, uint32_t n);
 
 #endif

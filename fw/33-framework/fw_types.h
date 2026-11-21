@@ -7,8 +7,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 #ifdef FW_NO_LIBC_HEADERS
-/* freestanding target build: the platform provides these three (the only libc symbols the framework uses) */
+/* freestanding target build: the platform provides these four (the only libc symbols the framework uses) */
 void *memcpy(void *d, const void *s, size_t n);
+void *memmove(void *d, const void *s, size_t n);
 void *memset(void *d, int c, size_t n);
 int memcmp(const void *a, const void *b, size_t n);
 #else

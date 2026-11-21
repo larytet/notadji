@@ -13,7 +13,7 @@ need spsc.h 'uint32_t h = atomic_load_explicit(&q->head, memory_order_acquire);'
 need mbox.h 'atomic_store_explicit(&m->seq, s + 2u, memory_order_release);'
 need mbox.h 'atomic_thread_fence(memory_order_acquire);'
 need mbox.h 'atomic_thread_fence(memory_order_release);'
-need sup.h 'atomic_load_explicit(owner, memory_order_acquire) == MON_OWNER_MAIN'
-need sup.c 'atomic_store_explicit(m->owner, MON_OWNER_MAIN, memory_order_release);'
+need sup.h 'mon_owner_of(atomic_load_explicit(owner, memory_order_acquire)) == MON_OWNER_MAIN'
+need sup.c '| MON_OWNER_MAIN, memory_order_release);'
 [ $fail -eq 0 ] && echo "  pass  audit"
 exit $fail

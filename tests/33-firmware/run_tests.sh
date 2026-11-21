@@ -7,6 +7,8 @@ B=${B:-build}; mkdir -p $B
 CFLAGS="-std=c11 -O1 -g -Wall -Wextra -Wconversion -Wshadow -Werror -I$FW -I../../fw/23-link-adaptation -I../../fw/25-calibration -fsanitize=address,undefined -fno-sanitize-recover=undefined"
 NEED_LIBS=""
 fail=0
+VEC=$B/vectors.txt; export VEC
+python3 gen_vectors.py $VEC >/dev/null || { echo '  FAIL gen_vectors.py'; fail=1; }
 tests=("$@"); [ ${#tests[@]} -eq 0 ] && tests=(audit $(ls t_*.c | sed 's/\.c$//'))
 for t in "${tests[@]}"; do
   if [ "$t" = audit ]; then echo "=== audit"; ./audit.sh $FW || fail=1; continue; fi
@@ -16,8 +18,15 @@ for t in "${tests[@]}"; do
   files=""; for s in $srcs; do files="$files $FW/$s"; done
   extra=$(grep -m1 '^// LIBS:' $t.c | sed 's#// LIBS:##')
   echo "=== $t"
+  if [ -n "$ONLY_FULL" ] && grep -q '^// FULLRUN' $t.c; then :; else
   if ! gcc $CFLAGS $t.c $FW/hal_sim.c $files -o $B/$t $extra -lm 2>$B/$t.err; then cat $B/$t.err; fail=1; continue; fi
   if ! $B/$t; then fail=1; fi
+  fi
+  if grep -q '^// FULLRUN' $t.c; then
+    echo "--- $t (full run, plain -O2 build)"
+    if ! gcc -std=c11 -O2 -Wall -Wextra -Werror -I$FW -I../../fw/23-link-adaptation $t.c $FW/hal_sim.c $files -o $B/$t.full $extra -lm 2>$B/$t.err; then cat $B/$t.err; fail=1
+    elif ! T33_FULL=1 $B/$t.full; then fail=1; fi
+  fi
   if grep -q '^// TSAN' $t.c; then
     echo "--- $t (ThreadSanitizer)"
     if ! gcc -std=c11 -O1 -g -Wall -Wextra -Werror -I$FW -fsanitize=thread $t.c $FW/hal_sim.c $files -o $B/$t.tsan $extra -lm 2>$B/$t.err; then cat $B/$t.err; fail=1

@@ -9,7 +9,7 @@ typedef struct { uint32_t time; uint8_t act; uint16_t arg; } seq_entry;
 
 typedef enum {
     SEQ_OK = 0, SEQ_ERR_EMPTY, SEQ_ERR_TOO_DEEP, SEQ_ERR_UNSORTED, SEQ_ERR_NO_END, SEQ_ERR_END_NOT_LAST, SEQ_ERR_TIME_RANGE,
-    SEQ_ERR_ACTION, SEQ_ERR_LATE, SEQ_ERR_RACE
+    SEQ_ERR_ACTION, SEQ_ERR_LATE, SEQ_ERR_RACE, SEQ_ERR_NOT_OWNER
 } seq_status;
 
 #define SEQ_WR_CLOCKS      40u      /* fabric clocks per entry written (4 register writes; conservative for an AXI-Lite port) */
@@ -20,6 +20,7 @@ typedef struct {
     uint32_t sum[2];                /* checksum of the table in each physical bank */
     bool     known[2];
     uint32_t n_written, n_skipped;  /* statistics: tables written in full / commit only */
+    uint32_t epoch_seen;            /* ownership epoch at the last load (see seq_load_owned in sup.h) */
 } seq_drv_t;
 
 void       seq_drv_init(seq_drv_t *d, hal_t *h);

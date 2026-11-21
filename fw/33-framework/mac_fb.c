@@ -90,6 +90,8 @@ fb_status mac_ctl_poll(mac_ctl_t *c)
     if (c->have_seq && d <= 0) { c->n_stale++; return FB_ERR_SEQ; }       /* duplicate or older than the last accepted one */
     c->last_seq = m.seq; c->have_seq = true;
 
+    if (c->safe_hold && fw_tdiff32(hal_now_us(c->h), c->safe_hold_until_us) < 0) { c->n_ok++; return FB_OK; }   /* held in the safe schedule: tracked, not applied */
+    c->safe_hold = false;
     fb.t_us = hal_now_us(c->h);
     fb.snr_x10 = m.snr_x10;
     fb.n_slices = m.n_slices;
@@ -104,6 +106,8 @@ fb_status mac_ctl_poll(mac_ctl_t *c)
 
 void mac_ctl_tick(mac_ctl_t *c)
 {
+    if (c->safe_hold && fw_tdiff32(hal_now_us(c->h), c->safe_hold_until_us) < 0) return;      /* the safe output stays */
+    c->safe_hold = false;
     la_tick(&c->la, &c->cfg, hal_now_us(c->h), &c->out);
     mac_ctl_apply(c, false);
 }
@@ -113,6 +117,7 @@ void mac_ctl_force_safe(mac_ctl_t *c)
     uint32_t now = hal_now_us(c->h);
     c->la.last_fb_us = now - c->cfg.fb_timeout_us - 1u;       /* look like a feedback timeout: the link adaptation falls to its safe schedule */
     la_tick(&c->la, &c->cfg, now, &c->out);
+    c->safe_hold = true; c->safe_hold_until_us = now + MAC_SAFE_HOLD_US;
     mac_ctl_apply(c, false);
 }
 

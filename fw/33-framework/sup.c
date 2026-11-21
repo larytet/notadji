@@ -90,7 +90,7 @@ bool mon_init(mon_t *m, hal_t *h, clog_t *log, const mbox_t *hb, _Atomic uint32_
     m->hold_limit = hold_frames; m->wait_limit = wait_frames;
     m->last_fc = hal_rd(h, SEQ_FRAME_CNT);
     m->state = MON_WATCH;
-    atomic_store(owner, MON_OWNER_MAIN);
+    atomic_store(owner, MON_OWNER_MAIN);                    /* epoch 0, main core */
     return true;
 }
 
@@ -122,9 +122,10 @@ void mon_poll(mon_t *m)
         if (m->grace) { m->grace = m->grace > df ? m->grace - df : 0; missed = 0; }
         if (hb_moved) m->stale_frames = 0; else m->stale_frames += df;
         if (m->stale_frames >= MON_STALL_FRAMES || missed >= MON_STALL_FRAMES) {
-            uint32_t expected = MON_OWNER_MAIN;
+            uint32_t expected = atomic_load_explicit(m->owner, memory_order_acquire);
             hal_wr(m->h, SYS_MAIN_HALT, 1);                  /* stop the main core first: no concurrent writer */
-            if (atomic_compare_exchange_strong(m->owner, &expected, MON_OWNER_MON)) {
+            if (mon_owner_of(expected) == MON_OWNER_MAIN &&
+                atomic_compare_exchange_strong(m->owner, &expected, ((mon_epoch_of(expected) + 1u) << 1) | MON_OWNER_MON)) {
                 bool ok = commit_safe(m);
                 m->takeovers++;
                 clog_append(m->log, CLOG_MONITOR_SAFE, 0, m->stale_frames, missed, ok ? 1u : 0u, fc);
@@ -143,7 +144,7 @@ void mon_poll(mon_t *m)
         m->wait_frames += df;
         if (hb_moved) m->alive_frames += df;
         if (m->alive_frames >= MON_STALL_FRAMES ) {   /* the heartbeat is back; the main core commits tables once it owns the sequencer again */
-            atomic_store_explicit(m->owner, MON_OWNER_MAIN, memory_order_release);
+            atomic_store_explicit(m->owner, ((mon_epoch_of(atomic_load(m->owner)) + 1u) << 1) | MON_OWNER_MAIN, memory_order_release);
             clog_append(m->log, CLOG_MONITOR_RELEASE, 0, m->wait_frames, 0, 0, fc);
             m->state = MON_WATCH; m->stale_frames = 0; m->grace = MON_STALL_FRAMES + 1u;   /* `missed` still shows the hold time until the first commit */
         } else if (m->wait_frames >= m->wait_limit) {        /* did not come back: halt again and keep the safe table */
@@ -152,4 +153,15 @@ void mon_poll(mon_t *m)
         }
         break;
     }
+}
+
+seq_status seq_load_owned(seq_drv_t *d, _Atomic uint32_t *owner, const seq_entry *t, uint32_t n)
+{
+    uint32_t w = atomic_load_explicit(owner, memory_order_acquire);
+    if (mon_owner_of(w) != MON_OWNER_MAIN) return SEQ_ERR_NOT_OWNER;
+    if (mon_epoch_of(w) != d->epoch_seen) {                    /* the monitor wrote the banks in between: what this driver remembers is stale */
+        d->known[0] = d->known[1] = false;
+        d->epoch_seen = mon_epoch_of(w);
+    }
+    return seq_load(d, t, n);
 }

@@ -178,6 +178,13 @@ TEST(safe_schedule_on_request)
     mac_ctl_force_safe(&c);
     CHECK(c.out.safe);
     CHECK(hal_rd(&S.hal, MAC_MCS) <= 1);                           /* the lowest rungs */
+    /* held: good feedback during the next 100 ms does not leave the safe schedule */
+    { int i; uint32_t held_mcs_max = 0;
+      for (i = 0; i < 90; i++) { m.seq = (uint8_t)(100 + i); hal_sim_advance_us(&S, 1000); push(&c, &m, false); CHECK_EQ(mac_ctl_poll(&c), FB_OK); mac_ctl_tick(&c);
+                                 if (hal_rd(&S.hal, MAC_MCS) > held_mcs_max) held_mcs_max = hal_rd(&S.hal, MAC_MCS); }
+      CHECK(held_mcs_max <= 1);
+      for (i = 0; i < 120; i++) { m.seq = (uint8_t)(190 + i); hal_sim_advance_us(&S, 1000); push(&c, &m, false); CHECK_EQ(mac_ctl_poll(&c), FB_OK); mac_ctl_tick(&c); }
+      CHECK(hal_rd(&S.hal, MAC_MCS) > 2); }                         /* after the hold the link climbs again */
 }
 
 TEST(feedback_timeout_in_tick)

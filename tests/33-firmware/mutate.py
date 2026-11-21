@@ -115,10 +115,68 @@ M = [
  ("S5-backpressure",   "hostproto.c", "if (!spsc_push(h->out, &f)) { h->st.out_full++; break; }", "if (!spsc_push(h->out, &f)) { h->st.out_full++; }", ["t_hostproto"]),
  ("S5-budget",         "hostproto.c", "while (h->n < HP_WIN && pulled < max_bytes && spsc_pop", "while (h->n < HP_WIN && spsc_pop", ["t_hostproto"]),
  ("S5-wait-break",     "hostproto.c", "if (pulled >= max_bytes || spsc_count(in_ring) == 0) break;", "", []),
+ ("S6-sha256-rot",     "sha2.c", "ROR32(e, 6) ^ ROR32(e, 11)", "ROR32(e, 7) ^ ROR32(e, 11)", ["t_crypto"]),
+ ("S6-sha256-len",     "sha2.c", "uint64_t bits = c->len * 8u;\n    uint8_t pad = 0x80u, z = 0, lenb[8];", "uint64_t bits = c->len * 4u;\n    uint8_t pad = 0x80u, z = 0, lenb[8];", ["t_crypto"]),
+ ("S6-sha512-rot",     "sha2.c", "ROR64(e, 14) ^ ROR64(e, 18)", "ROR64(e, 15) ^ ROR64(e, 18)", ["t_crypto"]),
+ ("S6-sha512-pad",     "sha2.c", "while (c->n != 112u) sha512_update(c, &z, 1);", "while (c->n != 120u) sha512_update(c, &z, 1);", ["t_crypto"]),
+ ("S6-hmac-pad",       "sha2.c", "k[i] ^ 0x36u", "k[i] ^ 0x37u", ["t_crypto"]),
+ ("S6-hmac-long",      "sha2.c", "if (klen > 64u) sha256(key, klen, k); else memcpy(k, key, klen);", "if (klen > 65u) sha256(key, klen, k); else memcpy(k, key, klen > 64u ? 64u : klen);", ["t_crypto"]),
+ ("S6-hkdf-ctr",       "sha2.c", "uint8_t ctr = 1;", "uint8_t ctr = 2;", ["t_crypto"]),
+ ("S6-hkdf-limit",     "sha2.c", "if (olen > 255u * 32u || infolen > 128u) return false;", "if (infolen > 128u) return false;", ["t_crypto"]),
+ ("S6-ctmem",          "sha2.c", "d |= (uint8_t)(x[i] ^ y[i]);", "d = (uint8_t)(x[i] ^ y[i]);", ["t_crypto"]),
+ ("S6-x25519-clamp",   "curve25519.c", "z[0] = (uint8_t)(z[0] & 248u);", "", ["t_crypto"]),
+ ("S6-x25519-bit254",  "curve25519.c", "z[31] = (uint8_t)((n[31] & 127u) | 64u);", "z[31] = (uint8_t)(n[31] & 127u);", ["t_crypto"]),
+ ("S6-x25519-swap",    "curve25519.c", "sel25519(a, b, r); sel25519(c, d, r);\n        fadd(e, a, c);", "fadd(e, a, c);", ["t_crypto"]),
+ ("S6-ed-s-range",     "curve25519.c", "if (ge_le(sig + 32, ORDER_L)) return false;", "", ["t_crypto"]),
+ ("S6-ed-small",       "curve25519.c", "if (small_order(q)) return false;", "if (0 && small_order(q)) return false;", ["t_crypto"]),
+ ("S6-ed-hash",        "curve25519.c", "sha512_update(&c, sig, 32); sha512_update(&c, pk, 32);", "sha512_update(&c, pk, 32); sha512_update(&c, sig, 32);", ["t_crypto"]),
+ ("S6-ed-reduce",      "curve25519.c", "    reduce64(h);\n", "    if (0) reduce64(h);\n", ["t_crypto"]),
+ ("S6-ed-parity",      "curve25519.c", "if (par25519(r[0]) == (p[31] >> 7)) fsub(r[0], GF0, r[0]);", "", ["t_crypto"]),
+ ("S6-pair-order",     "pair.c", "if (p->initiator) { sha256_update(&c, p->pk, 32); sha256_update(&c, peer, 32); }", "if (1) { sha256_update(&c, p->pk, 32); sha256_update(&c, peer, 32); }", ["t_pair"]),
+ ("S6-pair-zero",      "pair.c", "if (ct_memcmp(secret, zero, 32) == 0) {", "if (0) {", ["t_pair"]),
+ ("S6-pair-wipe",      "pair.c", "fw_wipe(p->sk, sizeof p->sk);", "", ["t_pair"]),
+ ("S6-pair-lock",      "pair.c", "if (++p->attempts >= PAIR_MAX_ATTEMPTS) {", "if (++p->attempts > PAIR_MAX_ATTEMPTS) {", ["t_pair"]),
+ ("S6-pair-keywipe",   "pair.c", "fw_wipe(p->link_key, sizeof p->link_key); fw_wipe(p->auth_key, sizeof p->auth_key); p->code = 0;", "p->code = 0;", ["t_pair"]),
+ ("S6-pair-keys",      "pair.c", "memcpy(p->link_key, okm, 32); memcpy(p->auth_key, okm + 32, 32);", "memcpy(p->link_key, okm, 32); memcpy(p->auth_key, okm, 32);", ["t_pair"]),
+ ("S6-pair-code",      "pair.c", "% 1000000u;", "% 1000001u;", ["t_pair"]),
+ ("S6-region-sig",     "region.c", "if (!ed25519_verify(b + 36, b, 36, pk)) return REGION_BAD_SIG;", "if (!ed25519_verify(b + 36, b, 36, pk) && 0) return REGION_BAD_SIG;", ["t_region"]),
+ ("S6-region-sigrange","region.c", "ed25519_verify(b + 36, b, 36, pk)", "ed25519_verify(b + 36, b, 35, pk)", ["t_region"]),
+ ("S6-region-magic",   "region.c", "if (r.magic != magic) return REGION_BAD_MAGIC;", "if (r.magic != magic && 0) return REGION_BAD_MAGIC;", ["t_region"]),
+ ("S6-region-ver",     "region.c", "if (r.version < min_version) return REGION_OLD_VERSION;", "if (r.version < min_version && 0) return REGION_OLD_VERSION;", ["t_region"]),
+ ("S6-region-len",     "region.c", "if (len != REGION_LEN) return REGION_BAD_LEN;", "if (len < REGION_LEN) return REGION_BAD_LEN;", ["t_region"]),
+ ("S6-region-clamp",   "region.c", "return req > r->max_power_x4[band] ? r->max_power_x4[band] : req;", "return req;", ["t_region"]),
+ ("S6-region-band",    "region.c", "if (band >= REGION_BANDS || !(((uint32_t)r->band_mask >> band) & 1u)) return REGION_NOT_ALLOWED;", "if (band >= REGION_BANDS) return REGION_NOT_ALLOWED;", ["t_region"]),
+ ("S6-region-dwell",   "region.c", "(r->dwell_ms != 0u && req > r->dwell_ms)", "(req > r->dwell_ms)", ["t_region"]),
+ ("S7-rec-crc",        "update.c", "if (fw_ld32(b) != BOOT_MAGIC || fw_ld32(b + 60) != crc32_ieee(b, 60)) return false;", "if (fw_ld32(b) != BOOT_MAGIC) return false;", ["t_update"]),
+ ("S7-rec-gen",        "update.c", "r.generation > u->rec.generation", "r.generation < u->rec.generation", ["t_update"]),
+ ("S7-rec-other",      "update.c", "uint32_t s = (u->rec_sector == 0) ? 1u : 0u;", "uint32_t s = (u->rec_sector == 0) ? 0u : 1u;", ["t_update"]),
+ ("S7-trial-max",      "update.c", "r.trial_boots >= UPD_MAX_TRIAL", "r.trial_boots > UPD_MAX_TRIAL", ["t_update"]),
+ ("S7-trial-count",    "update.c", "            r.trial_boots++;                                                     /* counted before the jump */\n", "", ["t_update"]),
+ ("S7-trial-verify",   "update.c", "if (upd_verify_slot(u, r.active, &ver) != UPD_OK) {", "if (upd_verify_slot(u, r.active, &ver) != UPD_OK && 0) {", ["t_update"]),
+ ("S7-sig",            "update.c", "if (!ed25519_verify(hdr + 64, hdr, 64, u->pk)) return UPD_ERR_SIG;", "", ["t_update"]),
+ ("S7-hash",           "update.c", "if (ct_memcmp(dig, hdr + 16, 32) != 0) return UPD_ERR_HASH;", "", ["t_update"]),
+ ("S7-hash-len",       "update.c", "uint32_t k = len - done < UPD_CHUNK_MAX ? len - done : UPD_CHUNK_MAX;", "uint32_t k = len - done < UPD_CHUNK_MAX ? len - done : UPD_CHUNK_MAX - 1u;", []),
+ ("S7-size",           "update.c", "if (len > u->slot_bytes - IMG_HDR) return UPD_ERR_SIZE;", "", ["t_update"]),
+ ("S7-version",        "update.c", "if (ver < u->rec.rollback) return UPD_ERR_VERSION;", "", ["t_update"]),
+ ("S7-version-eq",     "update.c", "if (ver < u->rec.rollback) return UPD_ERR_VERSION;", "if (ver <= u->rec.rollback) return UPD_ERR_VERSION;", ["t_update"]),
+ ("S7-confirm-ctr",    "update.c", "if (ver > r.rollback) r.rollback = ver;", "", ["t_update"]),
+ ("S7-target",         "update.c", "target = (uint8_t)(u->rec.active ^ 1u);", "target = u->rec.active;", ["t_update"]),
+ ("S7-erase",          "update.c", "if (off % u->sector == 0 && u->h->fl_erase(u->h, base + off) != 0) return UPD_ERR_FLASH;", "", ["t_update"]),
+ ("S7-resume",         "update.c", "(first_blank - 1u) * u->sector", "first_blank * u->sector", ["t_update"]),
+ ("S7-resume-id",      "update.c", "if (resume && u->rec.upd_target == target && u->rec.upd_total == total) {", "if (resume) {", ["t_update"]),
+ ("S7-offset",         "update.c", "if (off != u->next_off) return UPD_ERR_OFFSET;", "", ["t_update"]),
+ ("S7-announce",       "update.c", "if (len + IMG_HDR != u->total) return UPD_ERR_SIZE;", "if (len + IMG_HDR != u->total && 0) return UPD_ERR_SIZE;", ["t_update"]),
+ ("S7-complete",       "update.c", "if (u->next_off != u->total) return UPD_ERR_SIZE;", "", ["t_update"]),
+ ("S7-clear-session",  "update.c", "r.upd_target = 0xFF; r.upd_total = 0;", "", ["t_update"]),
+ ("S7-badmask",        "update.c", "r.bad_mask = (uint8_t)(r.bad_mask & ~(1u << u->target));", "", ["t_update"]),
+ ("S7-state",          "update.c", "r.active = u->target; r.state = BOOT_TRIAL; r.trial_boots = 0;", "r.active = u->target; r.state = BOOT_CONFIRMED; r.trial_boots = 0;", ["t_update"]),
+ ("S7-epoch",          "sup.c", "        d->known[0] = d->known[1] = false;\n        d->epoch_seen = mon_epoch_of(w);", "        d->epoch_seen = mon_epoch_of(w);", ["t_monitor"]),
+ ("S7-owned",          "sup.c", "if (mon_owner_of(w) != MON_OWNER_MAIN) return SEQ_ERR_NOT_OWNER;", "", ["t_monitor"]),
+ ("S7-hold",           "mac_fb.c", "c->safe_hold = true; c->safe_hold_until_us = now + MAC_SAFE_HOLD_US;", "", ["t_macfb"]),
  ("S2-mon-release",    "sup.c", "hal_wr(m->h, SYS_MAIN_HALT, 0);                  /* release", "                  /* release", ["t_monitor"]),
 ]
 def run(tests, fwdir, bdir):
-    env = dict(os.environ, FW=str(fwdir), B=str(bdir), NO_A64="1")
+    env = dict(os.environ, FW=str(fwdir), B=str(bdir), NO_A64="1", ONLY_FULL="1")
     r = subprocess.run([str(HERE / "run_tests.sh")] + tests, env=env, capture_output=True, text=True, cwd=HERE)
     return r.returncode, r.stdout + r.stderr
 prefix = sys.argv[1] if len(sys.argv) > 1 else ""
@@ -126,13 +184,13 @@ surv = 0; n = 0
 for mid, f, old, new, tests in M:
     if not mid.startswith(prefix) or not tests: continue
     n += 1
-    d = HERE / "build" / "mut" / "fw"
+    d = HERE / "build" / os.environ.get("MUT", "mut") / "fw"
     shutil.rmtree(d.parent, ignore_errors=True); shutil.copytree(FW, d); shutil.copytree(FW.parent / '23-link-adaptation', d.parent / '23-link-adaptation')
     src = (d / f).read_text()
     if old not in src:
         print(f"  BAD PATTERN {mid}"); surv += 1; continue
     (d / f).write_text(src.replace(old, new, 1))
-    rc, out = run(tests, d, HERE / "build" / "mut" / "b")
+    rc, out = run(tests, d, HERE / "build" / os.environ.get("MUT", "mut") / "b")
     # the mutant build must be compiled; a compile error is not a kill
     if re.search(r":\d+:\d+: (fatal )?error:", out):
         print(f"  BUILD ERROR  {mid}\n{out[-600:]}"); surv += 1; continue

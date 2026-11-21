@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Report on the AArch64 objects: unresolved symbols (only memcpy, memset, memcmp allowed), sizes, and static instruction counts of selected
+"""Report on the AArch64 objects: unresolved symbols (only memcpy, memmove, memset, memcmp allowed), sizes, and static instruction counts of selected
 functions (the basis of the cycle figures in design/33 section 8; an estimate, not a measurement). Usage: a64_report.py <build dir>"""
 import re, subprocess, sys
 from pathlib import Path
 B = Path(sys.argv[1])
 objs = sorted(B.glob("*.a64.o"))
-ALLOWED = {"memcpy", "memset", "memcmp"}
+ALLOWED = {"memcpy", "memmove", "memset", "memcmp"}
 def run(*a):
     return subprocess.run(a, capture_output=True, text=True, check=True).stdout
 defined, undefined = set(), set()
@@ -19,7 +19,7 @@ ok = True
 if bad:
     print("  FAIL unresolved symbols:", " ".join(bad)); ok = False
 else:
-    print("  pass  no unresolved symbols beyond memcpy/memset/memcmp")
+    print("  pass  no unresolved symbols beyond memcpy/memmove/memset/memcmp")
 tot = 0
 for o in objs:
     sz = 0

@@ -48,9 +48,7 @@ static void frame(void)
 {
     uint32_t w[4];
     if (main_alive && hal_rd(&S.hal, SYS_MAIN_HALT) == 0) {
-        if (mon_main_owns(&OWNER)) {
-            if (seq_load(&DRV, mainT, 3) == SEQ_OK) main_commits++;
-        }
+        if (seq_load_owned(&DRV, &OWNER, mainT, 3) == SEQ_OK) main_commits++;
         hb_count++; w[0] = hb_count; w[1] = 0; w[2] = 0; w[3] = 0; mbox_write(&HB, w, 4);
     }
     hal_sim_clocks(&S, FRAME_CLK / 2);
@@ -81,7 +79,7 @@ TEST(alive_never_takes_over)
     setup(50, 20);
     for (i = 0; i < 100000; i++) frame();
     CHECK_EQ(MON.takeovers, 0);
-    CHECK_EQ(OWNER, MON_OWNER_MAIN);
+    CHECK_EQ(OWNER & 1u, MON_OWNER_MAIN);
     CHECK_EQ(hal_rd(&S.hal, SYS_MAIN_HALT), 0);
     CHECK(active_is(mainT));
     CHECK(hal_rd(&S.hal, SEQ_MISSED) <= 1);
@@ -102,7 +100,7 @@ TEST(stall_takeover_and_release)
     }
     CHECK(f_take != 0);
     CHECK(f_take - f_stall <= 3);                          /* committed within three frames of the stall */
-    CHECK_EQ(OWNER, MON_OWNER_MON);
+    CHECK_EQ(OWNER & 1u, MON_OWNER_MON);
     CHECK_EQ(hal_rd(&S.hal, SYS_MAIN_HALT), 1);
     CHECK(active_is(safeT));                               /* the safe table is running */
     CHECK_EQ(count_type(CLOG_MONITOR_SAFE), 1);
@@ -112,11 +110,44 @@ TEST(stall_takeover_and_release)
     CHECK_EQ(hal_rd(&S.hal, SYS_MAIN_HALT), 0);
     main_alive = true;
     for (i = 0; i < 10; i++) frame();
-    CHECK_EQ(OWNER, MON_OWNER_MAIN);
+    CHECK_EQ(OWNER & 1u, MON_OWNER_MAIN);
     CHECK_EQ(count_type(CLOG_MONITOR_RELEASE), 1);
     for (i = 0; i < 5; i++) frame();
     CHECK(active_is(mainT));                               /* the main table is back */
     CHECK_EQ(MON.takeovers, 1);                            /* and no second takeover */
+}
+
+TEST(main_table_returns_whatever_the_bank_parity)
+{
+    /* the monitor writes the banks too: after the hand-back the main core must not trust its own idea of what the banks hold.
+     * The stall starts at different frame parities so that both banks end up holding the safe table in some run. */
+    uint32_t pre, i, ok = 0;
+    for (pre = 0; pre < 6; pre++) {
+        setup(8, 20);
+        for (i = 0; i < 20 + pre; i++) frame();
+        main_alive = false;
+        for (i = 0; i < 70 && hal_rd(&S.hal, SYS_MAIN_HALT) == 0; i++) frame();
+        for (i = 0; i < 70 && hal_rd(&S.hal, SYS_MAIN_HALT) == 1; i++) frame();
+        main_alive = true;
+        for (i = 0; i < 12; i++) frame();
+        if ((OWNER & 1u) == MON_OWNER_MAIN && active_is(mainT)) ok++;
+    }
+    CHECK_EQ(ok, 6);
+}
+
+TEST(main_cannot_write_while_the_monitor_owns)
+{
+    uint32_t i, b_before, commits;
+    setup(50, 20);
+    for (i = 0; i < 20; i++) frame();
+    main_alive = false;
+    for (i = 0; i < 10; i++) frame();
+    CHECK_EQ(OWNER & 1u, MON_OWNER_MON);
+    b_before = hal_rd(&S.hal, SEQ_STATUS) & 1u; commits = S.commits;
+    CHECK_EQ(seq_load_owned(&DRV, &OWNER, mainT, 3), SEQ_ERR_NOT_OWNER);         /* refused: nothing written, nothing committed */
+    CHECK_EQ(S.commits, commits);
+    CHECK_EQ(hal_rd(&S.hal, SEQ_STATUS) & 1u, b_before);
+    CHECK(active_is(safeT));
 }
 
 TEST(main_does_not_return)
@@ -126,7 +157,7 @@ TEST(main_does_not_return)
     for (i = 0; i < 50; i++) frame();
     main_alive = false;
     for (i = 0; i < 200; i++) frame();                     /* hold 10, release, wait 8, halt again, hold ... */
-    CHECK_EQ(OWNER, MON_OWNER_MON);
+    CHECK_EQ(OWNER & 1u, MON_OWNER_MON);
     CHECK_EQ(MON.takeovers, 1);                            /* the ownership was never given back, so no second takeover */
     CHECK(active_is(safeT));
     CHECK(MON.state == MON_SAFE_HOLD || MON.state == MON_WAIT_ALIVE);
@@ -143,7 +174,7 @@ TEST(alive_but_not_committing)
         hal_sim_clocks(&S, FRAME_CLK / 2); mon_poll(&MON); hal_sim_clocks(&S, FRAME_CLK / 2);
     }
     CHECK_EQ(MON.takeovers, 1);
-    CHECK_EQ(OWNER, MON_OWNER_MON);
+    CHECK_EQ(OWNER & 1u, MON_OWNER_MON);
 }
 
 TEST(damaged_safe_table_not_committed)
@@ -171,7 +202,7 @@ TEST(init_rejects_bad_table)
 
 int main(void)
 {
-    RUN(alive_never_takes_over); RUN(stall_takeover_and_release); RUN(main_does_not_return); RUN(alive_but_not_committing);
+    RUN(alive_never_takes_over); RUN(stall_takeover_and_release); RUN(main_table_returns_whatever_the_bank_parity); RUN(main_cannot_write_while_the_monitor_owns); RUN(main_does_not_return); RUN(alive_but_not_committing);
     RUN(damaged_safe_table_not_committed); RUN(init_rejects_bad_table);
     TC_DONE();
 }

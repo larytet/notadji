@@ -5,7 +5,7 @@
 
 #include "hal.h"
 
-#define SIM_RET_SIZE   8192u
+#define SIM_RET_SIZE   65536u
 #define SIM_FLASH_SIZE (256u * 1024u)
 #define SIM_SECTOR     4096u
 #define SIM_LOG_N      8192u
