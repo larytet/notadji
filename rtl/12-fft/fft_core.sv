@@ -1,6 +1,7 @@
 // fft_core - memory-based radix-2 DIT FFT/IFFT, two ping-pong buffers, one butterfly per clock (design/12-fft.md).
 module fft_core #(
-    parameter int MAX_LOG2 = 10          // 6..10
+    parameter int MAX_LOG2 = 10,         // 6..10
+    parameter int MIN_LOG2 = 6           // smallest transform (6 = the original behaviour; module 31 uses 4)
 ) (
     input  logic        clk,
     input  logic        rst_n,
@@ -32,7 +33,7 @@ module fft_core #(
 
   function automatic [3:0] clamp_log2(input [3:0] v);
     begin
-      if (v < 4'd6) clamp_log2 = 4'd6;
+      if (v < 4'(MIN_LOG2)) clamp_log2 = 4'(MIN_LOG2);
       else if (v > 4'(MAX_LOG2)) clamp_log2 = 4'(MAX_LOG2);
       else clamp_log2 = v;
     end

@@ -1,0 +1,5 @@
+dft|dft_mixed|test_dft||
+tx|dfts_tx|test_txrx||DUT=tx
+rx|dfts_rx|test_txrx||DUT=rx
+loop_tx|ds_tx_top|test_loop||DUT=tx
+loop_rx|ds_rx_top|test_loop||DUT=rx

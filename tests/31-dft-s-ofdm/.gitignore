@@ -1,0 +1,8 @@
+sim_build/
+results_*.xml
+sim_*.log
+synth_*.txt
+synth_*.log
+__pycache__/
+.mut/
+link.log

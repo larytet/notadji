@@ -1,0 +1,12 @@
+rtl/31-dft-s-ofdm/dfts_twiddle_rom.sv
+rtl/31-dft-s-ofdm/dft_mixed.sv
+rtl/31-dft-s-ofdm/dfts_tx.sv
+rtl/31-dft-s-ofdm/dfts_rx.sv
+rtl/12-fft/fft_core.sv
+rtl/12-fft/fft_twiddle_rom.sv
+rtl/17-equalizer/recip_rom.sv
+rtl/04-cyclic-prefix/cp_insert.sv
+rtl/06-mapper/mapper.sv
+rtl/14-demapper/demapper.sv
+tests/31-dft-s-ofdm/ds_tx_top.sv
+tests/31-dft-s-ofdm/ds_rx_top.sv
