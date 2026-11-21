@@ -17,7 +17,7 @@ Decisions **[E]**:
 
 Parameters: `DEPTH` (retained codewords, default 8), `NMAX` (1944), `PEND` (pending results, default 8).
 
-Ports: `clk`, `rst_n`; `mode` (0 bypass, 1 combine); `code[2:0]`, `key_seq[15:0]`, `key_cw[7:0]` (sampled with the first LLR of a codeword); `s_axis_valid/ready/data[7:0] (signed)/last`; `m_axis_valid/ready/data[7:0]/last`; `res_valid`, `res_ok` (one pulse per decoded codeword, in input order); `drop_seq_valid`, `drop_seq[15:0]`, `drop_all`; status `n_hit`, `n_miss`, `n_evict`, `n_ovf` (16-bit counters), `occupancy`.
+Ports: `clk`, `rst_n`; `mode` (0 bypass, 1 combine); `code[2:0]`, `key_seq[15:0]`, `key_cw[7:0]`, `maxit[5:0]` (sampled with the first LLR of a codeword; `code` and `maxit` come out again as the sideband `m_code`, `m_maxit`, valid with every LLR of the codeword, so that the decoder sees them aligned with its first LLR despite the 2 clocks of latency); `s_axis_valid/ready/data[7:0] (signed)/last`; `m_axis_valid/ready/data[7:0]/last`; `res_valid`, `res_ok` (one pulse per decoded codeword, in input order); `drop_seq_valid`, `drop_seq[15:0]`, `drop_all`; status `n_hit`, `n_miss`, `n_evict`, `n_ovf` (16-bit counters), `occupancy`.
 
 State: per slot `valid`, `seq`, `cw`, `code`, `stamp` (16-bit allocation stamp); a memory of `DEPTH x NMAX` signed bytes with registered read; the pending FIFO (depth `PEND`) of `{used, slot, seq, cw}` pushed with every codeword (`used` = 0 in bypass); an allocation counter.
 
@@ -59,3 +59,31 @@ Python model of the combiner (the event order of section 2, driven by what the t
 - Memory sizing: `DEPTH` x 1944 bytes; block-RAM mapping not verified (Yosys / Vivado).
 - Incremental redundancy (different puncturing) would gain more than chase combining at high code rates; out of scope.
 - Combining of LLRs of different demapper scales (different `llr_shift`) is assumed equal.
+
+## 8. Results (implementation commit)
+
+Run: `source scripts/sim_env.sh && tests/30-soft-combining/run_tests.sh` (7 simulations, then the statistics script), `tests/30-soft-combining/mutate.sh`, `tests/common/lint_synth.sh tests/30-soft-combining`. Files: `rtl/30-soft-combining/{llr_combiner,ldpc_dec_array,soft_rx_decode}.sv`, `tests/30-soft-combining/`.
+
+| Test | Result |
+|---|---|
+| T30-01 | Random streams (60 codewords of N = 648 and 1944, keys from a small set, `res_ok` random, bypass changes, random valid and ready; also `DEPTH` = 3 / `PEND` = 2 with 40 codewords): every output LLR, the sideband and the counters equal the model (27 hits, 25 misses, 1 replacement in the large configuration; 9 hits, 26 misses, 13 replacements in the small one) |
+| T30-02 | Directed: a failed codeword is kept and combined with the next reception (a + b), a decoded one is freed (the next is a miss), a codeword with another `code` and the same key misses, `drop_seq` and `drop_all` remove entries, the oldest entry is replaced when `DEPTH` is exceeded, and with `PEND` = 2 and no results the first LLR of the third codeword waits (`n_ovf` counts the stall) |
+| T30-03 | Saturation: 127 + 127 gives 127, 127 + (-127) gives 0, -128 inputs are clamped to -127, a three-reception sum equals hand-computed values (independent of the model) |
+| T30-04 | `soft_rx_decode` (combiner and the real decoder of module 20) on codes 0 and 7, 12 frames at an Eb/N0 where about half the single receptions fail, 10 and 20 iterations: decoder output, `m_ok`, `m_iters` equal the model of (combine, decode) for every reception; 6 frames decoded at once, **6 failed the first reception and were decoded from the combination, 5 of them would also have failed on the second reception alone**; the occupancy returns to zero; bypass gives the plain decoder result and creates no entry; `drop_seq` removes the retained entry |
+| T30-05 | Model statistics, 240 frames per point (N = 648) and 96 (N = 1944), rate 1/2, Eb/N0 per reception, FER 10% point: **one reception 2.19 dB, two combined -0.88 dB (gain 3.07 dB), three combined -2.49 dB (gain 4.68 dB)** for N = 648; 2.25, -0.87 (gain 3.12), -2.27 (gain 4.52) for N = 1944 (10 iterations); with 20 iterations the gains are 3.06 and 3.09 dB. The gain is the theoretical 3 dB of two equal receptions (R30-08 asks 2.0). **20 against 10 iterations: 0.18 dB (N = 648) and 0.41 dB (N = 1944) at FER 10%** (R30-09: FER(20) <= FER(10) at every point within 3 sigma: holds). |
+| T30-06 | Array: ordered results and `m_ok`, `m_iters` equal the model for mixed codes (random handshakes) for P = 1, 2, 3, 4. Information throughput at 200 MHz with an always-valid source of one LLR per clock (8 codewords): N = 1944 R5/6: **126 Mbit/s with P = 1, 161 Mbit/s with P = 2, 3, 4** (2013 clocks per codeword, the LLR input rate); N = 1944 R1/2: 58 (P = 1), 93 Mbit/s (P >= 2, 2087 clocks); N = 648 R1/2: 42, 66, 87, 84 Mbit/s for P = 1, 2, 3, 4. 20 iterations against 10 change the throughput by at most 6% for P >= 2 (the frames mostly converge early at these SNRs; N = 1944 R1/2 with P = 2 goes from 2087 to 2444 clocks per codeword). |
+| M-30 | Seven mutants of `llr_combiner` (no saturation; never free on success; key match ignoring `cw`; `drop_seq` ignored; replacement of the lowest index instead of the oldest; hit not added; result `ok` ignored): all seven fail at least two tests |
+| L-30, S-30 | `-Wall` clean for `llr_combiner`, `ldpc_dec_array` (P = 1, 2) and `soft_rx_decode`; Yosys on `llr_combiner`: 304516 cells, 125204 flip-flops (the 8 x 1944 x 8 bit memory as flip-flops), no latches; the array and the top contain the decoder of module 20 and are not synthesised (Yosys does not finish for the decoder, see module 20) |
+
+### What this means
+
+- **Chase combining works as specified**: the gain of two receptions is the theoretical 3 dB (3.1 dB measured), three receptions 4.5 dB; the cost is a 2-clock latency and one memory of `DEPTH` x 1944 bytes.
+- **More iterations help little at the waterfall**: 0.2 to 0.4 dB for doubling from 10 to 20 iterations. PHY-017's "at least twice the iterations" is therefore a modest gain; the soft combining (3 dB) is the large part. The cost in decoder time is small when the frames converge early and up to 17% more clocks per codeword (N = 1944 R1/2, P = 2) when they do not.
+- **PHY-015 finding:** an array of two decoders at one LLR per clock reaches 161 Mbit/s of information only for R5/6 (N = 1944), because the input rate (one LLR per clock) bounds the decoded rate at `R x 200` Mbit/s (R = 3/4: 150 Mbit/s, R = 1/2: 100 Mbit/s, measured 93 because of the load and output gaps). A rate of 155 Mbit/s at R <= 3/4 needs two LLRs per clock into the decoder (the de-interleaver output and the demapper serializer are the 1-LLR-per-clock bottleneck already noted in module 21). The decoder itself is not the limit once P >= 2.
+
+### Limits
+
+- Chase combining only; the retransmission must carry the same bits (section 4 of the requirements: nonce from the sequence number; a refresh is a new slice and misses).
+- The combiner is not wired into `rx_chain` (module 21) and the MAC flag for an identical retransmission does not exist yet (module 22); the tests drive it with the decoder directly.
+- Statistics are with the bit-exact model of module 20 (AWGN, BPSK-equivalent LLRs at a fixed scale), 96 to 240 frames per point; the 10% crossing has an uncertainty of about 0.1 dB.
+- `DEPTH` x 1944 bytes was not mapped to block RAM (flip-flops here).

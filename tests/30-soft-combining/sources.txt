@@ -1,0 +1,5 @@
+rtl/30-soft-combining/llr_combiner.sv
+rtl/30-soft-combining/ldpc_dec_array.sv
+rtl/30-soft-combining/soft_rx_decode.sv
+rtl/20-ldpc-decoder/ldpc_dec.sv
+rtl/13-ldpc-encoder/ldpc_code_rom.sv

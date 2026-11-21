@@ -1,0 +1,7 @@
+comb|llr_combiner|test_comb|-GDEPTH=8 -GPEND=8|CFG=big
+comb_small|llr_combiner|test_comb|-GDEPTH=3 -GPEND=2|CFG=small
+soft|soft_rx_decode|test_soft|-GP=1|
+arr1|ldpc_dec_array|test_arr|-GP=1|P=1
+arr2|ldpc_dec_array|test_arr|-GP=2|P=2
+arr3|ldpc_dec_array|test_arr|-GP=3|P=3
+arr4|ldpc_dec_array|test_arr|-GP=4|P=4
