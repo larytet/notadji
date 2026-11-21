@@ -1,0 +1,44 @@
+# R31 - DFT-spread OFDM low-PAPR mode (PHY-014)
+
+Source: `spec/01` PHY-014: *"Optional low-PAPR mode: DFT-spread OFDM for BPSK, QPSK and 16QAM with a PAPR at least 3 dB below plain OFDM at a CCDF of 1e-3 [E], selectable per link; it is the mitigation if the PA study shows less than 27% PAE at OFDM QPSK/16QAM."* Priority O (optional), phase P2. Related: PHY-009 (PAPR reduction plus DPD, back-off at most 7 dB / 6 dB; not met together at 7 dB by module 26, see `design/26`), PHY-001/003/004, PHY-013, RF-014/RF-015 (emission mask, EVM), SYS-005 (air-unit power).
+
+## 1. Scope
+
+In scope: the transmit-side DFT spreading stage and the receive-side despreading (IDFT) stage with frequency-domain MMSE weighting, for the FFT sizes 64 to 512 of the existing tone plan (module 7); their integration into the transmit chain (module 16) and the receive chain (module 21) behind a per-frame mode bit; the measurement of the PAPR gain and of the link-level cost; the signalling constraints.
+
+Out of scope: the 80 MHz mode (N = 1024), DFT-s-OFDM for 64QAM and 256QAM (not required; the mode exists for the power-limited case), a hardware noise-variance estimator (the receiver gets the noise level as a parameter), a header bit and its protection (the mode bit is a frame configuration input), pi/2-BPSK pulse shaping variants.
+
+## 2. Definitions
+
+- **Plain OFDM**: modules 6, 7, 12, 16 as built.
+- **DFT-s-OFDM**: the Nd data constellation points of an OFDM symbol are replaced by `M` constellation points that are first transformed by an `M`-point DFT; the `M` outputs occupy the data tones of the symbol in the tone order of the plan; pilots, nulls, training symbols, prefix and the IFFT are unchanged.
+- **M**: `3N/4` (48, 96, 192, 384 for N = 64, 128, 256, 512). It is a product of a power of two and 3, so the DFT is built from power-of-two FFTs and one radix-3 stage. `Nd - M` data tones (0, 12, 42, 84) are left null at the edges of the band (they also reduce the out-of-band energy), which is a throughput cost of 0, 11%, 18% and 18% of the data tones.
+- **PAPR**: peak to mean power of the oversampled (4x) complex baseband signal of the data symbols (the preamble excluded), complementary CCDF at 1e-3.
+- **Mode bit** `dsofdm`: per frame, sampled with the frame start like the other configuration inputs.
+
+## 3. Requirements
+
+| ID | Requirement | Acceptance criterion | Verified by |
+|---|---|---|---|
+| R31-01 | A transmit stage shall compute the `M`-point DFT of the `M` mapper samples of a symbol, scaled to keep the RMS amplitude (4096 for the mapper scale of `06`), for N = 64, 128, 256, 512. | RTL output equals the integer model; against a floating-point DFT the error is below 0.5% of the RMS. | T31-01, T31-02 |
+| R31-02 | A receive stage shall compute the `M`-point inverse DFT of the equalised data tones, weighted per tone by a minimum-mean-square-error gain derived from `csi`, with the output scaled to the mapper amplitude (unbiased) and one `csi` value for the whole symbol. | RTL equals the integer model; against floating-point MMSE equalisation + IDFT the error is below 1% of the RMS. | T31-03, T31-04 |
+| R31-03 | The PAPR of DFT-s-OFDM at a CCDF of 1e-3 shall be at least 3 dB below plain OFDM for BPSK, QPSK and 16QAM, for N = 64 to 512, measured on the output of the real transmit chain (pilots, null edge tones and the DC tone included). | Measured gain on 20000 symbols per case; any case below 3.0 dB is reported as not met. | T31-05 |
+| R31-04 | In an AWGN channel the uncoded bit error rate of DFT-s-OFDM shall equal that of plain OFDM within 0.2 dB (same modulation, same energy per bit; edge tones null) for BPSK, QPSK, 16QAM. | Simulated BER at 3 SNR points within the confidence interval of the plain OFDM curve (+/- 0.2 dB). | T31-06 |
+| R31-05 | In a frequency-selective channel (the 2-tap channel of module 21 and a deep-fade case) the coded frame error rate of DFT-s-OFDM with MMSE weighting shall be reported against plain OFDM; the loss shall be quantified (it is the price of the mode). | Table in the results; no pass limit, the numbers are the deliverable. | T31-07 |
+| R31-06 | The mode shall be selectable per frame, with plain OFDM unchanged and bit-exact when the mode is off. | With `dsofdm` = 0 the transmit chain and the receive chain equal the previous results (modules 16 and 21 tests unchanged). | T31-08 |
+| R31-07 | The closed loop transmit chain to channel to receive chain shall recover frames in DFT-s mode (noiseless, with carrier and timing offset, 2-tap multipath, noise). | All frames recovered (same scenarios as module 21 where applicable). | T31-09 |
+| R31-08 | The stage shall keep up with the symbol rate: a symbol (useful part plus prefix) lasts 14.4 us at the 1/8 prefix, 2880 clocks at 200 MHz. | Clocks per symbol measured for every N; reported against 2880. | T31-10 |
+| R31-09 | The limits and the signalling needs shall be documented. | Sections 4 and 5 of this file and the design file. | review |
+
+## 4. Interaction with the PA study and the other requirements
+
+- DFT-s-OFDM is the planned mitigation for PHY-009 if the PA study gives less than 27% PAE (`07` T-14). This module measures how much back-off the lower PAPR buys with the PA model of module 26 only as a PAPR figure; a closed-loop DPD measurement with DFT-s signals is an open item.
+- Spectral efficiency: the edge tones carry no data (`M = 3N/4`), so the useful rate of the mode is 100%, 89%, 82%, 82% of plain OFDM for N = 64, 128, 256, 512.
+- Receiver channel estimation uses the preamble (LTF) unchanged; pilot tones stay in every data symbol (common phase tracking unchanged). The pilots are not spread; they raise PAPR slightly, and this is included in R31-03.
+- 64QAM and 256QAM stay on plain OFDM.
+
+## 5. Signalling and assumptions
+
+1. The receiver must know the mode before the first data symbol: one bit in the frame header (MAC, module 9/22), protected like the rest of the header; not defined here.
+2. The receiver needs the noise level relative to the channel gain (`nv`, in `csi` units) to form the MMSE weights; it comes from the noise estimate of the front end (module 25/18 statistics) and is a register here.
+3. Tone order: the spread symbols are placed on the data tones in the bin order of the tone plan; the PAPR properties equal those of contiguous allocation up to a sign alternation of the data symbols (argued in the design).
