@@ -260,11 +260,15 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | IF-002 | [AU] Camera: MIPI CSI-2 (VID-002), I2C/SPI control, sensor sync (FSIN) output for rolling-shutter alignment; fixed frame period policy: exposure is limited below the frame time so that the sensor never stretches the frame (source review S-5); sensor readout time of 8 ms or less at 1080p60 and 4 ms or less at 1080p120 (the assumption of the latency budget in `02`, G-15). | M | | I |
 | IF-003 | [GU] Ground unit host interface: HDMI/DP/DSI out, USB-C (video and data), Ethernet 1 Gbit (O), 5 GHz WiFi/BLE for the phone app (low-priority sideband). Optional gaze or head-direction input from the goggles (MAC-013). | M | | I |
 | IF-004 | Debug: JTAG/SWD, UART console, a trace port for the latency timestamps, and a test header for RF conducted measurements (U.FL). | M | P1 | I |
-| SW-001 | Control plane in Linux (or Zephyr/RTOS) on the application CPU; data plane in hardware. The data plane shall continue to work if the application CPU stalls for 100 ms. | M | | T |
+| SW-001 | Control plane on the hard real-time core(s) (bare-metal or RTOS-style static scheduler, AArch64 assumed for the target, `13` section 3); Linux on the application CPU is optional and outside the real-time path. The data plane shall continue to work if every control CPU stalls for 100 ms (HSI-001). | M | | T |
 | SW-002 | A hardware abstraction (HAL) shall isolate the modem from the transceiver, so that the same software runs on the AD936x/ADRV9002-based prototype and the ASIC. | M | | I |
 | SW-003 | Open documentation of the host APIs, the register map, and the on-air frame formats. | M | | I |
 | SW-004 | Over-the-air (over the link) firmware update of the air unit with fail-safe rollback. | S | | T |
 | SW-005 | Logging: link statistics, per-slice RSSI/SNR/PER, calibration events, thermal events, at 1 kHz into a ring buffer that survives a crash (for flight forensics). | M | | T |
+| SW-006 | Firmware rules for the real-time cores: static allocation only (no heap), bounded loops, no floating point in interrupt handlers, 64-bit clean (LP64: the same source builds for x86-64 hosts and AArch64 targets without warnings under `-Wall -Wextra -Werror`), every task has a period, a deadline and a budget. | M | | T |
+| SW-007 | Firmware supervision: a software watchdog service shall detect a task that overran its budget three times in a row or missed its deadline, record the fault in the crash log and request the safe schedule (HSI-011); a hardware watchdog is kicked only when all supervised tasks have checked in. | M | | T |
+| SW-008 | Host-protocol framing (MAVLink 2 and MSP v1/v2) shall be parsed from DMA ring buffers without blocking, with CRC check, resynchronisation after corruption, and bounded work per call (IF-001, MAC-007). | M | | T |
+| SW-009 | Signed images and tables: firmware images, region tables and entitlement tables carry an Ed25519 signature; the verifier is part of the immutable boot code; pairing uses X25519 with a short-code authentication (SEC-001, SEC-003, SEC-005). | M | | T |
 
 ## 15a. Hardware-software integration (HSI) - details in document 13
 
@@ -275,7 +279,7 @@ wavefront shaping possible with more than one antenna element. Recorded as assum
 | HSI-003 | One 64-bit timestamp counter at 200 MHz or faster (5 ns resolution) shall be latched at every pipeline stage boundary and exposed on the trace port (LAT-004). | M | | T |
 | HSI-004 | The DPD correlation accumulation and the link encryption shall be hardware blocks; steady-state operation shall not depend on a software implementation of either. | M | P2 | I |
 | HSI-005 | Worst-case load of each real-time core shall be 50% or less at the 1080p120 workload of `13` section 2, measured. | M | | T |
-| HSI-006 | The worst-case execution time of every real-time task shall be measured on the target core and recorded; the estimates in `13` section 2 shall be replaced by measurements. | M | | T |
+| HSI-006 | The worst-case execution time of every real-time task shall be recorded: in the host phase as the cycle-budget accounting of the firmware scheduler (per-task maximum, overrun counter) plus the static AArch64 stack and code size; on the target core as a trace-port measurement; the estimates in `13` section 2 shall be replaced by measurements. | M | | T |
 | HSI-007 | Boot to first video in 3 s or less (target 1.5 s) with the real-time path only; the application core shall not be in the critical path. | M | | T |
 | HSI-008 | Real-time core interrupt entry within 5 us at 300 MHz (to the first instruction of the handler). [TBV] | M | | T |
 | HSI-009 | Processor subsystem power (all cores, caches and SRAM) of the ASIC: 100 mW or less in the streaming state with the application core gated; 5 mW or less in sleep (RAM retention). [target, TBV] | S | P2 | T |
